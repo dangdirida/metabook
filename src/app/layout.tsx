@@ -3,24 +3,21 @@ import "./globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 
+const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "MetaBook — 살아있는 독서 경험",
-  description:
-    "AI 캐릭터와 대화하고, 책 속 세계를 탐험하고, 독자 커뮤니티를 만나보세요.",
-  metadataBase: new URL(process.env.NEXTAUTH_URL || "http://localhost:3000"),
+  title: "MetaBook",
+  description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
+  metadataBase: new URL(siteUrl),
   openGraph: {
     title: "MetaBook",
-    description:
-      "AI 캐릭터와 대화하고, 책 속 세계를 탐험하고, 독자 커뮤니티를 만나보세요.",
-    images: ["/og-thumbnail.png"],
+    description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "MetaBook",
-    description:
-      "AI 캐릭터와 대화하고, 책 속 세계를 탐험하고, 독자 커뮤니티를 만나보세요.",
-    images: ["/og-thumbnail.png"],
+    description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
   },
   icons: {
     icon: [
