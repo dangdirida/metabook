@@ -22,18 +22,18 @@ export default async function Image() {
       >
         {/* 별 장식 */}
         {[
-          { top: 60, left: 150, size: 4 },
-          { top: 120, left: 400, size: 3 },
-          { top: 80, left: 700, size: 5 },
-          { top: 50, left: 950, size: 3 },
-          { top: 180, left: 1050, size: 4 },
-          { top: 200, left: 200, size: 3 },
-          { top: 500, left: 100, size: 4 },
-          { top: 520, left: 350, size: 3 },
-          { top: 480, left: 800, size: 5 },
-          { top: 550, left: 1000, size: 3 },
-          { top: 300, left: 80, size: 2 },
-          { top: 350, left: 1100, size: 2 },
+          { top: 60, left: 150, s: 4 },
+          { top: 120, left: 400, s: 3 },
+          { top: 80, left: 700, s: 5 },
+          { top: 50, left: 950, s: 3 },
+          { top: 180, left: 1050, s: 4 },
+          { top: 200, left: 200, s: 3 },
+          { top: 500, left: 100, s: 4 },
+          { top: 520, left: 350, s: 3 },
+          { top: 480, left: 800, s: 5 },
+          { top: 550, left: 1000, s: 3 },
+          { top: 300, left: 80, s: 2 },
+          { top: 350, left: 1100, s: 2 },
         ].map((star, i) => (
           <div
             key={i}
@@ -41,8 +41,8 @@ export default async function Image() {
               position: "absolute",
               top: star.top,
               left: star.left,
-              width: star.size,
-              height: star.size,
+              width: star.s,
+              height: star.s,
               borderRadius: "50%",
               background: "white",
               opacity: 0.6,
@@ -50,27 +50,27 @@ export default async function Image() {
           />
         ))}
 
-        {/* 빛 효과 */}
+        {/* 빛 효과 (단색 원형 — Satori는 radial-gradient 미지원) */}
         <div
           style={{
             position: "absolute",
             bottom: 80,
-            left: "50%",
-            transform: "translateX(-50%)",
+            left: 350,
             width: 500,
             height: 300,
-            background: "radial-gradient(ellipse, rgba(50, 210, 157, 0.15) 0%, transparent 70%)",
+            borderRadius: "50%",
+            background: "rgba(50, 210, 157, 0.1)",
           }}
         />
         <div
           style={{
             position: "absolute",
-            top: "40%",
-            left: "50%",
-            transform: "translateX(-50%)",
+            top: 200,
+            left: 400,
             width: 400,
             height: 200,
-            background: "radial-gradient(ellipse, rgba(126, 90, 226, 0.12) 0%, transparent 70%)",
+            borderRadius: "50%",
+            background: "rgba(126, 90, 226, 0.08)",
           }}
         />
 
@@ -88,7 +88,7 @@ export default async function Image() {
           <span style={{ color: "#32d29d" }}>Book</span>
         </div>
 
-        {/* 슬로건 */}
+        {/* 슬로건 — Satori 기본 폰트가 한글 미지원이므로 영문 사용 */}
         <div
           style={{
             fontSize: 28,
@@ -96,7 +96,7 @@ export default async function Image() {
             marginTop: 20,
           }}
         >
-          책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼
+          Interactive Reading Platform
         </div>
       </div>
     ),
