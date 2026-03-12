@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5b1dcd"/>
+      <stop offset="100%" stop-color="#262d2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="400" fill="url(#bg4)"/>
+  <!-- Brain halves - geometric abstraction -->
+  <!-- Left brain (logical) - angular shapes -->
+  <rect x="45" y="70" width="50" height="50" fill="none" stroke="#ebe8fc" stroke-width="1.5" opacity="0.4" transform="rotate(10,70,95)"/>
+  <rect x="55" y="85" width="30" height="30" fill="none" stroke="#ebe8fc" stroke-width="1" opacity="0.3" transform="rotate(10,70,100)"/>
+  <polygon points="60,130 90,130 75,155" fill="none" stroke="#ebe8fc" stroke-width="1" opacity="0.3"/>
+  <!-- Right brain (creative) - curved/organic shapes -->
+  <circle cx="210" cy="90" r="30" fill="none" stroke="#7e5ae2" stroke-width="1.5" opacity="0.4"/>
+  <circle cx="220" cy="100" r="18" fill="none" stroke="#7e5ae2" stroke-width="1" opacity="0.3"/>
+  <ellipse cx="200" cy="130" rx="25" ry="15" fill="none" stroke="#7e5ae2" stroke-width="1" opacity="0.3"/>
+  <!-- Dividing line between two systems -->
+  <line x1="150" y1="50" x2="150" y2="170" stroke="#ebe8fc" stroke-width="1" opacity="0.3" stroke-dasharray="4,4"/>
+  <!-- System 1 & 2 labels -->
+  <text x="80" y="180" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#ebe8fc" opacity="0.5">System 1</text>
+  <text x="220" y="180" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7e5ae2" opacity="0.5">System 2</text>
+  <!-- Speed indicators -->
+  <line x1="50" y1="190" x2="110" y2="190" stroke="#ebe8fc" stroke-width="2" opacity="0.4"/>
+  <polygon points="110,186 118,190 110,194" fill="#ebe8fc" opacity="0.4"/>
+  <line x1="190" y1="190" x2="240" y2="190" stroke="#7e5ae2" stroke-width="2" opacity="0.4" stroke-dasharray="6,3"/>
+  <polygon points="240,186 248,190 240,194" fill="#7e5ae2" opacity="0.4"/>
+  <!-- Title -->
+  <text x="150" y="245" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="24" fill="#ffffff">생각에 관한 생각</text>
+  <line x1="50" y1="260" x2="250" y2="260" stroke="#7e5ae2" stroke-width="1" opacity="0.5"/>
+  <text x="150" y="280" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#ebe8fc" opacity="0.6">우리의 행동을 지배하는 두 가지 사고 시스템</text>
+  <!-- Author -->
+  <text x="150" y="370" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#ebe8fc" opacity="0.8">대니얼 카너먼</text>
+  <!-- Top/bottom accent bars -->
+  <rect x="0" y="0" width="150" height="4" fill="#ebe8fc" opacity="0.6"/>
+  <rect x="150" y="0" width="150" height="4" fill="#7e5ae2" opacity="0.6"/>
+</svg>

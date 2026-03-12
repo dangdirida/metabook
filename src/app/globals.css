@@ -1,42 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* === OGQ 기본 테마 === */
+  --background: #fcfdfd; /* mono-010 */
+  --foreground: #040606; /* mono-990 */
+
+  /* === OGQ Primary — 그린 계열 === */
+  --color-primary-010: #f5fdfb;
+  --color-primary-050: #dff4ea;
+  --color-primary-080: #cbecdf;
+  --color-primary-100: #b5e5d7;
+  --color-primary-200: #9bdfcc;
+  --color-primary-300: #71dec1;
+  --color-primary-400: #58dab1;
+  --color-primary-500: #32d29d; /* ★ 핵심 Primary */
+  --color-primary-600: #00c389;
+  --color-primary-700: #00b57f;
+  --color-primary-800: #00996e;
+  --color-primary-900: #007a58;
+  --color-primary-990: #006147;
+
+  /* === OGQ Secondary — 퍼플 계열 === */
+  --color-secondary-010: #fbfbfe;
+  --color-secondary-030: #f8f6fe;
+  --color-secondary-050: #ebe8fc;
+  --color-secondary-080: #e0dafb;
+  --color-secondary-100: #d2cbf9;
+  --color-secondary-200: #bfb0f2;
+  --color-secondary-300: #a793ec;
+  --color-secondary-400: #947be5;
+  --color-secondary-500: #7e5ae2; /* ★ 핵심 Secondary */
+  --color-secondary-600: #703fe4;
+  --color-secondary-700: #5b1dcd;
+  --color-secondary-800: #4917a6;
+  --color-secondary-900: #37117e;
+  --color-secondary-990: #290d5e;
+
+  /* === OGQ Mono — 그레이스케일 === */
+  --color-mono-010: #fcfdfd;
+  --color-mono-030: #f9fbfb;
+  --color-mono-050: #f4f6f6;
+  --color-mono-080: #eef1f1;
+  --color-mono-100: #d8cfdf;
+  --color-mono-200: #a7b6b9;
+  --color-mono-300: #89989c;
+  --color-mono-400: #7d8d92;
+  --color-mono-500: #76888f;
+  --color-mono-600: #6c7e84;
+  --color-mono-700: #57767b;
+  --color-mono-800: #425052;
+  --color-mono-900: #262d2e;
+  --color-mono-990: #040606;
+
+  /* === OGQ Accent Red === */
+  --color-red-030: #ffeeef;
+  --color-red-050: #ffe2e4;
+  --color-red-100: #ffd0d3;
+  --color-red-200: #e33861;
+  --color-red-300: #e21235; /* ★ 에러 / 위험 / 삭제 */
+
+  /* === OGQ Accent Blue === */
+  --color-blue-030: #f0f8ff;
+  --color-blue-050: #d9ecfe;
+  --color-blue-100: #a4d9ff;
+  --color-blue-200: #75c2fa;
+  --color-blue-300: #1384d7; /* ★ 정보 / 링크 */
+  --color-blue-400: #3b7cf3;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+.dark {
+  --background: #262d2e; /* mono-900 */
+  --foreground: #f4f6f6; /* mono-050 */
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-mono-200);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-mono-400);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-mono-700);
+}
+
+/* 접근성: focus-visible — OGQ Primary 사용 */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* 접근성: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
