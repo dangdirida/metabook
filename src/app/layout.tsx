@@ -20,11 +20,7 @@ export const metadata: Metadata = {
     description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
   },
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/favicon.png", type: "image/png" },
-    ],
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.svg",
   },
 };
 
