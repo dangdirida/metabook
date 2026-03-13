@@ -10,7 +10,7 @@ import QRGenerator from "@/components/ui/QRGenerator";
 export default function LeftPanel() {
   const { bookId } = useParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"my" | "all">("all");
+  const [activeTab, setActiveTab] = useState<"my" | "all">("my");
   const [expandedBookId, setExpandedBookId] = useState<string | null>(
     bookId as string
   );

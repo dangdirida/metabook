@@ -1,17 +1,5 @@
 "use client";
 
-declare global {
-  interface Window {
-    Kakao: {
-      isInitialized: () => boolean;
-      init: (key: string) => void;
-      Share: {
-        sendDefault: (options: object) => void;
-      };
-    };
-  }
-}
-
 import { useState, useRef, useEffect } from "react";
 import {
   Send,
@@ -22,7 +10,6 @@ import {
   Image as ImageIcon,
   Flag,
   Copy,
-  Link2,
 } from "lucide-react";
 
 interface CommunityMessage {
@@ -298,42 +285,6 @@ export default function CommunityChat() {
               >
                 <Copy className="w-5 h-5 text-mono-500" />
                 <span className="text-sm">링크 복사</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (!window.Kakao) return;
-                  if (!window.Kakao.isInitialized()) {
-                    window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY || "");
-                  }
-                  const shareUrl = new URL(window.location.href);
-                  shareUrl.searchParams.set("tab", "community");
-                  window.Kakao.Share.sendDefault({
-                    objectType: "feed",
-                    content: {
-                      title: "MetaBook 독서 커뮤니티에 초대합니다!",
-                      description: "함께 책을 읽고 이야기를 나눠요",
-                      imageUrl: "https://metabook-two.vercel.app/og-image.png",
-                      link: {
-                        mobileWebUrl: shareUrl.toString(),
-                        webUrl: shareUrl.toString(),
-                      },
-                    },
-                    buttons: [
-                      {
-                        title: "커뮤니티 참여하기",
-                        link: {
-                          mobileWebUrl: shareUrl.toString(),
-                          webUrl: shareUrl.toString(),
-                        },
-                      },
-                    ],
-                  });
-                  setShowInvite(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-[#FEE500] rounded-xl hover:opacity-90 transition-opacity"
-              >
-                <Link2 className="w-5 h-5 text-mono-900" />
-                <span className="text-sm text-mono-900">카카오톡 공유</span>
               </button>
             </div>
             <button
