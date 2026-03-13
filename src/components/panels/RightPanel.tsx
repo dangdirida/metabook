@@ -19,6 +19,17 @@ interface ChatMessage {
 export default function RightPanel() {
   const { activeTab, setActiveTab, selectedAgentId } = usePanelStore();
 
+  // URL 파라미터로 탭 자동 전환
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "community") {
+        setActiveTab("community");
+      }
+    }
+  }, [setActiveTab]);
+
   return (
     <aside className="w-full md:w-[380px] border-l border-mono-200 flex-shrink-0 bg-white flex flex-col h-full">
       {/* 탭 헤더 */}
@@ -34,7 +45,7 @@ export default function RightPanel() {
             }`}
           >
             {tab === "ai"
-              ? "AI 대화"
+              ? "채팅"
               : tab === "community"
               ? "커뮤니티"
               : "2차 창작"}

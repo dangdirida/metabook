@@ -1,5 +1,17 @@
 "use client";
 
+declare global {
+  interface Window {
+    Kakao: {
+      isInitialized: () => boolean;
+      init: (key: string) => void;
+      Share: {
+        sendDefault: (options: object) => void;
+      };
+    };
+  }
+}
+
 import { useState, useRef, useEffect } from "react";
 import {
   Send,
@@ -187,9 +199,9 @@ export default function CommunityChat() {
                 )}
                 <div className={msg.userId === "me" ? "text-right" : ""}>
                   {msg.userId !== "me" && (
-                    <span className="text-xs font-medium text-mono-700">
+                    <p className="text-xs font-medium text-mono-700 mb-0.5 ml-1">
                       {msg.userName}
-                    </span>
+                    </p>
                   )}
                   <div
                     className={`inline-block px-3 py-2 rounded-xl text-sm max-w-[240px] text-left ${
@@ -200,7 +212,7 @@ export default function CommunityChat() {
                   >
                     {msg.content}
                   </div>
-                  <div className="flex items-center gap-1 mt-0.5">
+                  <div className={`flex items-center gap-1 mt-0.5 ${msg.userId === "me" ? "justify-end" : ""}`}>
                     <span className="text-[10px] text-mono-400">
                       {formatDate(msg.createdAt)}
                     </span>
@@ -277,7 +289,9 @@ export default function CommunityChat() {
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("tab", "community");
+                  navigator.clipboard.writeText(url.toString());
                   setShowInvite(false);
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 bg-mono-50 rounded-xl hover:bg-mono-100 transition-colors"
@@ -285,7 +299,39 @@ export default function CommunityChat() {
                 <Copy className="w-5 h-5 text-mono-500" />
                 <span className="text-sm">링크 복사</span>
               </button>
-              <button className="w-full flex items-center gap-3 px-4 py-3 bg-[#FEE500] rounded-xl hover:opacity-90 transition-opacity">
+              <button
+                onClick={() => {
+                  if (!window.Kakao) return;
+                  if (!window.Kakao.isInitialized()) {
+                    window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY || "");
+                  }
+                  const shareUrl = new URL(window.location.href);
+                  shareUrl.searchParams.set("tab", "community");
+                  window.Kakao.Share.sendDefault({
+                    objectType: "feed",
+                    content: {
+                      title: "MetaBook 독서 커뮤니티에 초대합니다!",
+                      description: "함께 책을 읽고 이야기를 나눠요",
+                      imageUrl: "https://metabook-two.vercel.app/og-image.png",
+                      link: {
+                        mobileWebUrl: shareUrl.toString(),
+                        webUrl: shareUrl.toString(),
+                      },
+                    },
+                    buttons: [
+                      {
+                        title: "커뮤니티 참여하기",
+                        link: {
+                          mobileWebUrl: shareUrl.toString(),
+                          webUrl: shareUrl.toString(),
+                        },
+                      },
+                    ],
+                  });
+                  setShowInvite(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-[#FEE500] rounded-xl hover:opacity-90 transition-opacity"
+              >
                 <Link2 className="w-5 h-5 text-mono-900" />
                 <span className="text-sm text-mono-900">카카오톡 공유</span>
               </button>

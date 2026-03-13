@@ -1,4 +1,4 @@
-import { Book, BookImage } from "@/types";
+import { Book, BookImage, Agent } from "@/types";
 
 function makeImages(bookId: string): BookImage[] {
   return [
@@ -8,6 +8,25 @@ function makeImages(bookId: string): BookImage[] {
     { id: "ch2-img2", bookId, chapterId: "ch2", url: "https://cdn.marble.worldlabs.ai/91f34581-0c18-491c-bd2b-9b5078e73df6/e22f9af5-7540-436f-9711-4e4e8e7aecbb_dust_mpi/thumbnail.webp", alt: "역사의 갈림길", caption: "역사의 갈림길", order: 4, worldUrl: "https://marble.worldlabs.ai/world/91f34581-0c18-491c-bd2b-9b5078e73df6" },
     { id: "ch3-img1", bookId, chapterId: "ch3", url: "https://cdn.marble.worldlabs.ai/234ae08a-7dee-491b-86f3-f9014113c2f2/5adbde74-5227-433d-8523-6b0a837a4802_dust_mpi/thumbnail.webp", alt: "고대 사원의 흔적", caption: "고대 사원의 흔적", order: 5, worldUrl: "https://marble.worldlabs.ai/world/234ae08a-7dee-491b-86f3-f9014113c2f2" },
     { id: "ch3-img2", bookId, chapterId: "ch3", url: "https://cdn.marble.worldlabs.ai/4e5ea988-46fd-4e6a-abd7-3d99cb65619c/1a4adcb6-0d7c-432f-8088-4a10c25b3148_dust_mpi/thumbnail.webp", alt: "탐험의 끝에서", caption: "탐험의 끝에서", order: 6, worldUrl: "https://marble.worldlabs.ai/world/4e5ea988-46fd-4e6a-abd7-3d99cb65619c" },
+  ];
+}
+
+function makeAgents(bookId: string): Agent[] {
+  return [
+    {
+      id: `${bookId}-a1`, bookId, name: "재레드 다이아몬드", role: "author", avatar: "",
+      personality: ["논리적", "학문적", "호기심 넘침"],
+      speechStyle: "차분하고 분석적인 말투로 설명하듯 이야기함",
+      forbiddenTopics: [], systemPrompt: "", isActive: true,
+      feedbackStats: { likes: 0, dislikes: 0 },
+    },
+    {
+      id: `${bookId}-a2`, bookId, name: "얄리", role: "supporting", avatar: "",
+      personality: ["호기심 많음", "직설적", "따뜻함"],
+      speechStyle: "순박하고 직접적인 말투, 진심 어린 질문을 던짐",
+      forbiddenTopics: [], systemPrompt: "", isActive: true,
+      feedbackStats: { likes: 0, dislikes: 0 },
+    },
   ];
 }
 
@@ -23,7 +42,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-1.png",
     description: "희망 없이 사람을 사랑하는 일이 가능할까 — 10년 만에 선보이는 백영옥 장편소설 완결판",
     chapters: [],
-    agents: [],
+    agents: makeAgents("lovers-lover"),
     images: makeImages("lovers-lover"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 341,
@@ -41,7 +60,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-2.png",
     description: "진통제와 수술 없이 바로 잡는다 — 20년 경력 한의사가 알려주는 내 몸의 신호 읽는 법",
     chapters: [],
-    agents: [],
+    agents: makeAgents("pain-encyclopedia"),
     images: makeImages("pain-encyclopedia"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 412,
@@ -59,7 +78,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-3.png",
     description: "뇌과학과 임상심리학이 무너진 마음에게 건네는 따뜻한 말 — 15만 부 기념 리커버 에디션",
     chapters: [],
-    agents: [],
+    agents: makeAgents("dont-know-myself"),
     images: makeImages("dont-know-myself"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 587,
@@ -77,7 +96,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-4.png",
     description: "수불 스님 간화선 집중수행 체험기 — 깊은 질문과 함께하는 철학적 수행의 여정",
     chapters: [],
-    agents: [],
+    agents: makeAgents("what-moves-me"),
     images: makeImages("what-moves-me"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 276,
@@ -95,7 +114,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-5.jpg",
     description: "거의 모든 사람과 효과적으로 협력하기 위한 전략 — HOW TO WORK WITH COMPLICATED PEOPLE",
     chapters: [],
-    agents: [],
+    agents: makeAgents("difficult-people"),
     images: makeImages("difficult-people"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 398,
@@ -113,7 +132,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-6.jpg",
     description: "RHYME & REASON 3 — Poetic Essay, Play, Comic을 아우르는 블랙코미디 앤솔로지",
     chapters: [],
-    agents: [],
+    agents: makeAgents("black-comedy"),
     images: makeImages("black-comedy"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 198,
@@ -131,7 +150,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/gy-7.jpg",
     description: "기상전문기자의 예측불허 인생 예보기 — 이상기후 앞에 선 기상전문기자의 초조하고도 설레는 마음",
     chapters: [],
-    agents: [],
+    agents: makeAgents("weather-interview"),
     images: makeImages("weather-interview"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 312,
@@ -151,7 +170,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/jr-1.jpg",
     description: "드래곤과 함께 성장하는 소년의 불꽃 같은 모험! 짜릿한 어린이 판타지 시리즈 3탄",
     chapters: [],
-    agents: [],
+    agents: makeAgents("dragon-hero-3"),
     images: makeImages("dragon-hero-3"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 289,
@@ -169,7 +188,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/jr-2.png",
     description: "세상에서 가장 큰 호박으로 만든 집에서 펼쳐지는 유쾌하고 따뜻한 동물 친구들의 이야기",
     chapters: [],
-    agents: [],
+    agents: makeAgents("big-pumpkin-house"),
     images: makeImages("big-pumpkin-house"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 198,
@@ -187,7 +206,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/jr-3.png",
     description: "유튜브 1700만 조회! 탁주쪼꼬가 알려주는 신나는 과학 — 힘과 소리의 원리를 만화로 쉽게!",
     chapters: [],
-    agents: [],
+    agents: makeAgents("science-level-up-4"),
     images: makeImages("science-level-up-4"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 356,
@@ -205,7 +224,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/jr-4.png",
     description: "어느 날 갑자기 어린이가 되고 만 어른의 눈으로 바라본 어린이의 세계 — 유쾌한 그림책",
     chapters: [],
-    agents: [],
+    agents: makeAgents("became-a-child"),
     images: makeImages("became-a-child"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 167,
@@ -223,7 +242,7 @@ export const mockBooks: Book[] = [
     coverImage: "/covers/jr-5.png",
     description: "기묘동 99번 버스를 타면 요괴 세계로! 사라진 그림자의 비밀을 파헤치는 짜릿한 어린이 판타지",
     chapters: [],
-    agents: [],
+    agents: makeAgents("yokai-bus-5"),
     images: makeImages("yokai-bus-5"),
     worldUrl: "https://marble.worldlabs.ai/world/dc2c65e4-68d3-4210-a01e-7a54cc9ded2a",
     communityMemberCount: 241,
