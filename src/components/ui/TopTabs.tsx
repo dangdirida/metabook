@@ -41,6 +41,7 @@ export default function TopTabs() {
   const { bookId } = useParams();
   const [activeTab, setActiveTab] = useState<TabType>("gallery");
   const [filterChip, setFilterChip] = useState("all");
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   const creations = getCreationsByBookId(bookId as string);
   const goods = getGoodsByBookId(bookId as string);
@@ -78,57 +79,76 @@ export default function TopTabs() {
   ];
 
   return (
-    <div className="bg-white border-t border-mono-200">
-      {/* 대탭 */}
-      <div className="flex border-b border-mono-200">
-        {tabs
-          .filter((t) => t.show)
-          .map((tab) => (
-            <button
-              key={tab.type}
-              onClick={() => setActiveTab(tab.type)}
-              className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab.type
-                  ? "text-primary-500 border-b-2 border-primary-500"
-                  : "text-mono-500 hover:text-mono-700"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-      </div>
+    <div className="bg-white border-t border-mono-200 flex flex-col">
+      {/* 클릭 가능한 타이틀 바 */}
+      <button
+        onClick={() => setGalleryOpen(!galleryOpen)}
+        className="flex items-center justify-between px-4 py-3 w-full hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm">✦</span>
+          <span className="text-sm font-semibold text-gray-800">창작 갤러리</span>
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? '' : 'rotate-180'}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+        </svg>
+      </button>
 
-      {/* 창작 갤러리 필터칩 */}
-      {activeTab === "gallery" && (
-        <div className="flex gap-2 px-4 py-2 overflow-x-auto">
-          {CREATION_FILTER_CHIPS.map((chip) => {
-            const count = chipCounts[chip.value] || 0;
-            const isActive = filterChip === chip.value;
-            const isDisabled = chip.value !== "all" && count === 0;
-
-            return (
+      {/* 열릴 때만 보이는 콘텐츠 */}
+      <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? 'max-h-[500px]' : 'max-h-0'}`}>
+        {/* 대탭 */}
+        <div className="flex border-b border-mono-200">
+          {tabs
+            .filter((t) => t.show)
+            .map((tab) => (
               <button
-                key={chip.value}
-                onClick={() => !isDisabled && setFilterChip(chip.value)}
-                disabled={isDisabled}
-                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors ${
-                  isActive
-                    ? "bg-primary-500 text-white"
-                    : isDisabled
-                    ? "bg-mono-100 text-mono-400 cursor-not-allowed"
-                    : "bg-mono-100 text-mono-600 hover:bg-mono-200"
+                key={tab.type}
+                onClick={() => setActiveTab(tab.type)}
+                className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab.type
+                    ? "text-primary-500 border-b-2 border-primary-500"
+                    : "text-mono-500 hover:text-mono-700"
                 }`}
               >
-                {chip.label}
+                {tab.icon}
+                {tab.label}
               </button>
-            );
-          })}
+            ))}
         </div>
-      )}
 
-      {/* 콘텐츠 */}
-      <div className="max-h-80 overflow-y-auto custom-scrollbar p-4">
+        {/* 창작 갤러리 필터칩 */}
+        {activeTab === "gallery" && (
+          <div className="flex gap-2 px-4 py-2 overflow-x-auto border-b border-mono-200">
+            {CREATION_FILTER_CHIPS.map((chip) => {
+              const count = chipCounts[chip.value] || 0;
+              const isActive = filterChip === chip.value;
+              const isDisabled = chip.value !== "all" && count === 0;
+
+              return (
+                <button
+                  key={chip.value}
+                  onClick={() => !isDisabled && setFilterChip(chip.value)}
+                  disabled={isDisabled}
+                  className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors ${
+                    isActive
+                      ? "bg-primary-500 text-white"
+                      : isDisabled
+                      ? "bg-mono-100 text-mono-400 cursor-not-allowed"
+                      : "bg-mono-100 text-mono-600 hover:bg-mono-200"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 콘텐츠 */}
+        <div className="max-h-80 overflow-y-auto custom-scrollbar p-4">
         {activeTab === "gallery" && (
           <>
             {filteredCreations.length > 0 ? (
@@ -225,6 +245,7 @@ export default function TopTabs() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
