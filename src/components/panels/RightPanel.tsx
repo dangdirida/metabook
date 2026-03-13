@@ -162,13 +162,14 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
           const lines = chunk.split("\n");
 
           for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (!data || data === "[DONE]") continue;
               try {
                 const parsed = JSON.parse(data);
-                if (parsed.content) {
-                  fullContent += parsed.content;
+                // Claude API 스트림 형식
+                if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
+                  fullContent += parsed.delta.text;
                   setMessages((prev) => {
                     const updated = [...prev];
                     updated[updated.length - 1] = {
@@ -178,9 +179,9 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
                     return updated;
                   });
                 }
-                // Claude API 스트림 형식
-                if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-                  fullContent += parsed.delta.text;
+                // 목업 응답 형식 (API 키 없을 때)
+                if (parsed.content) {
+                  fullContent += parsed.content;
                   setMessages((prev) => {
                     const updated = [...prev];
                     updated[updated.length - 1] = {
@@ -193,7 +194,6 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
               } catch {
                 // 파싱 실패 무시
               }
-            }
           }
         }
       }
