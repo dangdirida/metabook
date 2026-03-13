@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "image.yes24.com",
       },
+      {
+        protocol: "https",
+        hostname: "www.gimmyoung.com",
+      },
     ],
   },
 };

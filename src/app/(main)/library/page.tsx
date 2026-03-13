@@ -2,14 +2,16 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import BookCard from "@/components/ui/BookCard";
 import UserMenu from "@/components/ui/UserMenu";
-import { mockBooks, filterBooks } from "@/lib/mock-data";
+import { mockBooks } from "@/lib/mock-data";
+import { GALLERY_BOOKS } from "@/lib/gallery-books";
 import type { Book } from "@/types";
 
 const CATEGORIES = ["전체", "인문", "역사", "과학", "심리학", "경제", "교육", "수학", "물리학", "우주", "미래학", "사회"];
 const VISIBLE = 5;
+const PAGE_SIZE = 12;
 
 // --- 무한 캐러셀 ---
 function PublisherSlider({
@@ -22,13 +24,12 @@ function PublisherSlider({
   intervalMs?: number;
 }) {
   const len = books.length;
-  // 5배 복제 — 주니어김영사 3권도 충분히 커버
   const cloned = useMemo(
     () => [...books, ...books, ...books, ...books, ...books],
     [books]
   );
 
-  const [idx, setIdx] = useState(len * 2); // 가운데 세트에서 시작
+  const [idx, setIdx] = useState(len * 2);
   const [animated, setAnimated] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -47,13 +48,12 @@ function PublisherSlider({
     }, intervalMs);
   }, [clearTimer, intervalMs]);
 
-  // 경계 감시 → 순간이동
   useEffect(() => {
     if (idx >= len * 4) {
       const t = setTimeout(() => {
         setAnimated(false);
         setIdx(len * 2);
-      }, 520); // 애니메이션 끝나면
+      }, 520);
       return () => clearTimeout(t);
     }
     if (idx < len) {
@@ -65,7 +65,6 @@ function PublisherSlider({
     }
   }, [idx, len]);
 
-  // animated=false 후 다음 프레임에 다시 true
   useEffect(() => {
     if (!animated) {
       const raf = requestAnimationFrame(() => setAnimated(true));
@@ -73,7 +72,6 @@ function PublisherSlider({
     }
   }, [animated]);
 
-  // 자동 슬라이드 시작
   useEffect(() => {
     startTimer();
     return clearTimer;
@@ -99,7 +97,6 @@ function PublisherSlider({
         {title}
       </h2>
       <div className="relative group">
-        {/* 좌우 화살표 */}
         <button
           onClick={() => go(-1)}
           className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-[var(--color-mono-080)] shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -113,7 +110,6 @@ function PublisherSlider({
           <ChevronRight className="w-4 h-4 text-[var(--color-mono-990)]" />
         </button>
 
-        {/* 슬라이드 영역 */}
         <div className="overflow-hidden">
           <div
             className="flex"
@@ -135,7 +131,6 @@ function PublisherSlider({
         </div>
       </div>
 
-      {/* 도트 인디케이터 */}
       {len > 1 && (
         <div className="flex justify-center gap-1.5 mt-3">
           {books.map((_, i) => (
@@ -155,13 +150,31 @@ function PublisherSlider({
   );
 }
 
+// --- 갤러리 카드 (img 태그 직접 사용) ---
+function GalleryCard({ title, coverImage }: { title: string; coverImage: string }) {
+  return (
+    <div className="group">
+      <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={coverImage}
+          alt={title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+      <h3 className="mt-2 font-semibold text-[var(--color-mono-990)] truncate text-sm">
+        {title}
+      </h3>
+    </div>
+  );
+}
+
 // --- 메인 ---
 function LibraryContent() {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState("전체");
-  const [visibleCount, setVisibleCount] = useState(10);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   const isFiltering = search.trim() !== "" || category !== "전체";
 
@@ -174,38 +187,45 @@ function LibraryContent() {
     []
   );
 
-  const filteredBooks = useMemo(() => {
-    return filterBooks({
-      search,
-      genre: category === "전체" ? "" : category,
-    });
-  }, [search, category]);
+  // 갤러리 무한 순환 스크롤
+  const [displayedGallery, setDisplayedGallery] = useState(
+    GALLERY_BOOKS.slice(0, PAGE_SIZE)
+  );
+  const [page, setPage] = useState(1);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
-  // 카테고리/검색 바뀌면 visibleCount 리셋
   useEffect(() => {
-    setVisibleCount(10);
-  }, [search, category]);
-
-  const displayedBooks = filteredBooks.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredBooks.length;
-
-  // 무한 스크롤 IntersectionObserver
-  useEffect(() => {
-    if (!hasMore) return;
-    const el = bottomRef.current;
+    const el = loaderRef.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => prev + 10);
+          setPage((prev) => prev + 1);
         }
       },
       { threshold: 0.1 }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, filteredBooks.length]);
+  }, []);
+
+  useEffect(() => {
+    if (page === 1) return;
+    const startIdx = ((page - 1) * PAGE_SIZE) % GALLERY_BOOKS.length;
+    const newBooks: typeof GALLERY_BOOKS = [];
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      newBooks.push(GALLERY_BOOKS[(startIdx + i) % GALLERY_BOOKS.length]);
+    }
+    setDisplayedGallery((prev) => [...prev, ...newBooks]);
+  }, [page]);
+
+  // 검색/카테고리 필터링은 갤러리와 무관 — 슬라이더 숨김용
+  const filteredForSearch = useMemo(() => {
+    if (!search.trim()) return null;
+    const q = search.toLowerCase();
+    return GALLERY_BOOKS.filter((b) => b.title.toLowerCase().includes(q));
+  }, [search]);
 
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
@@ -218,7 +238,6 @@ function LibraryContent() {
             </h1>
             <UserMenu />
           </div>
-          {/* 검색바 */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-mono-400)]" />
             <input
@@ -233,7 +252,7 @@ function LibraryContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4">
-        {/* 슬라이더 섹션 (필터 중이 아닐 때만) */}
+        {/* 슬라이더 섹션 */}
         {!isFiltering && (
           <>
             <PublisherSlider
@@ -247,9 +266,11 @@ function LibraryContent() {
               books={juniorBooks}
               intervalMs={4700}
             />
-            <div className="border-t border-[var(--color-mono-080)]" />
           </>
         )}
+
+        {/* 슬라이더 ↔ 카테고리 사이 간격 */}
+        <div className="mt-16 border-t border-[var(--color-mono-080)]" />
 
         {/* 카테고리 탭바 */}
         <div className="py-4 -mx-4 px-4 overflow-x-auto scrollbar-hide">
@@ -270,40 +291,41 @@ function LibraryContent() {
           </div>
         </div>
 
-        {/* 도서 그리드 */}
+        {/* 도서 갤러리 그리드 — 무한 순환 스크롤 */}
         <div className="pb-8">
-          {displayedBooks.length > 0 ? (
-            <>
+          {filteredForSearch ? (
+            // 검색 결과
+            filteredForSearch.length > 0 ? (
               <div className="grid grid-cols-5 gap-4">
-                {displayedBooks.map((book) => (
-                  <BookCard key={book.id} book={book} />
+                {filteredForSearch.map((book, i) => (
+                  <GalleryCard key={`search-${i}`} {...book} />
                 ))}
               </div>
-
-              {/* 무한 스크롤 감지 영역 + 로딩 스피너 */}
-              {hasMore && (
-                <div
-                  ref={bottomRef}
-                  className="flex items-center justify-center gap-1.5 py-8"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:0ms]" />
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:150ms]" />
-                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:300ms]" />
-                </div>
-              )}
-            </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <h3 className="text-lg font-semibold text-[var(--color-mono-990)] mb-2">
+                  &ldquo;{search}&rdquo;에 대한 결과가 없어요
+                </h3>
+                <p className="text-[var(--color-mono-400)]">
+                  다른 검색어를 시도해보세요.
+                </p>
+              </div>
+            )
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <BookOpen className="w-16 h-16 text-mono-300 mb-4" />
-              <h3 className="text-lg font-semibold text-[var(--color-mono-990)] mb-2">
-                {search
-                  ? `"${search}"에 대한 결과가 없어요`
-                  : "조건에 맞는 책이 없어요"}
-              </h3>
-              <p className="text-mono-500">
-                다른 검색어나 카테고리를 시도해보세요.
-              </p>
-            </div>
+            // 무한 순환 스크롤
+            <>
+              <div className="grid grid-cols-5 gap-4">
+                {displayedGallery.map((book, i) => (
+                  <GalleryCard key={`gallery-${i}`} {...book} />
+                ))}
+              </div>
+              <div
+                ref={loaderRef}
+                className="h-10 flex items-center justify-center mt-4"
+              >
+                <div className="w-6 h-6 border-2 border-[var(--color-primary-500)] border-t-transparent rounded-full animate-spin" />
+              </div>
+            </>
           )}
         </div>
       </main>
