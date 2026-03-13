@@ -410,7 +410,7 @@ export default function CenterPanel() {
               <button
                 onClick={() => {
                   window.open(
-                    `/world/guns-germs-steel/${showWorldModal}`,
+                    `/world/${bookId}/${showWorldModal}`,
                     "_blank"
                   );
                   setShowWorldModal(null);
