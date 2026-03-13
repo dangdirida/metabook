@@ -315,6 +315,7 @@ function LibraryContent() {
         {/* 슬라이더 섹션 */}
         {!isFiltering && (
           <>
+            <div className="mt-10" />
             <PublisherSlider
               title="김영사"
               books={kimyoungsaBooks}
