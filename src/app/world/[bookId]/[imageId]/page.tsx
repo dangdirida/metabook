@@ -96,6 +96,13 @@ export default function WorldViewerPage() {
               alt={image.alt}
               className="w-full h-full object-cover"
             />
+          ) : book?.coverImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={book.coverImage}
+              alt={book.title}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary-900/50 via-primary-800/30 to-primary-900/50 flex items-center justify-center">
               <p className="text-2xl font-bold">{book?.title || "책"}</p>
