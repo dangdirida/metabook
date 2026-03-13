@@ -111,6 +111,46 @@ body {
   outline-offset: 2px;
 }
 
+/* 다크모드 전체화면 */
+html.dark-mode {
+  background: #1a1f1c;
+}
+
+html.dark-mode body {
+  background: #1a1f1c;
+  color: #f4f6f6;
+}
+
+html.dark-mode aside {
+  background: #1e2422 !important;
+  border-color: #2a3530 !important;
+}
+
+html.dark-mode header {
+  background: #1e2422 !important;
+  border-color: #2a3530 !important;
+}
+
+html.dark-mode .border-mono-200 {
+  border-color: #2a3530;
+}
+
+html.dark-mode .bg-white {
+  background: #1e2422;
+}
+
+html.dark-mode .text-mono-900 {
+  color: #e8eceb;
+}
+
+html.dark-mode .text-mono-500 {
+  color: #8a9894;
+}
+
+html.dark-mode .bg-mono-50 {
+  background: #243029;
+}
+
 /* 접근성: prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *,

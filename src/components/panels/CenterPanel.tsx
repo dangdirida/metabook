@@ -15,10 +15,12 @@ import {
   Palette,
   Bot,
   Share2,
+  Heart,
 } from "lucide-react";
 import { mockChapters } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
+import { isFavorite, addFavorite, removeFavorite } from "@/lib/favorites-store";
 
 export default function CenterPanel() {
   const { bookId } = useParams();
@@ -31,6 +33,7 @@ export default function CenterPanel() {
   const [currentChapter, setCurrentChapter] = useState(0);
   const [fontSize, setFontSize] = useState(16);
   const [isDark, setIsDark] = useState(false);
+  const [liked, setLiked] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [showHint, setShowHint] = useState(false);
@@ -64,7 +67,10 @@ export default function CenterPanel() {
     const savedFontSize = localStorage.getItem("metabook_fontsize");
     const savedDark = localStorage.getItem("metabook_dark");
     if (savedFontSize) setFontSize(Number(savedFontSize));
-    if (savedDark) setIsDark(savedDark === "true");
+    if (savedDark === "true") setIsDark(true);
+
+    // 찜 상태 복원
+    if (bookId) setLiked(isFavorite(bookId as string));
 
     // 첫 방문 힌트 (1회만)
     const hintShown = localStorage.getItem("metabook_hint_shown");
@@ -73,7 +79,7 @@ export default function CenterPanel() {
       setTimeout(() => setShowHint(false), 3000);
       localStorage.setItem("metabook_hint_shown", "true");
     }
-  }, []);
+  }, [bookId]);
 
   useEffect(() => {
     localStorage.setItem("metabook_fontsize", String(fontSize));
@@ -81,6 +87,13 @@ export default function CenterPanel() {
 
   useEffect(() => {
     localStorage.setItem("metabook_dark", String(isDark));
+    if (isDark) {
+      document.documentElement.classList.add("dark-mode");
+      document.body.style.background = "#1a1f1c";
+    } else {
+      document.documentElement.classList.remove("dark-mode");
+      document.body.style.background = "";
+    }
   }, [isDark]);
 
   // 스크롤 진행률
@@ -275,6 +288,26 @@ export default function CenterPanel() {
             className={`p-1.5 rounded-lg ml-1 ${isDark ? "hover:bg-mono-800" : "hover:bg-mono-100"}`}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={() => {
+              if (!book) return;
+              if (liked) {
+                removeFavorite(book.id);
+              } else {
+                addFavorite({
+                  bookId: book.id,
+                  title: book.title,
+                  coverImage: book.coverImage,
+                  addedAt: new Date().toISOString(),
+                });
+              }
+              setLiked(!liked);
+            }}
+            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-mono-800" : "hover:bg-mono-100"}`}
+            title="찜하기"
+          >
+            <Heart className={`w-4 h-4 ${liked ? "fill-red-500 text-red-500" : ""}`} />
           </button>
         </div>
       </div>

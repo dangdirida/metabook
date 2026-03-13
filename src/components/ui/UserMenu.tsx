@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Heart } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function UserMenu() {
   const { data: session } = useSession();
@@ -32,6 +33,14 @@ export default function UserMenu() {
   const initial = user.name?.[0] || "U";
 
   return (
+    <div className="flex items-center gap-2">
+      <Link
+        href="/favorites"
+        className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"
+        title="찜한 도서"
+      >
+        <Heart className="w-5 h-5 text-[var(--color-mono-500)]" />
+      </Link>
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
@@ -73,6 +82,7 @@ export default function UserMenu() {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 }

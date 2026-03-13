@@ -9,7 +9,7 @@ import { mockBooks } from "@/lib/mock-data";
 import { GALLERY_BOOKS } from "@/lib/gallery-books";
 import type { Book } from "@/types";
 
-const CATEGORIES = ["전체", "인문", "역사", "과학", "심리학", "경제", "교육", "수학", "물리학", "우주", "미래학", "사회"];
+const CATEGORIES = ["전체", "소설", "인문", "심리학", "자기계발", "건강", "에세이", "어린이", "판타지", "동화", "학습만화", "그림책"];
 const VISIBLE = 5;
 const PAGE_SIZE = 12;
 
@@ -220,7 +220,13 @@ function LibraryContent() {
     setDisplayedGallery((prev) => [...prev, ...newBooks]);
   }, [page]);
 
-  // 검색/카테고리 필터링은 갤러리와 무관 — 슬라이더 숨김용
+  // 카테고리 필터링 — mockBooks에서 장르 기반
+  const filteredByCategory = useMemo(() => {
+    if (category === "전체") return null;
+    return mockBooks.filter((b) => b.genre.includes(category));
+  }, [category]);
+
+  // 검색 필터링
   const filteredForSearch = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
@@ -369,6 +375,24 @@ function LibraryContent() {
                 </h3>
                 <p className="text-[var(--color-mono-400)]">
                   다른 검색어를 시도해보세요.
+                </p>
+              </div>
+            )
+          ) : filteredByCategory ? (
+            // 카테고리 필터 결과
+            filteredByCategory.length > 0 ? (
+              <div className="grid grid-cols-4 gap-8">
+                {filteredByCategory.map((book) => (
+                  <GalleryCard key={book.id} title={book.title} coverImage={book.coverImage} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <h3 className="text-lg font-semibold text-[var(--color-mono-990)] mb-2">
+                  &ldquo;{category}&rdquo; 카테고리에 도서가 없어요
+                </h3>
+                <p className="text-[var(--color-mono-400)]">
+                  다른 카테고리를 선택해보세요.
                 </p>
               </div>
             )

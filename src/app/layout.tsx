@@ -13,11 +13,13 @@ export const metadata: Metadata = {
     title: "MetaBook",
     description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "MetaBook",
     description: "책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼",
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.svg",

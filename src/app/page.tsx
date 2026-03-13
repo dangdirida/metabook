@@ -73,14 +73,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 책에서 뿜어져 나오는 빛 효과 */}
-      <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2">
-        <div className="w-[400px] h-[400px] bg-gradient-radial from-primary-500/20 via-secondary-500/10 to-transparent rounded-full blur-3xl animate-pulse-slow" />
-      </div>
-      <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2">
-        <div className="w-[200px] h-[300px] bg-gradient-to-t from-primary-400/15 via-white/5 to-transparent blur-2xl" style={{ clipPath: "polygon(30% 100%, 70% 100%, 90% 0%, 10% 0%)" }} />
-      </div>
-
       {/* 메인 콘텐츠 - 정중앙 */}
       <div className="relative z-10 flex flex-col items-center text-center px-6">
         <h1 className="text-6xl sm:text-7xl font-bold text-white mb-4 drop-shadow-lg">
@@ -92,7 +84,7 @@ export default function Home() {
 
         <button
           onClick={() => signIn("google", { callbackUrl: "/library" })}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-lg font-semibold text-white hover:bg-white/20 transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02]"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-lg font-semibold text-white hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
