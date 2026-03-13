@@ -252,6 +252,24 @@ function LibraryContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 pt-10">
+        {/* 히어로 섹션 */}
+        {!isFiltering && (
+          <section className="px-6 pt-10 pb-8">
+            <div className="max-w-2xl">
+              <p className="text-sm font-medium text-[#32d29d] mb-2 tracking-wide uppercase">
+                AI × Books × 김영사
+              </p>
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
+                책 속 세계가<br />살아납니다
+              </h1>
+              <p className="text-base text-gray-500 leading-relaxed">
+                김영사의 책들을 AI 캐릭터와 함께 탐험하고,<br />
+                나만의 독서 세계를 만들어보세요.
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* 슬라이더 섹션 */}
         {!isFiltering && (
           <>
@@ -273,7 +291,7 @@ function LibraryContent() {
         <div className="mt-20 border-t border-[var(--color-mono-080)]" />
 
         {/* 카테고리 탭바 */}
-        <div className="py-4 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+        <div className="py-4 mb-10 -mx-4 px-4 overflow-x-auto scrollbar-hide">
           <div className="flex gap-2 w-max">
             {CATEGORIES.map((cat) => (
               <button
@@ -292,11 +310,11 @@ function LibraryContent() {
         </div>
 
         {/* 도서 갤러리 그리드 — 무한 순환 스크롤 */}
-        <div className="mt-6 pb-8">
+        <div className="pb-8">
           {filteredForSearch ? (
             // 검색 결과
             filteredForSearch.length > 0 ? (
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-4 gap-8">
                 {filteredForSearch.map((book, i) => (
                   <GalleryCard key={`search-${i}`} {...book} />
                 ))}
@@ -314,7 +332,7 @@ function LibraryContent() {
           ) : (
             // 무한 순환 스크롤
             <>
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-4 gap-8">
                 {displayedGallery.map((book, i) => (
                   <GalleryCard key={`gallery-${i}`} {...book} />
                 ))}
