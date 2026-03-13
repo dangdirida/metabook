@@ -6,36 +6,98 @@ import { Search, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import BookCard from "@/components/ui/BookCard";
 import UserMenu from "@/components/ui/UserMenu";
 import { mockBooks, filterBooks } from "@/lib/mock-data";
+import type { Book } from "@/types";
 
 const CATEGORIES = ["전체", "인문", "역사", "과학", "심리학", "경제", "교육", "수학", "물리학", "우주", "미래학", "사회"];
 
-// --- 슬라이더 컴포넌트 ---
-function BookSlider({ title, books }: { title: string; books: typeof mockBooks }) {
-  const [current, setCurrent] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const maxIndex = Math.max(0, books.length - 5);
+// 책이 5권 미만이면 5권 이상이 될 때까지 복제
+function padBooks(books: Book[]): Book[] {
+  if (books.length === 0) return [];
+  const result = [...books];
+  while (result.length < 5) {
+    result.push(...books);
+  }
+  return result;
+}
 
-  const resetTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+// --- 무한 캐러셀 ---
+function PublisherSlider({ title, books: rawBooks }: { title: string; books: Book[] }) {
+  const books = useMemo(() => padBooks(rawBooks), [rawBooks]);
+  const len = books.length;
+
+  // 3배 복제: [set0 | set1(초기) | set2]
+  const tripled = useMemo(() => [...books, ...books, ...books], [books]);
+
+  const [index, setIndex] = useState(len); // set1 시작점
+  const [animated, setAnimated] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const jumpingRef = useRef(false);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
     timerRef.current = setInterval(() => {
-      setCurrent((prev) => (prev >= maxIndex ? 0 : prev + 1));
+      setIndex((prev) => prev + 1);
+      setAnimated(true);
     }, 2800);
-  }, [maxIndex]);
+  }, [clearTimer]);
+
+  // 경계 도달 시 순간이동
+  useEffect(() => {
+    if (jumpingRef.current) return;
+
+    if (index >= len * 2) {
+      jumpingRef.current = true;
+      // 애니메이션 완료 후 순간이동
+      const t = setTimeout(() => {
+        setAnimated(false);
+        setIndex(len);
+        jumpingRef.current = false;
+      }, 520);
+      return () => clearTimeout(t);
+    }
+
+    if (index < len) {
+      jumpingRef.current = true;
+      const t = setTimeout(() => {
+        setAnimated(false);
+        setIndex(len + (index % len));
+        jumpingRef.current = false;
+      }, 520);
+      return () => clearTimeout(t);
+    }
+  }, [index, len]);
+
+  // animated가 false로 바뀌면 다음 프레임에서 다시 true
+  useEffect(() => {
+    if (!animated) {
+      const raf = requestAnimationFrame(() => setAnimated(true));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [animated]);
 
   useEffect(() => {
-    resetTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [resetTimer]);
+    startTimer();
+    return clearTimer;
+  }, [startTimer, clearTimer]);
 
   const go = (dir: -1 | 1) => {
-    setCurrent((prev) => {
-      if (dir === -1) return prev <= 0 ? maxIndex : prev - 1;
-      return prev >= maxIndex ? 0 : prev + 1;
-    });
-    resetTimer();
+    setAnimated(true);
+    setIndex((prev) => prev + dir);
+    startTimer();
   };
 
-  const dotCount = maxIndex + 1;
+  const activeDot = index % len;
+
+  const goToDot = (dotIndex: number) => {
+    setAnimated(true);
+    // 현재 set1 기준 위치로 이동
+    setIndex(len + dotIndex);
+    startTimer();
+  };
 
   return (
     <section className="py-5">
@@ -58,11 +120,14 @@ function BookSlider({ title, books }: { title: string; books: typeof mockBooks }
         {/* 슬라이드 영역 */}
         <div className="overflow-hidden">
           <div
-            className="flex gap-4 transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(calc(-${current} * (calc((100% - 64px) / 5) + 16px)))` }}
+            className="flex gap-4"
+            style={{
+              transition: animated ? "transform 500ms ease-in-out" : "none",
+              transform: `translateX(calc(-${index} * (calc((100% - 64px) / 5) + 16px)))`,
+            }}
           >
-            {books.map((book) => (
-              <div key={book.id} className="flex-shrink-0" style={{ width: "calc((100% - 64px) / 5)" }}>
+            {tripled.map((book, i) => (
+              <div key={`${book.id}-${i}`} className="flex-shrink-0" style={{ width: "calc((100% - 64px) / 5)" }}>
                 <BookCard book={book} />
               </div>
             ))}
@@ -71,14 +136,14 @@ function BookSlider({ title, books }: { title: string; books: typeof mockBooks }
       </div>
 
       {/* 도트 인디케이터 */}
-      {dotCount > 1 && (
+      {len > 1 && (
         <div className="flex justify-center gap-1.5 mt-3">
-          {Array.from({ length: dotCount }).map((_, i) => (
+          {books.map((_, i) => (
             <button
               key={i}
-              onClick={() => { setCurrent(i); resetTimer(); }}
+              onClick={() => goToDot(i)}
               className={`w-2 h-2 rounded-full transition-colors ${
-                i === current ? "bg-[var(--color-primary-500)]" : "bg-[var(--color-mono-080)]"
+                i === activeDot ? "bg-[var(--color-primary-500)]" : "bg-[var(--color-mono-080)]"
               }`}
             />
           ))}
@@ -119,7 +184,7 @@ function LibraryContent() {
           </div>
           {/* 검색바 */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-mono-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-mono-400)]" />
             <input
               type="text"
               value={search}
@@ -135,9 +200,9 @@ function LibraryContent() {
         {/* 슬라이더 섹션 (필터 중이 아닐 때만) */}
         {!isFiltering && (
           <>
-            <BookSlider title="김영사" books={kimyoungsaBooks} />
+            <PublisherSlider title="김영사" books={kimyoungsaBooks} />
             <div className="border-t border-[var(--color-mono-080)]" />
-            <BookSlider title="주니어김영사" books={juniorBooks} />
+            <PublisherSlider title="주니어김영사" books={juniorBooks} />
             <div className="border-t border-[var(--color-mono-080)]" />
           </>
         )}
