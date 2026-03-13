@@ -29,7 +29,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["인문", "역사", "과학"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-guns-germs-steel.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/7884018-L.jpg",
     description: "인류 문명의 불평등은 어디서 비롯되었는가? 1만 3천 년 인류 역사의 수수께끼를 풀어낸 역작.",
     chapters: [],
     agents: [
@@ -50,7 +50,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["인문", "역사"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-sapiens.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/8634250-L.jpg",
     description: "유인원에서 사이보그까지, 인류 역사의 대담하고 도발적인 대항해.",
     chapters: [],
     agents: [
@@ -70,7 +70,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["과학", "우주"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-cosmos.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/8739161-L.jpg",
     description: "138억 년 우주의 역사를 담은 과학 에세이. 우리는 어디서 왔고 어디로 가는가.",
     chapters: [],
     agents: [
@@ -90,7 +90,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["심리학", "경제"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-thinking-fast-slow.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/8323892-L.jpg",
     description: "노벨경제학상 수상자가 밝히는 인간 사고의 두 시스템.",
     chapters: [],
     agents: [
@@ -151,7 +151,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["인문", "미래학"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-homo-deus.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/9295344-L.jpg",
     description: "사피엔스의 후속작. 인류의 미래, 신이 되려는 호모 사피엔스의 도전.",
     chapters: [],
     agents: [
@@ -173,7 +173,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["인문", "사회"],
     ageGroup: "성인",
-    coverImage: "/covers/cover-21-lessons.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/9281906-L.jpg",
     description: "지금 이 순간, 우리가 직면한 21가지 핵심 문제에 대한 하라리의 제언.",
     chapters: [],
     agents: [
@@ -216,7 +216,7 @@ export const mockBooks: Book[] = [
     publisher: "김영사",
     genre: ["과학", "물리학"],
     ageGroup: "청소년",
-    coverImage: "/covers/cover-brief-history-time.svg",
+    coverImage: "https://covers.openlibrary.org/b/id/8739470-L.jpg",
     description: "블랙홀, 빅뱅, 시간의 본질까지. 현대 물리학의 최전선을 안내하는 명저.",
     chapters: [],
     agents: [

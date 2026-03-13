@@ -9,69 +9,63 @@ import { mockBooks, filterBooks } from "@/lib/mock-data";
 import type { Book } from "@/types";
 
 const CATEGORIES = ["전체", "인문", "역사", "과학", "심리학", "경제", "교육", "수학", "물리학", "우주", "미래학", "사회"];
-
-// 책이 5권 미만이면 5권 이상이 될 때까지 복제
-function padBooks(books: Book[]): Book[] {
-  if (books.length === 0) return [];
-  const result = [...books];
-  while (result.length < 5) {
-    result.push(...books);
-  }
-  return result;
-}
+const VISIBLE = 5;
 
 // --- 무한 캐러셀 ---
-function PublisherSlider({ title, books: rawBooks }: { title: string; books: Book[] }) {
-  const books = useMemo(() => padBooks(rawBooks), [rawBooks]);
+function PublisherSlider({
+  title,
+  books,
+  intervalMs = 3000,
+}: {
+  title: string;
+  books: Book[];
+  intervalMs?: number;
+}) {
   const len = books.length;
+  // 5배 복제 — 주니어김영사 3권도 충분히 커버
+  const cloned = useMemo(
+    () => [...books, ...books, ...books, ...books, ...books],
+    [books]
+  );
 
-  // 3배 복제: [set0 | set1(초기) | set2]
-  const tripled = useMemo(() => [...books, ...books, ...books], [books]);
-
-  const [index, setIndex] = useState(len); // set1 시작점
+  const [idx, setIdx] = useState(len * 2); // 가운데 세트에서 시작
   const [animated, setAnimated] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const jumpingRef = useRef(false);
 
   const clearTimer = useCallback(() => {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
   }, []);
 
   const startTimer = useCallback(() => {
     clearTimer();
     timerRef.current = setInterval(() => {
-      setIndex((prev) => prev + 1);
+      setIdx((prev) => prev + 1);
       setAnimated(true);
-    }, 2800);
-  }, [clearTimer]);
+    }, intervalMs);
+  }, [clearTimer, intervalMs]);
 
-  // 경계 도달 시 순간이동
+  // 경계 감시 → 순간이동
   useEffect(() => {
-    if (jumpingRef.current) return;
-
-    if (index >= len * 2) {
-      jumpingRef.current = true;
-      // 애니메이션 완료 후 순간이동
+    if (idx >= len * 4) {
       const t = setTimeout(() => {
         setAnimated(false);
-        setIndex(len);
-        jumpingRef.current = false;
+        setIdx(len * 2);
+      }, 520); // 애니메이션 끝나면
+      return () => clearTimeout(t);
+    }
+    if (idx < len) {
+      const t = setTimeout(() => {
+        setAnimated(false);
+        setIdx(len * 3 - 1);
       }, 520);
       return () => clearTimeout(t);
     }
+  }, [idx, len]);
 
-    if (index < len) {
-      jumpingRef.current = true;
-      const t = setTimeout(() => {
-        setAnimated(false);
-        setIndex(len + (index % len));
-        jumpingRef.current = false;
-      }, 520);
-      return () => clearTimeout(t);
-    }
-  }, [index, len]);
-
-  // animated가 false로 바뀌면 다음 프레임에서 다시 true
+  // animated=false 후 다음 프레임에 다시 true
   useEffect(() => {
     if (!animated) {
       const raf = requestAnimationFrame(() => setAnimated(true));
@@ -79,6 +73,7 @@ function PublisherSlider({ title, books: rawBooks }: { title: string; books: Boo
     }
   }, [animated]);
 
+  // 자동 슬라이드 시작
   useEffect(() => {
     startTimer();
     return clearTimer;
@@ -86,22 +81,23 @@ function PublisherSlider({ title, books: rawBooks }: { title: string; books: Boo
 
   const go = (dir: -1 | 1) => {
     setAnimated(true);
-    setIndex((prev) => prev + dir);
+    setIdx((prev) => prev + dir);
     startTimer();
   };
 
-  const activeDot = index % len;
+  const activeDot = ((idx % len) + len) % len;
 
-  const goToDot = (dotIndex: number) => {
+  const goToDot = (dotIdx: number) => {
     setAnimated(true);
-    // 현재 set1 기준 위치로 이동
-    setIndex(len + dotIndex);
+    setIdx(len * 2 + dotIdx);
     startTimer();
   };
 
   return (
     <section className="py-5">
-      <h2 className="text-lg font-bold text-[var(--color-mono-990)] mb-4">{title}</h2>
+      <h2 className="text-xl font-bold text-[var(--color-mono-990)] mb-4">
+        {title}
+      </h2>
       <div className="relative group">
         {/* 좌우 화살표 */}
         <button
@@ -120,14 +116,18 @@ function PublisherSlider({ title, books: rawBooks }: { title: string; books: Boo
         {/* 슬라이드 영역 */}
         <div className="overflow-hidden">
           <div
-            className="flex gap-4"
+            className="flex"
             style={{
-              transition: animated ? "transform 500ms ease-in-out" : "none",
-              transform: `translateX(calc(-${index} * (calc((100% - 64px) / 5) + 16px)))`,
+              transition: animated ? "transform 0.5s ease" : "none",
+              transform: `translateX(-${idx * (100 / VISIBLE)}%)`,
             }}
           >
-            {tripled.map((book, i) => (
-              <div key={`${book.id}-${i}`} className="flex-shrink-0" style={{ width: "calc((100% - 64px) / 5)" }}>
+            {cloned.map((book, i) => (
+              <div
+                key={`${book.id}-${i}`}
+                className="flex-none"
+                style={{ width: "20%", paddingRight: "16px" }}
+              >
                 <BookCard book={book} />
               </div>
             ))}
@@ -143,7 +143,9 @@ function PublisherSlider({ title, books: rawBooks }: { title: string; books: Boo
               key={i}
               onClick={() => goToDot(i)}
               className={`w-2 h-2 rounded-full transition-colors ${
-                i === activeDot ? "bg-[var(--color-primary-500)]" : "bg-[var(--color-mono-080)]"
+                i === activeDot
+                  ? "bg-[var(--color-primary-500)]"
+                  : "bg-[var(--color-mono-080)]"
               }`}
             />
           ))}
@@ -158,11 +160,19 @@ function LibraryContent() {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState("전체");
+  const [visibleCount, setVisibleCount] = useState(10);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const isFiltering = search.trim() !== "" || category !== "전체";
 
-  const kimyoungsaBooks = useMemo(() => mockBooks.filter((b) => b.publisher === "김영사"), []);
-  const juniorBooks = useMemo(() => mockBooks.filter((b) => b.publisher === "주니어김영사"), []);
+  const kimyoungsaBooks = useMemo(
+    () => mockBooks.filter((b) => b.publisher === "김영사"),
+    []
+  );
+  const juniorBooks = useMemo(
+    () => mockBooks.filter((b) => b.publisher === "주니어김영사"),
+    []
+  );
 
   const filteredBooks = useMemo(() => {
     return filterBooks({
@@ -170,6 +180,32 @@ function LibraryContent() {
       genre: category === "전체" ? "" : category,
     });
   }, [search, category]);
+
+  // 카테고리/검색 바뀌면 visibleCount 리셋
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [search, category]);
+
+  const displayedBooks = filteredBooks.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredBooks.length;
+
+  // 무한 스크롤 IntersectionObserver
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = bottomRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 10);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, filteredBooks.length]);
 
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
@@ -200,9 +236,17 @@ function LibraryContent() {
         {/* 슬라이더 섹션 (필터 중이 아닐 때만) */}
         {!isFiltering && (
           <>
-            <PublisherSlider title="김영사" books={kimyoungsaBooks} />
+            <PublisherSlider
+              title="김영사"
+              books={kimyoungsaBooks}
+              intervalMs={3200}
+            />
             <div className="border-t border-[var(--color-mono-080)]" />
-            <PublisherSlider title="주니어김영사" books={juniorBooks} />
+            <PublisherSlider
+              title="주니어김영사"
+              books={juniorBooks}
+              intervalMs={4700}
+            />
             <div className="border-t border-[var(--color-mono-080)]" />
           </>
         )}
@@ -228,19 +272,37 @@ function LibraryContent() {
 
         {/* 도서 그리드 */}
         <div className="pb-8">
-          {filteredBooks.length > 0 ? (
-            <div className="grid grid-cols-5 gap-4">
-              {filteredBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
+          {displayedBooks.length > 0 ? (
+            <>
+              <div className="grid grid-cols-5 gap-4">
+                {displayedBooks.map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+              </div>
+
+              {/* 무한 스크롤 감지 영역 + 로딩 스피너 */}
+              {hasMore && (
+                <div
+                  ref={bottomRef}
+                  className="flex items-center justify-center gap-1.5 py-8"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:0ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:150ms]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-primary-500)] animate-bounce [animation-delay:300ms]" />
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <BookOpen className="w-16 h-16 text-mono-300 mb-4" />
               <h3 className="text-lg font-semibold text-[var(--color-mono-990)] mb-2">
-                {search ? `"${search}"에 대한 결과가 없어요` : "조건에 맞는 책이 없어요"}
+                {search
+                  ? `"${search}"에 대한 결과가 없어요`
+                  : "조건에 맞는 책이 없어요"}
               </h3>
-              <p className="text-mono-500">다른 검색어나 카테고리를 시도해보세요.</p>
+              <p className="text-mono-500">
+                다른 검색어나 카테고리를 시도해보세요.
+              </p>
             </div>
           )}
         </div>
