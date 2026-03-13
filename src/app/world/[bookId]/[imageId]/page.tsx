@@ -16,7 +16,7 @@ import { getBookById } from "@/lib/mock-data";
 export default function WorldViewerPage() {
   const { bookId, imageId } = useParams();
   const book = getBookById(bookId as string);
-  const image = book?.images?.find(img => img.id === imageId);
+  const image = book?.images?.find(img => img.id === imageId) ?? book?.images?.[0];
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -88,13 +88,7 @@ export default function CenterPanel() {
     return () => el.removeEventListener("scroll", handleScroll);
   }, [currentChapter]);
 
-  // 스크롤 위치 복원
-  useEffect(() => {
-    const saved = localStorage.getItem(`metabook_scroll_ch${chapter.number}`);
-    if (saved && contentRef.current) {
-      contentRef.current.scrollTop = Number(saved);
-    }
-  }, [chapter.number]);
+  // 스크롤 위치 복원 제거 — 챕터 이동 시 항상 맨 위에서 시작
 
   const saveScrollPosition = () => {
     if (contentRef.current) {
@@ -110,7 +104,9 @@ export default function CenterPanel() {
     const next = currentChapter + dir;
     if (next >= 0 && next < totalChapters) {
       setCurrentChapter(next);
-      if (contentRef.current) contentRef.current.scrollTop = 0;
+      setTimeout(() => {
+        if (contentRef.current) contentRef.current.scrollTop = 0;
+      }, 0);
     }
   };
 

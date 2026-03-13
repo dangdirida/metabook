@@ -117,13 +117,8 @@ function BookItem({
   onToggleExpand: () => void;
   onShowQR: (imageId: string) => void;
 }) {
-  // 삽화 목 데이터
-  const mockImages = [
-    { id: "img1", label: "삽화 1" },
-    { id: "img2", label: "삽화 2" },
-    { id: "img3", label: "삽화 3" },
-    { id: "img4", label: "삽화 4" },
-  ];
+  // book.images에서 앞 4개만 사용, 없으면 빈 배열
+  const displayImages = book.images?.slice(0, 4) ?? [];
 
   return (
     <div className="mb-1">
@@ -172,16 +167,21 @@ function BookItem({
         }`}
       >
         <div className="grid grid-cols-2 gap-2 p-2 pl-12">
-          {mockImages.map((img) => (
+          {displayImages.map((img, idx) => (
             <div key={img.id} className="relative group">
-              <div className="aspect-square bg-gradient-to-br from-mono-100 to-mono-200 rounded-lg flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary-300 transition-all">
-                <span className="text-xs text-mono-400">{img.label}</span>
-                {/* 🌐 배지 */}
+              <div className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-300 transition-all bg-mono-100">
+                {img.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={img.url} alt={img.alt || `삽화 ${idx + 1}`} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-mono-100 to-mono-200 flex items-center justify-center">
+                    <span className="text-xs text-mono-400">삽화 {idx + 1}</span>
+                  </div>
+                )}
                 <div className="absolute bottom-1 right-1">
-                  <Globe className="w-3.5 h-3.5 text-primary-500" />
+                  <Globe className="w-3.5 h-3.5 text-white drop-shadow" />
                 </div>
               </div>
-              {/* QR 아이콘 */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
