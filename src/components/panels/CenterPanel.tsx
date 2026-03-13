@@ -39,7 +39,14 @@ export default function CenterPanel() {
     y: number;
     text: string;
   } | null>(null);
-  const [showWorldModal, setShowWorldModal] = useState<string | null>(null);
+  const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
+  const bookWorldUrlMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    book?.images?.forEach(img => {
+      map[img.id] = img.worldUrl || book?.worldUrl || "";
+    });
+    return map;
+  }, [book]);
   const [popover, setPopover] = useState<{
     x: number;
     y: number;
@@ -294,7 +301,7 @@ export default function CenterPanel() {
                     caption={chapter.images[0].caption}
                     url={bookImageMap[chapter.images[0].id]}
                     isDark={isDark}
-                    onClick={() => setShowWorldModal(chapter.images[0].id)}
+                    onClick={() => setShowWorldModal({ imageId: chapter.images[0].id, worldUrl: bookWorldUrlMap[chapter.images[0].id] })}
                   />
                 )}
                 {i === 2 && chapter.images[1] && (
@@ -302,7 +309,7 @@ export default function CenterPanel() {
                     caption={chapter.images[1].caption}
                     url={bookImageMap[chapter.images[1].id]}
                     isDark={isDark}
-                    onClick={() => setShowWorldModal(chapter.images[1].id)}
+                    onClick={() => setShowWorldModal({ imageId: chapter.images[1].id, worldUrl: bookWorldUrlMap[chapter.images[1].id] })}
                   />
                 )}
               </div>
@@ -409,10 +416,9 @@ export default function CenterPanel() {
               </button>
               <button
                 onClick={() => {
-                  window.open(
-                    `/world/${bookId}/${showWorldModal}`,
-                    "_blank"
-                  );
+                  if (showWorldModal?.worldUrl) {
+                    window.open(showWorldModal.worldUrl, "_blank", "noopener,noreferrer");
+                  }
                   setShowWorldModal(null);
                 }}
                 className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600"
