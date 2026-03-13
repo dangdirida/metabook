@@ -90,6 +90,25 @@ const config: Config = {
           pink: "#F06595",
         },
       },
+      keyframes: {
+        'scroll-left': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        'scroll-right': {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        'scroll-left-slow': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        'scroll-left': 'scroll-left 30s linear infinite',
+        'scroll-right': 'scroll-right 35s linear infinite',
+        'scroll-left-slow': 'scroll-left-slow 45s linear infinite',
+      },
       fontFamily: {
         sans: [
           "Pretendard Variable",

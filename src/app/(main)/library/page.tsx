@@ -252,22 +252,64 @@ function LibraryContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 pt-10">
-        {/* 히어로 섹션 */}
+        {/* 히어로 배너 */}
         {!isFiltering && (
-          <section className="px-6 pt-10 pb-8">
-            <div className="max-w-2xl">
-              <p className="text-sm font-medium text-[#32d29d] mb-2 tracking-wide uppercase">
-                AI × Books × 김영사
-              </p>
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
-                책 속 세계가<br />살아납니다
+          <div className="relative w-full overflow-hidden bg-[#0a0a0a] rounded-2xl" style={{height: '420px'}}>
+            {/* 책 표지 흐르는 배경 — 3줄, 반대방향 */}
+            <div className="absolute inset-0 flex flex-col gap-3 opacity-35" style={{top: '-20px'}}>
+              {/* 1번 줄 — 왼쪽으로 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="flex gap-3 animate-scroll-left" style={{width: 'max-content'}}>
+                {[...Array(3)].flatMap(() => [
+                  '/covers/gy-1.png', '/covers/gy-2.png', '/covers/gy-3.png', '/covers/gy-4.png',
+                  '/covers/gy-5.jpg', '/covers/gy-6.jpg', '/covers/gy-7.jpg',
+                  '/covers/jr-1.jpg', '/covers/jr-2.png', '/covers/jr-3.png',
+                ]).map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={`row1-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                ))}
+              </div>
+              {/* 2번 줄 — 오른쪽으로 */}
+              <div className="flex gap-3 animate-scroll-right" style={{width: 'max-content'}}>
+                {[...Array(3)].flatMap(() => [
+                  '/covers/jr-4.png', '/covers/jr-5.png', '/covers/gy-7.jpg',
+                  '/covers/gy-1.png', '/covers/gy-3.png', '/covers/gy-5.jpg',
+                  '/covers/jr-1.jpg', '/covers/gy-2.png', '/covers/jr-2.png',
+                ]).map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={`row2-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                ))}
+              </div>
+              {/* 3번 줄 — 왼쪽으로 (느리게) */}
+              <div className="flex gap-3 animate-scroll-left-slow" style={{width: 'max-content'}}>
+                {[...Array(3)].flatMap(() => [
+                  '/covers/gy-6.jpg', '/covers/jr-3.png', '/covers/gy-4.png',
+                  '/covers/jr-5.png', '/covers/gy-2.png', '/covers/jr-4.png',
+                  '/covers/gy-7.jpg', '/covers/gy-1.png', '/covers/gy-3.png',
+                ]).map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={`row3-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                ))}
+              </div>
+            </div>
+
+            {/* 그라디언트 오버레이 (좌우 페이드) */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-transparent to-[#0a0a0a]" />
+            {/* 어두운 오버레이 */}
+            <div className="absolute inset-0 bg-[#0a0a0a]/50" />
+
+            {/* 텍스트 콘텐츠 */}
+            <div className="absolute inset-0 flex flex-col justify-center px-12">
+              <h1 className="text-white font-bold leading-none mb-4" style={{fontSize: '72px', letterSpacing: '-2px'}}>
+                책 속 세계가<br />
+                <span style={{color: '#32d29d'}}>살아납니다.</span>
               </h1>
-              <p className="text-base text-gray-500 leading-relaxed">
+              <p className="text-white/60 text-lg leading-relaxed" style={{maxWidth: '480px'}}>
                 김영사의 책들을 AI 캐릭터와 함께 탐험하고,<br />
                 나만의 독서 세계를 만들어보세요.
               </p>
             </div>
-          </section>
+          </div>
         )}
 
         {/* 슬라이더 섹션 */}
