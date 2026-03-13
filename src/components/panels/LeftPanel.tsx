@@ -28,8 +28,15 @@ export default function LeftPanel() {
       {currentBook && (
         <div className="p-4 border-b border-mono-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center flex-shrink-0">
-              <BookOpen className="w-6 h-6 text-primary-400" />
+            <div className="w-12 h-16 rounded-lg flex-shrink-0 overflow-hidden bg-mono-100">
+              {currentBook.coverImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentBook.coverImage} alt={currentBook.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-primary-500" />
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-mono-900 text-sm truncate">
@@ -129,8 +136,15 @@ function BookItem({
           onClick={onSelect}
           className="flex items-center gap-2 flex-1 min-w-0"
         >
-          <div className="w-8 h-10 bg-gradient-to-br from-primary-100 to-primary-200 rounded flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-4 h-4 text-primary-400" />
+          <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-mono-100">
+            {book.coverImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-primary-500" />
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-mono-900 truncate">
