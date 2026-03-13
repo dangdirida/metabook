@@ -251,7 +251,7 @@ function LibraryContent() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4">
+      <main className="max-w-7xl mx-auto px-4 pt-10">
         {/* 슬라이더 섹션 */}
         {!isFiltering && (
           <>
@@ -270,7 +270,7 @@ function LibraryContent() {
         )}
 
         {/* 슬라이더 ↔ 카테고리 사이 간격 */}
-        <div className="mt-16 border-t border-[var(--color-mono-080)]" />
+        <div className="mt-20 border-t border-[var(--color-mono-080)]" />
 
         {/* 카테고리 탭바 */}
         <div className="py-4 -mx-4 px-4 overflow-x-auto scrollbar-hide">
@@ -292,7 +292,7 @@ function LibraryContent() {
         </div>
 
         {/* 도서 갤러리 그리드 — 무한 순환 스크롤 */}
-        <div className="pb-8">
+        <div className="mt-6 pb-8">
           {filteredForSearch ? (
             // 검색 결과
             filteredForSearch.length > 0 ? (
