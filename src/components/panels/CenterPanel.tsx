@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useParams } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,9 +17,17 @@ import {
   Share2,
 } from "lucide-react";
 import { mockChapters } from "@/lib/mock-content";
+import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
 
 export default function CenterPanel() {
+  const { bookId } = useParams();
+  const book = getBookById(bookId as string);
+  const bookImageMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    book?.images?.forEach(img => { map[img.id] = img.url; });
+    return map;
+  }, [book]);
   const [currentChapter, setCurrentChapter] = useState(0);
   const [fontSize, setFontSize] = useState(16);
   const [isDark, setIsDark] = useState(false);
@@ -287,6 +296,7 @@ export default function CenterPanel() {
                 {i === 0 && chapter.images[0] && (
                   <ImageFigure
                     caption={chapter.images[0].caption}
+                    url={bookImageMap[chapter.images[0].id]}
                     isDark={isDark}
                     onClick={() => setShowWorldModal(chapter.images[0].id)}
                   />
@@ -294,6 +304,7 @@ export default function CenterPanel() {
                 {i === 2 && chapter.images[1] && (
                   <ImageFigure
                     caption={chapter.images[1].caption}
+                    url={bookImageMap[chapter.images[1].id]}
                     isDark={isDark}
                     onClick={() => setShowWorldModal(chapter.images[1].id)}
                   />
@@ -422,10 +433,12 @@ export default function CenterPanel() {
 
 function ImageFigure({
   caption,
+  url,
   isDark,
   onClick,
 }: {
   caption: string;
+  url?: string;
   isDark: boolean;
   onClick: () => void;
 }) {
@@ -433,20 +446,27 @@ function ImageFigure({
     <figure className="my-8">
       <div
         onClick={onClick}
-        className="relative aspect-video bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary-300 transition-all"
+        className="relative aspect-video rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-300 transition-all"
       >
-        <span className={`text-sm ${isDark ? "text-primary-300" : "text-primary-400"}`}>
-          {caption}
-        </span>
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt={caption} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+            <span className={`text-sm ${isDark ? "text-primary-300" : "text-primary-400"}`}>
+              {caption}
+            </span>
+          </div>
+        )}
+        {caption && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+            <span className="text-white text-xs font-medium">{caption}</span>
+          </div>
+        )}
         <div className="absolute bottom-2 right-2">
-          <Globe className="w-5 h-5 text-primary-500" />
+          <Globe className="w-5 h-5 text-white/70" />
         </div>
       </div>
-      <figcaption
-        className={`text-center text-sm mt-2 ${isDark ? "text-mono-500" : "text-mono-400"}`}
-      >
-        {caption}
-      </figcaption>
     </figure>
   );
 }

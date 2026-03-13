@@ -53,6 +53,7 @@ export interface BookImage {
   alt: string;
   caption?: string;
   order: number;
+  worldUrl?: string;
 }
 
 // AI Agent

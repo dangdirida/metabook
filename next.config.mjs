@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "www.gimmyoung.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.marble.worldlabs.ai",
+      },
     ],
   },
 };

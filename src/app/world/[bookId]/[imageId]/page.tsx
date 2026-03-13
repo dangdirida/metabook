@@ -16,6 +16,7 @@ import { getBookById } from "@/lib/mock-data";
 export default function WorldViewerPage() {
   const { bookId, imageId } = useParams();
   const book = getBookById(bookId as string);
+  const image = book?.images?.find(img => img.id === imageId);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,8 +58,9 @@ export default function WorldViewerPage() {
   };
 
   const handle3DExplore = () => {
-    if (book?.worldUrl) {
-      window.open(book.worldUrl, "_blank", "noopener,noreferrer");
+    const targetUrl = image?.worldUrl || book?.worldUrl;
+    if (targetUrl) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -81,25 +83,29 @@ export default function WorldViewerPage() {
       >
         {/* 삽화 with CSS 3D tilt */}
         <div
-          className="w-[80vw] h-[60vh] max-w-4xl bg-gradient-to-br from-primary-900/50 via-primary-800/30 to-primary-900/50 rounded-2xl border border-primary-700/30 flex items-center justify-center relative overflow-hidden transition-transform duration-100"
+          className="w-[80vw] h-[60vh] max-w-4xl rounded-2xl overflow-hidden relative transition-transform duration-100"
           style={{
             transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
             transformStyle: "preserve-3d",
           }}
         >
-          {/* 배경 효과 */}
-          <div className="absolute inset-0 bg-gradient-to-t from-primary-900/80 to-transparent" />
-          <div className="absolute top-0 left-0 w-full h-full opacity-20">
-            <div className="absolute w-32 h-32 bg-primary-400/20 rounded-full blur-3xl top-10 left-10" />
-            <div className="absolute w-48 h-48 bg-accent-cyan/10 rounded-full blur-3xl bottom-10 right-20" />
-          </div>
-
-          {/* 콘텐츠 */}
-          <div className="relative z-10 text-center">
-            <p className="text-2xl font-bold mb-2">{book?.title || "책"}</p>
-            <p className="text-primary-300 text-sm mb-1">삽화: {imageId}</p>
-            <p className="text-mono-500 text-xs">마우스 움직여서 원근 효과 확인</p>
-          </div>
+          {image?.url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image.url}
+              alt={image.alt}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary-900/50 via-primary-800/30 to-primary-900/50 flex items-center justify-center">
+              <p className="text-2xl font-bold">{book?.title || "책"}</p>
+            </div>
+          )}
+          {image?.caption && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+              <p className="text-white text-lg font-medium">{image.caption}</p>
+            </div>
+          )}
         </div>
       </div>
 
