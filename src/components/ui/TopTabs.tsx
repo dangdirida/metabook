@@ -66,25 +66,24 @@ export default function TopTabs() {
       {/* 열릴 때만 보이는 콘텐츠 */}
       <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? "max-h-64" : "max-h-0"}`}>
         {/* CTA 버튼 3개 */}
-        <div className="flex gap-2 px-4 py-2.5 border-b border-mono-200 dark:border-mono-800">
+        <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-200 dark:border-mono-800">
           <button
             onClick={() => setOpenModal("shortbook")}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-xs font-medium bg-[var(--color-primary-500)] hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium bg-white border border-[var(--color-mono-200)] text-[var(--color-mono-900)] hover:bg-[var(--color-mono-050)] hover:border-[var(--color-mono-400)] dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors"
           >
-            <BookOpen className="w-4 h-4" strokeWidth={1.5} /> 숏북 만들기
+            <BookOpen className="w-3.5 h-3.5 text-[var(--color-mono-500)]" strokeWidth={1.5} /> 숏북 만들기
           </button>
           <button
             onClick={() => setOpenModal("shortmovie")}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-xs font-medium bg-[var(--color-secondary-500)] hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium bg-white border border-[var(--color-mono-200)] text-[var(--color-mono-900)] hover:bg-[var(--color-mono-050)] hover:border-[var(--color-mono-400)] dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors"
           >
-            <Film className="w-4 h-4" strokeWidth={1.5} /> 숏뮤비 만들기
+            <Film className="w-3.5 h-3.5 text-[var(--color-mono-500)]" strokeWidth={1.5} /> 숏뮤비 만들기
           </button>
           <button
             onClick={() => setOpenModal("goods")}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-xs font-medium hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: "#f5a623" }}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium bg-white border border-[var(--color-mono-200)] text-[var(--color-mono-900)] hover:bg-[var(--color-mono-050)] hover:border-[var(--color-mono-400)] dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors"
           >
-            <Gift className="w-4 h-4" strokeWidth={1.5} /> 굿즈 만들기
+            <Gift className="w-3.5 h-3.5 text-[var(--color-mono-500)]" strokeWidth={1.5} /> 굿즈 만들기
           </button>
         </div>
 
@@ -97,45 +96,38 @@ export default function TopTabs() {
               <p className="text-xs text-mono-500 mt-1">위 버튼을 눌러 첫 창작물을 만들어보세요!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {creations.map((item) => {
                 const badge = TYPE_BADGE[item.type];
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-lg border border-mono-200 overflow-hidden hover:shadow-md transition-shadow"
+                    className="rounded-lg overflow-hidden hover:shadow-md transition-shadow relative aspect-[3/4] bg-gradient-to-br from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-700"
                   >
-                    <div className="aspect-square bg-gradient-to-br from-mono-100 to-mono-200 relative">
-                      {item.thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          {item.type === "shortbook" && <BookOpen className="w-6 h-6 text-mono-300" strokeWidth={1.5} />}
-                          {item.type === "shortmovie" && <Film className="w-6 h-6 text-mono-300" strokeWidth={1.5} />}
-                          {item.type === "goods" && <Gift className="w-6 h-6 text-mono-300" strokeWidth={1.5} />}
-                        </div>
-                      )}
-                      {badge && (
-                        <span className={`absolute top-1 left-1 px-1.5 py-0.5 text-[9px] font-medium rounded-full ${badge.color}`}>
-                          {badge.label}
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-xs font-medium text-mono-900 line-clamp-1">{item.title}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[10px] text-mono-500">
-                          {new Date(item.createdAt).toLocaleDateString("ko-KR")}
-                        </span>
-                        <button
-                          onClick={() => handleHeart(item.id)}
-                          className="flex items-center gap-0.5 text-[10px] text-mono-400 hover:text-red-400 transition-colors"
-                        >
-                          <Heart className={`w-2.5 h-2.5 ${item.hearted ? "fill-red-400 text-red-400" : ""}`} strokeWidth={1.5} />
-                          {item.hearts}
-                        </button>
+                    {item.thumbnail ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {item.type === "shortbook" && <BookOpen className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
+                        {item.type === "shortmovie" && <Film className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
+                        {item.type === "goods" && <Gift className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
                       </div>
+                    )}
+                    {badge && (
+                      <span className={`absolute top-1 left-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${badge.color}`}>
+                        {badge.label}
+                      </span>
+                    )}
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 pb-1.5 pt-4">
+                      <p className="text-xs font-medium text-white truncate">{item.title}</p>
+                      <button
+                        onClick={() => handleHeart(item.id)}
+                        className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 text-[10px] text-white/70 hover:text-red-400 transition-colors"
+                      >
+                        <Heart className={`w-3 h-3 ${item.hearted ? "fill-red-400 text-red-400" : ""}`} strokeWidth={1.5} />
+                        {item.hearts}
+                      </button>
                     </div>
                   </div>
                 );
