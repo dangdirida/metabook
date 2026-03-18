@@ -14,10 +14,10 @@ function ShortBookContent() {
   const router = useRouter();
   const bookId = searchParams.get("bookId") || "";
   const book = mockBooks.find((b) => b.id === bookId);
+  const chapters = getChaptersByBookId(bookId);
 
   const [step, setStep] = useState<StepType>("select");
   const [subType, setSubType] = useState<"perspective" | "ending">("perspective");
-  const chapters = getChaptersByBookId(bookId);
 
   const [startChapter, setStartChapter] = useState(1);
   const [endChapter, setEndChapter] = useState(1);
@@ -28,6 +28,12 @@ function ShortBookContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
+
+  // 새 옵션들
+  const [writingStyle, setWritingStyle] = useState<"first" | "third" | "diary">("first");
+  const [emotionTone, setEmotionTone] = useState<string>("원작 분위기 유지");
+  const [outputLength, setOutputLength] = useState<"short" | "medium" | "long">("medium");
+  const [genreShift, setGenreShift] = useState<string>("원작 장르 유지");
 
   const allCharacters = Array.from(
     new Set(chapters.flatMap((ch) => ch.characters))
@@ -42,22 +48,16 @@ function ShortBookContent() {
   const getChapterText = () => {
     const start = Math.min(startChapter, endChapter);
     const end = Math.max(startChapter, endChapter);
-    return chapters
-      .filter((ch) => ch.number >= start && ch.number <= end)
-      .map((ch) => ch.content)
-      .join("\n\n");
-  };
 
-  // chapterText가 부족할 때 book 메타데이터로 보강
-  const enrichChapterText = (text: string) => {
-    if (text && text.length >= 50) return text;
-    const meta = [
-      book?.title && `제목: ${book.title}`,
-      book?.author && `저자: ${book.author}`,
-      book?.genre?.length && `장르: ${book.genre.join(", ")}`,
-      book?.description && `설명: ${book.description}`,
-    ].filter(Boolean).join("\n");
-    return `${meta}\n\n${text}`;
+    let text = chapters
+      .filter((ch) => ch.number >= start && ch.number <= end)
+      .map((ch) => `[${ch.number}장: ${ch.title}]\n${ch.content}`)
+      .join("\n\n---\n\n");
+
+    if (!text || text.length < 100) {
+      text = `[책 정보]\n제목: ${book?.title}\n저자: ${book?.author}\n장르: ${book?.genre?.join(", ")}\n\n${text || ""}`.trim();
+    }
+    return text;
   };
 
   const handleGenerate = async () => {
@@ -66,12 +66,17 @@ function ShortBookContent() {
     setGeneratedText("");
     setIsDone(false);
 
-    let chapterText =
+    const chapterText =
       subType === "perspective"
         ? getChapterText()
-        : chapters.find((ch) => ch.number === branchChapter)?.content || "";
-
-    chapterText = enrichChapterText(chapterText);
+        : (() => {
+            const ch = chapters.find((c) => c.number === branchChapter);
+            let text = ch ? `[${ch.number}장: ${ch.title}]\n${ch.content}` : "";
+            if (!text || text.length < 100) {
+              text = `[책 정보]\n제목: ${book?.title}\n저자: ${book?.author}\n장르: ${book?.genre?.join(", ")}\n\n${text || ""}`.trim();
+            }
+            return text;
+          })();
 
     const chapterRange =
       subType === "perspective"
@@ -85,12 +90,25 @@ function ShortBookContent() {
         body: JSON.stringify({
           type: subType,
           bookTitle: book?.title || "",
+          bookAuthor: book?.author || "",
           chapterText,
           character: selectedCharacter,
           endingDirection,
           chapterRange,
+          writingStyle,
+          emotionTone,
+          outputLength,
+          genreShift,
         }),
       });
+
+      if (!response.ok) {
+        const err = await response.json();
+        setGeneratedText(`오류: ${err.error || "생성 실패. 다시 시도해주세요."}`);
+        setIsDone(true);
+        setIsGenerating(false);
+        return;
+      }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -100,30 +118,39 @@ function ShortBookContent() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
+
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split("\n");
+
           for (const line of lines) {
             if (!line.startsWith("data: ")) continue;
             const data = line.slice(6).trim();
             if (!data || data === "[DONE]") continue;
+
             try {
               const parsed = JSON.parse(data);
-              if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
-                fullContent += parsed.delta.text;
-                setGeneratedText(fullContent);
+              if (parsed.error) {
+                setGeneratedText(`오류: ${parsed.error}`);
+                setIsDone(true);
+                setIsGenerating(false);
+                return;
               }
               if (parsed.content) {
                 fullContent += parsed.content;
                 setGeneratedText(fullContent);
               }
             } catch {
-              // ignore
+              // 파싱 실패 무시
             }
           }
         }
       }
-    } catch {
-      setGeneratedText("생성에 실패했습니다. 다시 시도해주세요.");
+
+      if (!fullContent) {
+        setGeneratedText("생성된 내용이 없습니다. 다시 시도해주세요.");
+      }
+    } catch (err) {
+      setGeneratedText(`오류: ${String(err)}`);
     } finally {
       setIsGenerating(false);
       setIsDone(true);
@@ -145,6 +172,33 @@ function ShortBookContent() {
     router.push(`/library/${bookId}`);
   };
 
+  // 공통 옵션 UI: 분량 선택
+  const LengthSelector = () => (
+    <div>
+      <label className="block text-sm font-semibold text-[var(--color-mono-700)] mb-2">분량</label>
+      <div className="flex gap-2">
+        {([
+          { value: "short", label: "짧게", desc: "~1,000자" },
+          { value: "medium", label: "보통", desc: "~2,000자" },
+          { value: "long", label: "길게", desc: "~3,500자" },
+        ] as const).map((l) => (
+          <button
+            key={l.value}
+            onClick={() => setOutputLength(l.value)}
+            className={`flex-1 py-2 rounded-xl text-sm border transition-colors ${
+              outputLength === l.value
+                ? "border-[var(--color-primary-500)] bg-[var(--color-primary-050)] text-[var(--color-primary-700)] font-medium"
+                : "border-[var(--color-mono-080)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]"
+            }`}
+          >
+            <div className="font-medium">{l.label}</div>
+            <div className="text-xs text-[var(--color-mono-400)]">{l.desc}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
       {/* 상단 헤더 */}
@@ -161,7 +215,7 @@ function ShortBookContent() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 py-8 flex gap-8">
-        {/* 좌측 사이드바: 책 정보 + 챕터 목록 */}
+        {/* 좌측 사이드바 */}
         <aside className="hidden md:block w-64 flex-shrink-0">
           <div className="bg-white rounded-2xl border border-[var(--color-mono-080)] p-5 sticky top-24">
             <div className="w-full aspect-[3/4] bg-gradient-to-br from-[var(--color-primary-100)] to-[var(--color-primary-200)] rounded-xl flex items-center justify-center mb-4">
@@ -279,6 +333,54 @@ function ShortBookContent() {
                   </div>
                 </div>
 
+                {/* 문체 선택 */}
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--color-mono-700)] mb-2">문체</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {([
+                      { value: "first", label: "1인칭 독백", desc: "나는..." },
+                      { value: "third", label: "3인칭 관찰", desc: "그는..." },
+                      { value: "diary", label: "내면 일기체", desc: "오늘 나는..." },
+                    ] as const).map((s) => (
+                      <button
+                        key={s.value}
+                        onClick={() => setWritingStyle(s.value)}
+                        className={`px-4 py-2 rounded-xl text-sm border transition-colors text-left ${
+                          writingStyle === s.value
+                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-050)] text-[var(--color-primary-700)] font-medium"
+                            : "border-[var(--color-mono-080)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]"
+                        }`}
+                      >
+                        <span className="font-medium">{s.label}</span>
+                        <span className="text-xs text-[var(--color-mono-400)] ml-1">{s.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 감정 톤 */}
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--color-mono-700)] mb-2">감정 톤</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["원작 분위기 유지", "애절하게", "냉소적으로", "따뜻하게", "긴장감있게"].map((tone) => (
+                      <button
+                        key={tone}
+                        onClick={() => setEmotionTone(tone)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                          emotionTone === tone
+                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-050)] text-[var(--color-primary-700)] font-medium"
+                            : "border-[var(--color-mono-080)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]"
+                        }`}
+                      >
+                        {tone}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 분량 */}
+                <LengthSelector />
+
                 <button
                   onClick={handleGenerate}
                   disabled={!selectedCharacter}
@@ -319,6 +421,29 @@ function ShortBookContent() {
                     className="w-full px-4 py-3 border border-[var(--color-mono-080)] rounded-xl text-sm resize-none h-28 bg-white"
                   />
                 </div>
+
+                {/* 장르 변화 */}
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--color-mono-700)] mb-2">장르 변화 (선택)</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["원작 장르 유지", "로맨스로", "스릴러로", "해피엔딩으로", "비극으로"].map((g) => (
+                      <button
+                        key={g}
+                        onClick={() => setGenreShift(g)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                          genreShift === g
+                            ? "border-purple-400 bg-purple-50 text-purple-700 font-medium"
+                            : "border-[var(--color-mono-080)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]"
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 분량 */}
+                <LengthSelector />
 
                 <button
                   onClick={handleGenerate}
