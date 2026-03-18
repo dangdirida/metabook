@@ -19,6 +19,8 @@ function ShortMovieContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [error, setError] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [elapsed, setElapsed] = useState(0);
 
   const chapters = getChaptersByBookId(bookId);
 
@@ -33,15 +35,20 @@ function ShortMovieContent() {
   };
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    setError("");
-    setVideoUrl("");
-
     const chapter = chapters.find((ch) => ch.number === selectedChapter);
     if (!chapter) return;
 
+    setIsGenerating(true);
+    setVideoUrl("");
+    setError("");
+    setStatusMsg("영상 생성을 요청하고 있어요...");
+    setElapsed(0);
+
+    const timer = setInterval(() => setElapsed(prev => prev + 1), 1000);
+
     try {
-      const response = await fetch("/api/shortmovie", {
+      // 1단계: POST → request_id 받기
+      const res = await fetch("/api/shortmovie", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -52,16 +59,64 @@ function ShortMovieContent() {
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.error || "영상 생성에 실패했습니다.");
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error || "요청에 실패했어요.");
+        setIsGenerating(false);
+        clearInterval(timer);
         return;
       }
-      setVideoUrl(data.videoUrl);
-    } catch {
-      setError("영상 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    } finally {
+
+      const { request_id } = data;
+      setStatusMsg("영상 생성 대기 중...");
+
+      // 2단계: 5초마다 상태 폴링 (최대 3분)
+      let attempts = 0;
+      const poll = async () => {
+        attempts++;
+        if (attempts > 36) {
+          setError("영상 생성 시간이 초과됐어요. 다시 시도해주세요.");
+          setIsGenerating(false);
+          clearInterval(timer);
+          return;
+        }
+
+        try {
+          const statusRes = await fetch(`/api/shortmovie?request_id=${request_id}`);
+          const statusData = await statusRes.json();
+
+          if (statusData.status === "COMPLETED" && statusData.videoUrl) {
+            setVideoUrl(statusData.videoUrl);
+            setIsGenerating(false);
+            setStatusMsg("");
+            clearInterval(timer);
+            return;
+          }
+
+          if (statusData.error) {
+            setError(statusData.error);
+            setIsGenerating(false);
+            clearInterval(timer);
+            return;
+          }
+
+          if (statusData.status === "IN_PROGRESS") {
+            setStatusMsg("영상 생성 중...");
+          } else {
+            setStatusMsg("영상 생성 대기 중...");
+          }
+        } catch {
+          // 폴링 실패는 무시하고 재시도
+        }
+
+        setTimeout(poll, 5000);
+      };
+
+      setTimeout(poll, 5000);
+    } catch (err) {
+      setError(`오류: ${String(err)}`);
       setIsGenerating(false);
+      clearInterval(timer);
     }
   };
 
@@ -175,9 +230,9 @@ function ShortMovieContent() {
                   <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
                 </div>
                 <p className="text-[var(--color-mono-700)] font-bold text-lg mb-2">
-                  AI가 영상을 만들고 있어요...
+                  {statusMsg || "AI가 영상을 만들고 있어요..."}
                 </p>
-                <p className="text-sm text-[var(--color-mono-400)]">30~90초 소요될 수 있습니다</p>
+                <p className="text-sm text-[var(--color-mono-400)]">{elapsed}초 경과 · 보통 30~90초 소요돼요</p>
               </div>
             )}
 

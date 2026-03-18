@@ -1,62 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fal } from "@fal-ai/client";
 
-fal.config({
-  credentials: process.env.FAL_KEY,
-});
-
+// POST: 영상 생성 요청 → request_id 즉시 반환 (Vercel 타임아웃 우회)
 export async function POST(req: NextRequest) {
-  const { chapterText, characters, additionalContext, bookTitle } =
-    await req.json();
+  const { chapterText, characters, additionalContext, bookTitle } = await req.json();
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) {
+    return NextResponse.json({ error: "FAL_KEY가 설정되지 않았습니다." }, { status: 500 });
+  }
 
-  // Step 1: Claude로 영상 프롬프트 생성
+  fal.config({ credentials: falKey });
+
+  // Groq로 영상 프롬프트 생성
   let videoPrompt = "";
-
-  if (!apiKey) {
-    videoPrompt = `Cinematic scene from Korean novel "${bookTitle}". ${
-      characters?.length ? `Characters: ${characters.join(", ")}. ` : ""
-    }A dramatic moment in a lush tropical setting with vivid colors, golden hour lighting. ${
-      additionalContext || ""
-    } Detailed, realistic, 720p cinematic quality.`;
-  } else {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
     try {
-      const promptRes = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 300,
-          messages: [
-            {
-              role: "user",
-              content: `Create a cinematic video prompt in English for HunyuanVideo AI. Scene from Korean novel: ${chapterText.slice(0, 500)}. Characters: ${characters?.join(", ") || "none specified"}. Style: cinematic, detailed, 720p. Additional: ${additionalContext || "none"}. Output only the video prompt, max 200 words.`,
-            },
-          ],
-        }),
+      const Groq = (await import("groq-sdk")).default;
+      const groq = new Groq({ apiKey: groqKey });
+      const completion = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: [{
+          role: "user",
+          content: `Create a cinematic video prompt in English for AI video generation.
+Book: "${bookTitle}"
+Scene: ${chapterText?.slice(0, 300) || ""}
+Characters: ${characters?.join(", ") || ""}
+Additional: ${additionalContext || ""}
+Output ONLY the video prompt, max 150 words, cinematic style, detailed visual description.`
+        }],
+        max_tokens: 200,
       });
-
-      if (!promptRes.ok) {
-        throw new Error("Prompt generation failed");
-      }
-
-      const promptData = await promptRes.json();
-      videoPrompt =
-        promptData.content?.[0]?.text ||
-        `Cinematic scene from "${bookTitle}", dramatic lighting, detailed.`;
+      videoPrompt = completion.choices[0]?.message?.content?.trim() || "";
     } catch {
-      videoPrompt = `Cinematic scene from Korean novel "${bookTitle}". Dramatic lighting, vivid atmosphere, 720p quality.`;
+      videoPrompt = "";
     }
   }
 
-  // Step 2: fal.ai API로 영상 생성
+  if (!videoPrompt) {
+    videoPrompt = `Cinematic scene from Korean novel "${bookTitle}". ${chapterText?.slice(0, 200) || ""}. Dramatic lighting, film quality, realistic.`;
+  }
+
   try {
-    const result = await fal.subscribe("fal-ai/hunyuan-video", {
+    // 비동기 큐 제출 → 즉시 request_id 반환 (타임아웃 없음)
+    const { request_id } = await fal.queue.submit("fal-ai/hunyuan-video", {
       input: {
         prompt: videoPrompt,
         resolution: "720p",
@@ -65,20 +53,45 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const videoUrl =
-      (result as { data?: { video?: { url?: string } } }).data?.video?.url ||
-      (result as { video?: { url?: string } }).video?.url ||
-      "";
+    return NextResponse.json({ request_id, prompt: videoPrompt });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `요청 실패: ${msg}` }, { status: 500 });
+  }
+}
 
-    return NextResponse.json({
-      videoUrl,
-      prompt: videoPrompt,
+// GET: 상태 폴링 → COMPLETED 시 videoUrl 반환
+export async function GET(req: NextRequest) {
+  const request_id = req.nextUrl.searchParams.get("request_id");
+  if (!request_id) {
+    return NextResponse.json({ error: "request_id가 필요합니다." }, { status: 400 });
+  }
+
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) {
+    return NextResponse.json({ error: "FAL_KEY가 설정되지 않았습니다." }, { status: 500 });
+  }
+
+  fal.config({ credentials: falKey });
+
+  try {
+    const status = await fal.queue.status("fal-ai/hunyuan-video", {
+      requestId: request_id,
+      logs: false,
     });
-  } catch (error) {
-    console.error("fal.ai error:", error);
-    return NextResponse.json(
-      { error: "영상 생성에 실패했습니다. 잠시 후 다시 시도해주세요." },
-      { status: 500 }
-    );
+
+    if (status.status === "COMPLETED") {
+      const result = await fal.queue.result("fal-ai/hunyuan-video", {
+        requestId: request_id,
+      });
+      const videoUrl =
+        (result.data as { video?: { url: string } })?.video?.url || "";
+      return NextResponse.json({ status: "COMPLETED", videoUrl });
+    }
+
+    return NextResponse.json({ status: status.status }); // IN_QUEUE | IN_PROGRESS
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
