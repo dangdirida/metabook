@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Loader2, Download } from "lucide-react";
-import { mockChapters } from "@/lib/mock-content";
+import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }: Props) {
+  const chapters = getChaptersByBookId(bookId);
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
   const [additionalContext, setAdditionalContext] = useState("");
@@ -21,7 +22,7 @@ export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }:
   const [error, setError] = useState("");
 
   const allCharacters = Array.from(
-    new Set(mockChapters.flatMap((ch) => ch.characters))
+    new Set(chapters.flatMap((ch) => ch.characters))
   );
 
   const toggleCharacter = (char: string) => {
@@ -35,7 +36,7 @@ export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }:
     setError("");
     setVideoUrl("");
 
-    const chapter = mockChapters.find((ch) => ch.number === selectedChapter);
+    const chapter = chapters.find((ch) => ch.number === selectedChapter);
     if (!chapter) return;
 
     try {
@@ -102,7 +103,7 @@ export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }:
                   onChange={(e) => setSelectedChapter(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-mono-200 rounded-lg text-sm"
                 >
-                  {mockChapters.map((ch) => (
+                  {chapters.map((ch) => (
                     <option key={ch.number} value={ch.number}>
                       {ch.number}장: {ch.title}
                     </option>

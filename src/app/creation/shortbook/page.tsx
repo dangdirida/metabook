@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen, GitBranch, ChevronRight, Loader2 } from "lucide-react";
 import { mockBooks } from "@/lib/mock-data";
-import { mockChapters } from "@/lib/mock-content";
+import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
 
 type StepType = "select" | "perspective" | "ending" | "generating";
@@ -17,6 +17,8 @@ function ShortBookContent() {
 
   const [step, setStep] = useState<StepType>("select");
   const [subType, setSubType] = useState<"perspective" | "ending">("perspective");
+  const chapters = getChaptersByBookId(bookId);
+
   const [startChapter, setStartChapter] = useState(1);
   const [endChapter, setEndChapter] = useState(1);
   const [selectedCharacter, setSelectedCharacter] = useState("");
@@ -28,7 +30,7 @@ function ShortBookContent() {
   const textRef = useRef<HTMLDivElement>(null);
 
   const allCharacters = Array.from(
-    new Set(mockChapters.flatMap((ch) => ch.characters))
+    new Set(chapters.flatMap((ch) => ch.characters))
   );
 
   useEffect(() => {
@@ -40,10 +42,22 @@ function ShortBookContent() {
   const getChapterText = () => {
     const start = Math.min(startChapter, endChapter);
     const end = Math.max(startChapter, endChapter);
-    return mockChapters
+    return chapters
       .filter((ch) => ch.number >= start && ch.number <= end)
       .map((ch) => ch.content)
       .join("\n\n");
+  };
+
+  // chapterText가 부족할 때 book 메타데이터로 보강
+  const enrichChapterText = (text: string) => {
+    if (text && text.length >= 50) return text;
+    const meta = [
+      book?.title && `제목: ${book.title}`,
+      book?.author && `저자: ${book.author}`,
+      book?.genre?.length && `장르: ${book.genre.join(", ")}`,
+      book?.description && `설명: ${book.description}`,
+    ].filter(Boolean).join("\n");
+    return `${meta}\n\n${text}`;
   };
 
   const handleGenerate = async () => {
@@ -52,10 +66,12 @@ function ShortBookContent() {
     setGeneratedText("");
     setIsDone(false);
 
-    const chapterText =
+    let chapterText =
       subType === "perspective"
         ? getChapterText()
-        : mockChapters.find((ch) => ch.number === branchChapter)?.content || "";
+        : chapters.find((ch) => ch.number === branchChapter)?.content || "";
+
+    chapterText = enrichChapterText(chapterText);
 
     const chapterRange =
       subType === "perspective"
@@ -161,7 +177,7 @@ function ShortBookContent() {
 
             <div className="mt-5 space-y-1">
               <p className="text-xs font-semibold text-[var(--color-mono-600)] mb-2">챕터 목록</p>
-              {mockChapters.map((ch) => (
+              {chapters.map((ch) => (
                 <div key={ch.id} className="text-xs text-[var(--color-mono-500)] py-1.5 px-2 rounded-lg hover:bg-[var(--color-mono-050)]">
                   {ch.number}장: {ch.title}
                 </div>
@@ -227,7 +243,7 @@ function ShortBookContent() {
                       onChange={(e) => setStartChapter(Number(e.target.value))}
                       className="flex-1 px-4 py-3 border border-[var(--color-mono-080)] rounded-xl text-sm bg-white"
                     >
-                      {mockChapters.map((ch) => (
+                      {chapters.map((ch) => (
                         <option key={ch.number} value={ch.number}>{ch.number}장: {ch.title}</option>
                       ))}
                     </select>
@@ -237,7 +253,7 @@ function ShortBookContent() {
                       onChange={(e) => setEndChapter(Number(e.target.value))}
                       className="flex-1 px-4 py-3 border border-[var(--color-mono-080)] rounded-xl text-sm bg-white"
                     >
-                      {mockChapters.map((ch) => (
+                      {chapters.map((ch) => (
                         <option key={ch.number} value={ch.number}>{ch.number}장: {ch.title}</option>
                       ))}
                     </select>
@@ -288,7 +304,7 @@ function ShortBookContent() {
                     onChange={(e) => setBranchChapter(Number(e.target.value))}
                     className="w-full px-4 py-3 border border-[var(--color-mono-080)] rounded-xl text-sm bg-white"
                   >
-                    {mockChapters.map((ch) => (
+                    {chapters.map((ch) => (
                       <option key={ch.number} value={ch.number}>{ch.number}장: {ch.title}</option>
                     ))}
                   </select>

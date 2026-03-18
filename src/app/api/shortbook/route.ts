@@ -4,17 +4,37 @@ export async function POST(req: NextRequest) {
   const { type, bookTitle, chapterText, character, endingDirection, chapterRange } =
     await req.json();
 
+  if (!chapterText || chapterText.trim().length < 10) {
+    return NextResponse.json({ error: "챕터 내용이 없습니다" }, { status: 400 });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   let systemPrompt = "";
   if (type === "perspective") {
-    systemPrompt = `당신은 소설 작가입니다. 아래 원문을 "${character}"의 시점에서 내면 묘사와 대화를 포함해 재집필하세요.
-챕터 구분을 포함하고, 문학적 문체로 작성하세요. 2000자 내외로 작성하세요.
-원작: "${bookTitle}" (${chapterRange})`;
+    systemPrompt = `당신은 창의적인 소설 작가입니다.
+아래는 "${bookTitle}"의 원문입니다. 이 내용을 "${character}"의 시점에서 새롭게 재집필해주세요.
+
+요구사항:
+- ${character}의 내면 심리, 감정, 생각을 중심으로 서술
+- 원문의 핵심 사건과 플롯은 유지하되, 시점과 감정선을 완전히 바꾸기
+- 대화문과 내면 독백을 풍부하게 포함
+- 챕터 구분(## 제목) 포함
+- 문학적이고 몰입감 있는 문체로 2000~3000자 작성
+- 한국어로 작성
+원작 구간: ${chapterRange}`;
   } else {
-    systemPrompt = `당신은 소설 작가입니다. 아래 원문의 분기점 이후를 "${endingDirection}" 방향으로 전개되도록 3챕터 분량으로 재집필하세요.
-챕터 구분을 포함하고, 문학적 문체로 작성하세요. 2000자 내외로 작성하세요.
-원작: "${bookTitle}" (${chapterRange})`;
+    systemPrompt = `당신은 창의적인 소설 작가입니다.
+아래는 "${bookTitle}"의 원문입니다. 분기점 이후 이야기를 "${endingDirection}" 방향으로 재집필해주세요.
+
+요구사항:
+- 원문의 세계관, 인물, 문체를 그대로 유지
+- "${endingDirection}"이라는 방향으로 자연스럽게 이야기 전개
+- 챕터 구분(## 챕터 제목) 3개로 나누어 작성
+- 각 챕터 500~800자 내외
+- 결말이 납득 가능하고 감동적으로 마무리
+- 한국어로 작성
+원작 구간: ${chapterRange}`;
   }
 
   if (!apiKey) {

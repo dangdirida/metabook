@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { X, BookOpen, GitBranch, ChevronRight, Loader2 } from "lucide-react";
-import { mockChapters } from "@/lib/mock-content";
+import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
 type StepType = "select" | "perspective" | "ending" | "generating";
 
 export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: Props) {
+  const chapters = getChaptersByBookId(bookId);
   const [step, setStep] = useState<StepType>("select");
   const [subType, setSubType] = useState<"perspective" | "ending">("perspective");
 
@@ -35,7 +36,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
 
   // 모든 챕터의 캐릭터 수집
   const allCharacters = Array.from(
-    new Set(mockChapters.flatMap((ch) => ch.characters))
+    new Set(chapters.flatMap((ch) => ch.characters))
   );
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
   const getChapterText = () => {
     const start = Math.min(startChapter, endChapter);
     const end = Math.max(startChapter, endChapter);
-    return mockChapters
+    return chapters
       .filter((ch) => ch.number >= start && ch.number <= end)
       .map((ch) => ch.content)
       .join("\n\n");
@@ -62,7 +63,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
     const chapterText =
       subType === "perspective"
         ? getChapterText()
-        : mockChapters.find((ch) => ch.number === branchChapter)?.content || "";
+        : chapters.find((ch) => ch.number === branchChapter)?.content || "";
 
     const chapterRange =
       subType === "perspective"
@@ -201,7 +202,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
                     onChange={(e) => setStartChapter(Number(e.target.value))}
                     className="flex-1 px-3 py-2 border border-mono-200 rounded-lg text-sm"
                   >
-                    {mockChapters.map((ch) => (
+                    {chapters.map((ch) => (
                       <option key={ch.number} value={ch.number}>
                         {ch.number}장: {ch.title}
                       </option>
@@ -213,7 +214,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
                     onChange={(e) => setEndChapter(Number(e.target.value))}
                     className="flex-1 px-3 py-2 border border-mono-200 rounded-lg text-sm"
                   >
-                    {mockChapters.map((ch) => (
+                    {chapters.map((ch) => (
                       <option key={ch.number} value={ch.number}>
                         {ch.number}장: {ch.title}
                       </option>
@@ -261,7 +262,7 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
                   onChange={(e) => setBranchChapter(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-mono-200 rounded-lg text-sm"
                 >
-                  {mockChapters.map((ch) => (
+                  {chapters.map((ch) => (
                     <option key={ch.number} value={ch.number}>
                       {ch.number}장: {ch.title}
                     </option>

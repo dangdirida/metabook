@@ -17,7 +17,7 @@ import {
   Share2,
   Heart,
 } from "lucide-react";
-import { mockChapters } from "@/lib/mock-content";
+import { getChaptersByBookId } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
 import { isFavorite, addFavorite, removeFavorite } from "@/lib/favorites-store";
@@ -59,8 +59,9 @@ export default function CenterPanel() {
   } | null>(null);
 
   const { setSelectedAgent, setActiveTab } = usePanelStore();
-  const chapter = mockChapters[currentChapter];
-  const totalChapters = mockChapters.length;
+  const chapters = getChaptersByBookId(bookId as string);
+  const chapter = chapters[currentChapter];
+  const totalChapters = chapters.length;
 
   // localStorage에서 설정 복원
   useEffect(() => {

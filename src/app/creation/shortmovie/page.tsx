@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Film, Loader2, Download } from "lucide-react";
 import { mockBooks } from "@/lib/mock-data";
-import { mockChapters } from "@/lib/mock-content";
+import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
 
 function ShortMovieContent() {
@@ -20,8 +20,10 @@ function ShortMovieContent() {
   const [videoUrl, setVideoUrl] = useState("");
   const [error, setError] = useState("");
 
+  const chapters = getChaptersByBookId(bookId);
+
   const allCharacters = Array.from(
-    new Set(mockChapters.flatMap((ch) => ch.characters))
+    new Set(chapters.flatMap((ch) => ch.characters))
   );
 
   const toggleCharacter = (char: string) => {
@@ -35,7 +37,7 @@ function ShortMovieContent() {
     setError("");
     setVideoUrl("");
 
-    const chapter = mockChapters.find((ch) => ch.number === selectedChapter);
+    const chapter = chapters.find((ch) => ch.number === selectedChapter);
     if (!chapter) return;
 
     try {
@@ -123,7 +125,7 @@ function ShortMovieContent() {
                     onChange={(e) => setSelectedChapter(Number(e.target.value))}
                     className="w-full px-4 py-3 border border-[var(--color-mono-080)] rounded-xl text-sm bg-white"
                   >
-                    {mockChapters.map((ch) => (
+                    {chapters.map((ch) => (
                       <option key={ch.number} value={ch.number}>{ch.number}장: {ch.title}</option>
                     ))}
                   </select>
