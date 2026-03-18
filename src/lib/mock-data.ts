@@ -1,14 +1,80 @@
 import { Book, BookImage, Agent } from "@/types";
 
+const MARBLE_IMAGES = [
+  {
+    suffix: "img1",
+    url: "https://cdn.marble.worldlabs.ai/a9736615-827d-4f2b-9b95-a1b8525f1ac5/5c555f6e-5176-44a3-afce-1a1c8380623a_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/a9736615-827d-4f2b-9b95-a1b8525f1ac5",
+  },
+  {
+    suffix: "img2",
+    url: "https://cdn.marble.worldlabs.ai/d270eda7-56b6-419b-ac04-b7bf0b9ccd00/08b712e2-1c94-4f31-823a-30d65f7efc23_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/d270eda7-56b6-419b-ac04-b7bf0b9ccd00",
+  },
+  {
+    suffix: "img3",
+    url: "https://cdn.marble.worldlabs.ai/1c3e0221-ba4a-479a-b80a-b72bd64fd558/5eeaf8f7-215b-4025-b4c1-f988075b2225_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/1c3e0221-ba4a-479a-b80a-b72bd64fd558",
+  },
+  {
+    suffix: "img4",
+    url: "https://cdn.marble.worldlabs.ai/91f34581-0c18-491c-bd2b-9b5078e73df6/e22f9af5-7540-436f-9711-4e4e8e7aecbb_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/91f34581-0c18-491c-bd2b-9b5078e73df6",
+  },
+  {
+    suffix: "img5",
+    url: "https://cdn.marble.worldlabs.ai/234ae08a-7dee-491b-86f3-f9014113c2f2/5adbde74-5227-433d-8523-6b0a837a4802_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/234ae08a-7dee-491b-86f3-f9014113c2f2",
+  },
+  {
+    suffix: "img6",
+    url: "https://cdn.marble.worldlabs.ai/4e5ea988-46fd-4e6a-abd7-3d99cb65619c/1a4adcb6-0d7c-432f-8088-4a10c25b3148_dust_mpi/thumbnail.webp",
+    worldUrl: "https://marble.worldlabs.ai/world/4e5ea988-46fd-4e6a-abd7-3d99cb65619c",
+  },
+];
+
+const BOOK_PREFIX: Record<string, string> = {
+  "lovers-lover": "ll",
+  "pain-encyclopedia": "pe",
+  "dont-know-myself": "dkm",
+  "what-moves-me": "wmm",
+  "difficult-people": "dp",
+  "black-comedy": "bc",
+  "weather-interview": "wi",
+  "dragon-hero-3": "dh",
+  "big-pumpkin-house": "bph",
+  "science-level-up-4": "slu",
+  "became-a-child": "bac",
+  "yokai-bus-5": "yb",
+};
+
 function makeImages(bookId: string): BookImage[] {
-  return [
-    { id: "ch1-img1", bookId, chapterId: "ch1", url: "https://cdn.marble.worldlabs.ai/a9736615-827d-4f2b-9b95-a1b8525f1ac5/5c555f6e-5176-44a3-afce-1a1c8380623a_dust_mpi/thumbnail.webp", alt: "뉴기니 해안의 풍경", caption: "뉴기니 해안의 풍경", order: 1, worldUrl: "https://marble.worldlabs.ai/world/a9736615-827d-4f2b-9b95-a1b8525f1ac5" },
-    { id: "ch1-img2", bookId, chapterId: "ch1", url: "https://cdn.marble.worldlabs.ai/d270eda7-56b6-419b-ac04-b7bf0b9ccd00/08b712e2-1c94-4f31-823a-30d65f7efc23_dust_mpi/thumbnail.webp", alt: "얄리와의 만남", caption: "얄리와의 만남", order: 2, worldUrl: "https://marble.worldlabs.ai/world/d270eda7-56b6-419b-ac04-b7bf0b9ccd00" },
-    { id: "ch2-img1", bookId, chapterId: "ch2", url: "https://cdn.marble.worldlabs.ai/1c3e0221-ba4a-479a-b80a-b72bd64fd558/5eeaf8f7-215b-4025-b4c1-f988075b2225_dust_mpi/thumbnail.webp", alt: "문명의 경계", caption: "문명의 경계", order: 3, worldUrl: "https://marble.worldlabs.ai/world/1c3e0221-ba4a-479a-b80a-b72bd64fd558" },
-    { id: "ch2-img2", bookId, chapterId: "ch2", url: "https://cdn.marble.worldlabs.ai/91f34581-0c18-491c-bd2b-9b5078e73df6/e22f9af5-7540-436f-9711-4e4e8e7aecbb_dust_mpi/thumbnail.webp", alt: "역사의 갈림길", caption: "역사의 갈림길", order: 4, worldUrl: "https://marble.worldlabs.ai/world/91f34581-0c18-491c-bd2b-9b5078e73df6" },
-    { id: "ch3-img1", bookId, chapterId: "ch3", url: "https://cdn.marble.worldlabs.ai/234ae08a-7dee-491b-86f3-f9014113c2f2/5adbde74-5227-433d-8523-6b0a837a4802_dust_mpi/thumbnail.webp", alt: "고대 사원의 흔적", caption: "고대 사원의 흔적", order: 5, worldUrl: "https://marble.worldlabs.ai/world/234ae08a-7dee-491b-86f3-f9014113c2f2" },
-    { id: "ch3-img2", bookId, chapterId: "ch3", url: "https://cdn.marble.worldlabs.ai/4e5ea988-46fd-4e6a-abd7-3d99cb65619c/1a4adcb6-0d7c-432f-8088-4a10c25b3148_dust_mpi/thumbnail.webp", alt: "탐험의 끝에서", caption: "탐험의 끝에서", order: 6, worldUrl: "https://marble.worldlabs.ai/world/4e5ea988-46fd-4e6a-abd7-3d99cb65619c" },
+  const prefix = BOOK_PREFIX[bookId];
+  const chapterMap = [
+    { ch: "ch1", imgs: [0, 1] },
+    { ch: "ch2", imgs: [2, 3] },
+    { ch: "ch3", imgs: [4, 5] },
   ];
+
+  const result: BookImage[] = [];
+  let order = 1;
+  for (const { ch, imgs } of chapterMap) {
+    for (let i = 0; i < imgs.length; i++) {
+      const m = MARBLE_IMAGES[imgs[i]];
+      const id = prefix ? `${prefix}-${ch}-img${i + 1}` : `${ch}-img${i + 1}`;
+      result.push({
+        id,
+        bookId,
+        chapterId: ch,
+        url: m.url,
+        alt: "",
+        caption: "",
+        order: order++,
+        worldUrl: m.worldUrl,
+      });
+    }
+  }
+  return result;
 }
 
 function makeAgents(bookId: string): Agent[] {
