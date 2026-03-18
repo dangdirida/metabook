@@ -1,82 +1,37 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useParams } from "next/navigation";
-import { Heart, ExternalLink, Palette, ShoppingBag, BookCopy, Sparkles } from "lucide-react";
-import { getCreationsByBookId } from "@/lib/mock-creations";
-import { getGoodsByBookId } from "@/lib/mock-goods";
-import { mockBooks } from "@/lib/mock-data";
-import type { CreationType } from "@/types";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { X, BookOpen, Film, Gift, Heart, Sparkles, ChevronRight } from "lucide-react";
+import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 
-const CREATION_FILTER_CHIPS = [
-  { value: "all", label: "전체" },
-  { value: "sticker", label: "스티커" },
-  { value: "music", label: "음악" },
-  { value: "webtoon", label: "웹툰" },
-  { value: "video", label: "영상" },
-  { value: "novel", label: "소설" },
-  { value: "other", label: "기타" },
-] as const;
-
-const OTHER_TYPES: CreationType[] = ["ai_agent", "prompt", "extension"];
-
-const TYPE_COLORS: Record<string, string> = {
-  sticker: "bg-secondary-50 text-secondary-600",
-  music: "bg-blue-50 text-blue-300",
-  photo: "bg-primary-50 text-primary-700",
-  video: "bg-red-50 text-red-300",
-  webtoon: "bg-accent-orange/10 text-accent-orange",
-  novel: "bg-primary-50 text-primary-600",
+const TYPE_BADGE: Record<string, { label: string; color: string }> = {
+  shortbook: { label: "숏북", color: "bg-emerald-100 text-emerald-700" },
+  shortmovie: { label: "숏뮤비", color: "bg-purple-100 text-purple-700" },
+  goods: { label: "굿즈", color: "bg-orange-100 text-orange-700" },
 };
 
-const TYPE_LABELS: Record<CreationType, string> = {
-  sticker: "스티커", music: "음악", photo: "이미지", video: "영상",
-  webtoon: "웹툰", novel: "소설", webdrama: "웹드라마",
-  ai_agent: "AI Agent", prompt: "프롬프트", extension: "익스텐션", goods: "굿즈",
-};
-
-type TabType = "gallery" | "goods" | "series";
+type ModalType = "shortbook" | "shortmovie" | "goods" | null;
 
 export default function TopTabs() {
   const { bookId } = useParams();
-  const [activeTab, setActiveTab] = useState<TabType>("gallery");
-  const [filterChip, setFilterChip] = useState("all");
+  const router = useRouter();
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<ModalType>(null);
+  const [creations, setCreations] = useState<CreationItem[]>([]);
 
-  const creations = getCreationsByBookId(bookId as string);
-  const goods = getGoodsByBookId(bookId as string);
-  const book = mockBooks.find((b) => b.id === bookId);
-  const seriesBooks = book?.seriesId
-    ? mockBooks.filter((b) => b.seriesId === book.seriesId)
-    : [];
+  useEffect(() => {
+    setCreations(getCreations(bookId as string));
+  }, [bookId]);
 
-  const hasGoods = goods.length > 0;
-  const hasSeries = seriesBooks.length >= 2;
+  const refreshCreations = () => {
+    setCreations(getCreations(bookId as string));
+  };
 
-  // 필터칩 활성 상태 계산
-  const chipCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: creations.length };
-    creations.forEach((c) => {
-      if (OTHER_TYPES.includes(c.type)) {
-        counts["other"] = (counts["other"] || 0) + 1;
-      } else {
-        counts[c.type] = (counts[c.type] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [creations]);
-
-  const filteredCreations = useMemo(() => {
-    if (filterChip === "all") return creations;
-    if (filterChip === "other") return creations.filter((c) => OTHER_TYPES.includes(c.type));
-    return creations.filter((c) => c.type === filterChip);
-  }, [creations, filterChip]);
-
-  const tabs: { type: TabType; label: string; icon: React.ReactNode; show: boolean }[] = [
-    { type: "gallery", label: "창작 갤러리", icon: <Palette className="w-4 h-4" />, show: true },
-    { type: "goods", label: "굿즈", icon: <ShoppingBag className="w-4 h-4" />, show: hasGoods },
-    { type: "series", label: "시리즈", icon: <BookCopy className="w-4 h-4" />, show: hasSeries },
-  ];
+  const handleHeart = (id: string) => {
+    toggleHeart(id);
+    refreshCreations();
+  };
 
   return (
     <div className="bg-white border-t border-mono-200 flex flex-col">
@@ -90,7 +45,7 @@ export default function TopTabs() {
           <span className="text-sm font-semibold text-gray-800">창작 갤러리</span>
         </div>
         <svg
-          className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? '' : 'rotate-180'}`}
+          className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -98,154 +53,201 @@ export default function TopTabs() {
       </button>
 
       {/* 열릴 때만 보이는 콘텐츠 */}
-      <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? 'max-h-[500px]' : 'max-h-0'}`}>
-        {/* 대탭 */}
-        <div className="flex border-b border-mono-200">
-          {tabs
-            .filter((t) => t.show)
-            .map((tab) => (
-              <button
-                key={tab.type}
-                onClick={() => setActiveTab(tab.type)}
-                className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition-colors ${
-                  activeTab === tab.type
-                    ? "text-primary-500 border-b-2 border-primary-500"
-                    : "text-mono-500 hover:text-mono-700"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+      <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? "max-h-[600px]" : "max-h-0"}`}>
+        {/* CTA 버튼 3개 */}
+        <div className="flex gap-2 px-4 py-3 border-b border-mono-200">
+          <button
+            onClick={() => setOpenModal("shortbook")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-medium bg-[var(--color-primary-500)] hover:opacity-90 transition-opacity"
+          >
+            <span>📖</span> 숏북 만들기
+          </button>
+          <button
+            onClick={() => setOpenModal("shortmovie")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-medium bg-[var(--color-secondary-500)] hover:opacity-90 transition-opacity"
+          >
+            <span>🎬</span> 숏뮤비 만들기
+          </button>
+          <button
+            onClick={() => setOpenModal("goods")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-xs font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#f5a623" }}
+          >
+            <span>🎁</span> 굿즈 만들기
+          </button>
         </div>
 
-        {/* 창작 갤러리 필터칩 */}
-        {activeTab === "gallery" && (
-          <div className="flex gap-2 px-4 py-2 overflow-x-auto border-b border-mono-200">
-            {CREATION_FILTER_CHIPS.map((chip) => {
-              const count = chipCounts[chip.value] || 0;
-              const isActive = filterChip === chip.value;
-              const isDisabled = chip.value !== "all" && count === 0;
-
-              return (
-                <button
-                  key={chip.value}
-                  onClick={() => !isDisabled && setFilterChip(chip.value)}
-                  disabled={isDisabled}
-                  className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-colors ${
-                    isActive
-                      ? "bg-primary-500 text-white"
-                      : isDisabled
-                      ? "bg-mono-100 text-mono-400 cursor-not-allowed"
-                      : "bg-mono-100 text-mono-600 hover:bg-mono-200"
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* 콘텐츠 */}
+        {/* 창작물 피드 */}
         <div className="max-h-80 overflow-y-auto custom-scrollbar p-4">
-        {activeTab === "gallery" && (
-          <>
-            {filteredCreations.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredCreations.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => window.open("#", "_blank")}
-                    className="bg-white rounded-xl border border-mono-200 overflow-hidden hover:shadow-md transition-shadow text-left"
+          {creations.length === 0 ? (
+            <div className="text-center py-8">
+              <Sparkles className="w-10 h-10 text-mono-300 mx-auto mb-3" />
+              <p className="text-mono-700 font-semibold">아직 이 책의 창작물이 없어요</p>
+              <p className="text-sm text-mono-500 mt-1">위 버튼을 눌러 첫 창작물을 만들어보세요!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {creations.map((item) => {
+                const badge = TYPE_BADGE[item.type];
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-xl border border-mono-200 overflow-hidden hover:shadow-md transition-shadow"
                   >
-                    <div className="aspect-square bg-gradient-to-br from-mono-100 to-mono-200 relative flex items-center justify-center">
-                      <Palette className="w-8 h-8 text-mono-300" />
-                      <span className={`absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full ${TYPE_COLORS[c.type] || "bg-mono-100 text-mono-600"}`}>
-                        {TYPE_LABELS[c.type]}
-                      </span>
+                    <div className="aspect-square bg-gradient-to-br from-mono-100 to-mono-200 relative">
+                      {item.thumbnail ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {item.type === "shortbook" && <BookOpen className="w-8 h-8 text-mono-300" />}
+                          {item.type === "shortmovie" && <Film className="w-8 h-8 text-mono-300" />}
+                          {item.type === "goods" && <Gift className="w-8 h-8 text-mono-300" />}
+                        </div>
+                      )}
+                      {badge && (
+                        <span className={`absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full ${badge.color}`}>
+                          {badge.label}
+                        </span>
+                      )}
                     </div>
                     <div className="p-3">
-                      <p className="text-sm font-medium text-mono-900 line-clamp-1">{c.title}</p>
+                      <p className="text-sm font-medium text-mono-900 line-clamp-1">{item.title}</p>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs text-mono-500">{c.userName}</span>
-                        <span className="flex items-center gap-1 text-xs text-mono-400">
-                          <Heart className="w-3 h-3" /> {c.likes}
+                        <span className="text-xs text-mono-500">
+                          {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                         </span>
+                        <button
+                          onClick={() => handleHeart(item.id)}
+                          className="flex items-center gap-1 text-xs text-mono-400 hover:text-red-400 transition-colors"
+                        >
+                          <Heart className={`w-3 h-3 ${item.hearted ? "fill-red-400 text-red-400" : ""}`} />
+                          {item.hearts}
+                        </button>
                       </div>
                     </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <Sparkles className="w-10 h-10 text-mono-300 mx-auto mb-3" />
-                <p className="text-mono-700 font-semibold">아직 이 책의 창작물이 없어요</p>
-                <p className="text-sm text-mono-500 mt-1 mb-4">첫 번째가 되어볼까요? ✨</p>
-                <button className="px-5 py-2.5 bg-primary-500 text-white text-sm rounded-xl hover:bg-primary-600">
-                  창작물 올리기
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === "goods" && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {goods.map((g) => (
-              <div key={g.id} className={`rounded-xl border border-mono-200 overflow-hidden ${g.stock === 0 ? "opacity-60 grayscale" : ""}`}>
-                <div className="aspect-square bg-gradient-to-br from-mono-100 to-mono-200 relative flex items-center justify-center">
-                  <ShoppingBag className="w-8 h-8 text-mono-300" />
-                  {g.isLimitedEdition && (
-                    <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full bg-red-50 text-red-300">한정판</span>
-                  )}
-                  {g.stock === 0 && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold">품절</span>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-medium text-mono-900 line-clamp-1">{g.name}</p>
-                  <p className="text-sm font-bold text-primary-600 mt-1">{g.price.toLocaleString()}원</p>
-                  {g.stock > 0 ? (
-                    <button
-                      onClick={() => window.open(g.externalUrl, "_blank")}
-                      className="w-full mt-2 py-2 bg-primary-500 text-white text-xs rounded-lg hover:bg-primary-600 flex items-center justify-center gap-1"
-                    >
-                      <ExternalLink className="w-3 h-3" /> 바로 구매
-                    </button>
-                  ) : (
-                    <button className="w-full mt-2 py-2 bg-mono-200 text-mono-600 text-xs rounded-lg">
-                      재입고 알림
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === "series" && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {seriesBooks.map((sb) => (
-              <a
-                key={sb.id}
-                href={`/library/${sb.id}`}
-                className={`rounded-xl border overflow-hidden hover:shadow-md transition-shadow ${
-                  sb.id === bookId ? "border-primary-300 ring-2 ring-primary-100" : "border-mono-200"
-                }`}
-              >
-                <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                  <BookCopy className="w-8 h-8 text-primary-300" />
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-medium text-mono-900 line-clamp-1">{sb.title}</p>
-                  <p className="text-xs text-mono-500 mt-0.5">{sb.author}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* 소개 모달 */}
+      {openModal && (
+        <IntroModal
+          type={openModal}
+          bookId={bookId as string}
+          onClose={() => setOpenModal(null)}
+          onNavigate={(path) => {
+            setOpenModal(null);
+            router.push(path);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// 소개 모달 컴포넌트
+function IntroModal({
+  type,
+  bookId,
+  onClose,
+  onNavigate,
+}: {
+  type: "shortbook" | "shortmovie" | "goods";
+  bookId: string;
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+}) {
+  const configs = {
+    shortbook: {
+      title: "숏북 만들기",
+      desc: "책의 특정 구간을 AI가 완전히 새롭게 재집필해요.\n다른 인물의 시점으로 보거나, 결말을 바꿔볼 수 있어요.",
+      features: [
+        { emoji: "🔄", title: "다른 시점으로", desc: "선택한 인물의 눈으로 이야기를 다시 써요" },
+        { emoji: "✨", title: "다른 결말로", desc: "내가 원하는 방향으로 결말을 바꿔요" },
+      ],
+      ctaLabel: "숏북 만들러 가기",
+      ctaColor: "bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)]",
+      path: `/creation/shortbook?bookId=${bookId}`,
+    },
+    shortmovie: {
+      title: "숏뮤비 만들기",
+      desc: "책 속 장면을 AI가 실제 움직이는 영상으로 만들어줘요.\n원하는 구간과 인물을 선택하면 5~8초 영상이 완성돼요.",
+      features: [
+        { emoji: "🎬", title: "장면 영상화", desc: "텍스트 장면을 720p HD 영상으로 변환해요" },
+      ],
+      ctaLabel: "숏뮤비 만들러 가기",
+      ctaColor: "bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]",
+      path: `/creation/shortmovie?bookId=${bookId}`,
+    },
+    goods: {
+      title: "굿즈 만들기",
+      desc: "책에서 마음에 드는 구절이나 장면으로 나만의 굿즈를 만들어요.",
+      features: [
+        { emoji: "🔖", title: "책갈피", desc: "좋아하는 구절로 나만의 책갈피를 만들어요" },
+        { emoji: "🎨", title: "스티커", desc: "캐릭터/장면을 AI 일러스트 스티커로" },
+        { emoji: "🖼", title: "일러스트", desc: "장면을 다양한 스타일의 일러스트로" },
+      ],
+      ctaLabel: "굿즈 만들러 가기",
+      ctaColor: "hover:opacity-90",
+      ctaStyle: { backgroundColor: "#f5a623" },
+      path: `/creation/goods?bookId=${bookId}`,
+    },
+  };
+
+  const config = configs[type];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-mono-200">
+          <h2 className="text-lg font-bold text-mono-900">{config.title}</h2>
+          <button onClick={onClose} className="p-1 hover:bg-mono-100 rounded-lg">
+            <X className="w-5 h-5 text-mono-500" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* 설명 */}
+          <p className="text-sm text-mono-600 leading-relaxed whitespace-pre-line">
+            {config.desc}
+          </p>
+
+          {/* 기능 카드 */}
+          <div className="space-y-3">
+            {config.features.map((feat) => (
+              <div
+                key={feat.title}
+                className="flex items-start gap-3 p-3 bg-[var(--color-mono-050)] rounded-xl"
+              >
+                <span className="text-xl flex-shrink-0 mt-0.5">{feat.emoji}</span>
+                <div>
+                  <p className="font-semibold text-sm text-mono-900">{feat.title}</p>
+                  <p className="text-xs text-mono-500 mt-0.5">{feat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA 버튼 */}
+          <button
+            onClick={() => onNavigate(config.path)}
+            className={`w-full py-3 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors ${config.ctaColor}`}
+            style={"ctaStyle" in config ? (config as { ctaStyle: React.CSSProperties }).ctaStyle : undefined}
+          >
+            {config.ctaLabel}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

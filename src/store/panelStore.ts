@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 interface PanelState {
   activePanel: "library" | "content" | "chat";
-  activeTab: "gallery" | "ai" | "community" | "creation";
+  activeTab: "ai" | "community";
   selectedAgentId: string | null;
   setActivePanel: (panel: PanelState["activePanel"]) => void;
   setActiveTab: (tab: PanelState["activeTab"]) => void;
@@ -11,7 +11,7 @@ interface PanelState {
 
 export const usePanelStore = create<PanelState>((set) => ({
   activePanel: "content",
-  activeTab: "gallery",
+  activeTab: "ai",
   selectedAgentId: null,
   setActivePanel: (panel) => set({ activePanel: panel }),
   setActiveTab: (tab) => set({ activeTab: tab }),
