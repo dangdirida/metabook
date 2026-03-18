@@ -44,12 +44,10 @@ Output ONLY the video prompt, max 150 words, cinematic style, detailed visual de
 
   try {
     // 비동기 큐 제출 → 즉시 request_id 반환 (타임아웃 없음)
-    const { request_id } = await fal.queue.submit("fal-ai/hunyuan-video", {
+    const { request_id } = await fal.queue.submit("fal-ai/minimax-video-01", {
       input: {
         prompt: videoPrompt,
-        resolution: "720p",
-        aspect_ratio: "16:9",
-        num_frames: "85" as const,
+        prompt_optimizer: true,
       },
     });
 
@@ -75,13 +73,13 @@ export async function GET(req: NextRequest) {
   fal.config({ credentials: falKey });
 
   try {
-    const status = await fal.queue.status("fal-ai/hunyuan-video", {
+    const status = await fal.queue.status("fal-ai/minimax-video-01", {
       requestId: request_id,
       logs: false,
     });
 
     if (status.status === "COMPLETED") {
-      const result = await fal.queue.result("fal-ai/hunyuan-video", {
+      const result = await fal.queue.result("fal-ai/minimax-video-01", {
         requestId: request_id,
       });
       const videoUrl =
