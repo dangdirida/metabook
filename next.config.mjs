@@ -18,6 +18,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.marble.worldlabs.ai",
       },
+      {
+        protocol: "https",
+        hostname: "image.pollinations.ai",
+      },
+      {
+        protocol: "https",
+        hostname: "fal.run",
+      },
+      {
+        protocol: "https",
+        hostname: "v3.fal.media",
+      },
     ],
   },
 };

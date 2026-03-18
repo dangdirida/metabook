@@ -7,6 +7,7 @@ import { mockBooks } from "@/lib/mock-data";
 import { useParams } from "next/navigation";
 import CommunityChat from "./CommunityChat";
 import CreationTab from "./CreationTab";
+import CreationGallery from "../creation/CreationGallery";
 
 interface ChatMessage {
   id: string;
@@ -34,7 +35,7 @@ export default function RightPanel() {
     <aside className="w-full md:w-[380px] border-l border-mono-200 flex-shrink-0 bg-white flex flex-col h-full">
       {/* 탭 헤더 */}
       <div className="flex border-b border-mono-200 flex-shrink-0">
-        {(["ai", "community", "creation"] as const).map((tab) => (
+        {(["gallery", "ai", "community", "creation"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -44,7 +45,9 @@ export default function RightPanel() {
                 : "text-mono-500 hover:text-mono-700"
             }`}
           >
-            {tab === "ai"
+            {tab === "gallery"
+              ? "창작 갤러리"
+              : tab === "ai"
               ? "채팅"
               : tab === "community"
               ? "커뮤니티"
@@ -55,6 +58,7 @@ export default function RightPanel() {
 
       {/* 탭 컨텐츠 */}
       <div className="flex-1 overflow-hidden flex flex-col">
+        {activeTab === "gallery" && <CreationGallery />}
         {activeTab === "ai" && <AIChat selectedAgentId={selectedAgentId} />}
         {activeTab === "community" && <CommunityChat />}
         {activeTab === "creation" && <CreationTab />}
