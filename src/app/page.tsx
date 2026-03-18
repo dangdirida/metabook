@@ -55,21 +55,19 @@ export default function Home() {
         <div className="shooting-star shooting-star-3" />
       </div>
 
-      {/* 떠다니는 이모지 */}
+      {/* 떠다니는 장식 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {["📖", "⭐", "✨", "🌙", "📚", "💫", "🔮", "🌟"].map((emoji, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <span
             key={`float-${i}`}
-            className="absolute text-2xl opacity-20 animate-float"
+            className="absolute w-1.5 h-1.5 bg-white/20 rounded-full animate-float"
             style={{
               top: `${10 + Math.random() * 80}%`,
               left: `${5 + Math.random() * 90}%`,
               animationDelay: `${i * 1.2}s`,
               animationDuration: `${6 + Math.random() * 4}s`,
             }}
-          >
-            {emoji}
-          </span>
+          />
         ))}
       </div>
 

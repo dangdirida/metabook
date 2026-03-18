@@ -19,10 +19,10 @@ export default function BookDetailPage() {
         </ErrorBoundary>
         <div className="flex-1 flex flex-col overflow-hidden">
           <ErrorBoundary>
-            <CenterPanel />
+            <TopTabs />
           </ErrorBoundary>
           <ErrorBoundary>
-            <TopTabs />
+            <CenterPanel />
           </ErrorBoundary>
         </div>
         <ErrorBoundary>
@@ -36,8 +36,8 @@ export default function BookDetailPage() {
           {activePanel === "library" && <LeftPanel />}
           {activePanel === "content" && (
             <div className="flex flex-col h-full">
-              <CenterPanel />
               <TopTabs />
+              <CenterPanel />
             </div>
           )}
           {activePanel === "chat" && <RightPanel />}

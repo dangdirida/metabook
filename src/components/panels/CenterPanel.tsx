@@ -240,7 +240,7 @@ export default function CenterPanel() {
       {showHint && (
         <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="bg-mono-900/80 text-white px-6 py-3 rounded-2xl text-sm animate-pulse pointer-events-auto">
-            인물 이름을 눌러보세요 👆
+            인물 이름을 눌러보세요
           </div>
         </div>
       )}

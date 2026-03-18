@@ -53,7 +53,7 @@ export default function CreationTab() {
         <p className="text-mono-700 font-semibold mb-1">
           아직 이 책의 창작물이 없어요
         </p>
-        <p className="text-sm text-mono-500 mb-6">첫 번째가 되어볼까요? ✨</p>
+        <p className="text-sm text-mono-500 mb-6">첫 번째가 되어볼까요?</p>
         <button className="px-6 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors">
           창작물 올리기
         </button>
