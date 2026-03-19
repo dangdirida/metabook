@@ -45,7 +45,7 @@ export default function LeftPanel() {
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               activeTab === tab ? "text-primary-500 border-b-2 border-primary-500" : "text-mono-500 hover:text-mono-700"
             }`}>
-            {tab === "my" ? "\ub0b4 \uc11c\uc7ac" : "\uc804\uccb4 \ub3c4\uc11c"}
+            {tab === "my" ? "내 서재" : "전체 도서"}
           </button>
         ))}
       </div>
@@ -103,7 +103,7 @@ function BookItem({ book, isActive, isExpanded, onSelect, onToggleExpand, onShow
 
       <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
         <div className="px-3 pt-2 pb-1 pl-12">
-          <p className="text-[10px] font-semibold text-mono-400 uppercase tracking-wider">\uc7a5\uba74</p>
+          <p className="text-[10px] font-semibold text-mono-400 uppercase tracking-wider">장면</p>
         </div>
         <div className="grid grid-cols-2 gap-2 p-2 pl-12">
           {displayImages.length > 0 ? displayImages.map((img, idx) => (
@@ -111,7 +111,7 @@ function BookItem({ book, isActive, isExpanded, onSelect, onToggleExpand, onShow
           )) : Array.from({ length: 4 }).map((_, idx) => (
             <div key={idx} className="aspect-square rounded-lg bg-mono-50 border border-mono-100 flex flex-col items-center justify-center gap-1">
               <ImageIcon className="w-4 h-4 text-mono-300" strokeWidth={1.5} />
-              <span className="text-[9px] text-mono-300">\uc7a5\uba74 {idx + 1}</span>
+              <span className="text-[9px] text-mono-300">장면 {idx + 1}</span>
             </div>
           ))}
         </div>
@@ -126,24 +126,24 @@ function SceneCard({ img, idx, onShowQR }: { img: { id: string; url?: string; al
       <div className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-300 transition-all bg-mono-100">
         {img.url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img.url} alt={img.alt || `\uc7a5\uba74 ${idx + 1}`}
+          <img src={img.url} alt={img.alt || `장면 ${idx + 1}`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-mono-100 to-mono-200 flex flex-col items-center justify-center gap-1">
             <ImageIcon className="w-4 h-4 text-mono-300" strokeWidth={1.5} />
-            <span className="text-[9px] text-mono-400">\uc7a5\uba74 {idx + 1}</span>
+            <span className="text-[9px] text-mono-400">장면 {idx + 1}</span>
           </div>
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-end justify-center pb-2">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white/90 rounded-full px-2 py-1">
             <Globe className="w-3 h-3 text-primary-600" strokeWidth={1.5} />
-            <span className="text-[9px] font-semibold text-primary-600">3D \ud0d0\ud5d8</span>
+            <span className="text-[9px] font-semibold text-primary-600">3D 탐험</span>
           </div>
         </div>
       </div>
       <button onClick={(e) => { e.stopPropagation(); onShowQR(); }}
         className="absolute top-1 right-1 p-1 bg-white/85 backdrop-blur-sm rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        title="QR \ucf54\ub4dc">
+        title="QR 코드">
         <QrCode className="w-3 h-3 text-mono-500" />
       </button>
     </div>
