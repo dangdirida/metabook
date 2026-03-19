@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 import BookCard from "@/components/ui/BookCard";
 import UserMenu from "@/components/ui/UserMenu";
 import { mockBooks } from "@/lib/mock-data";
@@ -314,6 +315,12 @@ function LibraryContent() {
                 김영사의 책들을 AI 캐릭터와 함께 탐험하고,<br />
                 나만의 독서 세계를 만들어보세요.
               </p>
+              <div className="mt-6 flex items-center gap-3">
+                <Link href="/about" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full text-sm font-semibold transition-all border border-white/30">
+                  <Sparkles className="w-4 h-4" />
+                  자세히 보기 <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         )}
