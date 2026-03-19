@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useRef, useEffect } from "react";
 import {
   Send,
@@ -22,14 +21,14 @@ interface CommunityMessage {
   createdAt: string;
 }
 
-const PROFANITY_FILTER = ["바보", "멍청이"];
+const PROFANITY_FILTER = ["ë°ë³´", "ë©ì²­ì´"];
 
 const MOCK_MESSAGES: CommunityMessage[] = [
   {
     id: "pin-1",
     userId: "admin",
-    userName: "관리자",
-    content: "환영합니다! '총, 균, 쇠' 독서 커뮤니티입니다. 서로 존중하며 대화해주세요.",
+    userName: "ê´ë¦¬ì",
+    content: "íìí©ëë¤! 'ì´, ê· , ì ' ëì ì»¤ë®¤ëí°ìëë¤. ìë¡ ì¡´ì¤íë©° ëíí´ì£¼ì¸ì.",
     type: "text",
     isPinned: true,
     createdAt: "2024-01-01T00:00:00Z",
@@ -37,8 +36,8 @@ const MOCK_MESSAGES: CommunityMessage[] = [
   {
     id: "m1",
     userId: "user1",
-    userName: "독서광민수",
-    content: "이 책 진짜 인상적이에요. 지리가 문명을 결정한다는 관점이 신선했어요.",
+    userName: "ëìê´ë¯¼ì",
+    content: "ì´ ì± ì§ì§ ì¸ìì ì´ìì. ì§ë¦¬ê° ë¬¸ëªì ê²°ì íë¤ë ê´ì ì´ ì ì íì´ì.",
     type: "text",
     isPinned: false,
     createdAt: "2024-01-15T10:30:00Z",
@@ -46,8 +45,8 @@ const MOCK_MESSAGES: CommunityMessage[] = [
   {
     id: "m2",
     userId: "user2",
-    userName: "역사덕후",
-    content: "얄리의 질문이 가장 인상깊었어요. 단순한 질문이지만 깊은 의미가 있죠.",
+    userName: "ì­ì¬ëí",
+    content: "ìë¦¬ì ì§ë¬¸ì´ ê°ì¥ ì¸ìê¹ìì´ì. ë¨ìí ì§ë¬¸ì´ì§ë§ ê¹ì ìë¯¸ê° ìì£ .",
     type: "text",
     isPinned: false,
     createdAt: "2024-01-15T10:35:00Z",
@@ -55,8 +54,8 @@ const MOCK_MESSAGES: CommunityMessage[] = [
   {
     id: "m3",
     userId: "user3",
-    userName: "과학소녀",
-    content: "가축화 안나 카레니나 원칙 부분 정말 재미있었어요 😂",
+    userName: "ê³¼íìë",
+    content: "ê°ì¶í ìë ì¹´ë ëë ìì¹ ë¶ë¶ ì ë§ ì¬ë¯¸ììì´ì ð",
     type: "text",
     isPinned: false,
     createdAt: "2024-01-15T11:00:00Z",
@@ -69,12 +68,21 @@ export default function CommunityChat() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [showReport, setShowReport] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [onlineCount] = useState(12);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // í ì¤í¸ ë©ìì§ ìë ìë©¸
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
 
   const filterProfanity = (text: string): string => {
     let filtered = text;
@@ -86,17 +94,15 @@ export default function CommunityChat() {
 
   const sendMessage = () => {
     if (!input.trim()) return;
-
     const newMsg: CommunityMessage = {
       id: Date.now().toString(),
       userId: "me",
-      userName: "나",
+      userName: "ë",
       content: filterProfanity(input.trim()),
       type: "text",
       isPinned: false,
       createdAt: new Date().toISOString(),
     };
-
     setMessages((prev) => [...prev, newMsg]);
     setInput("");
   };
@@ -109,7 +115,6 @@ export default function CommunityChat() {
   const pinnedMessages = messages.filter((m) => m.isPinned);
   const chatMessages = messages.filter((m) => !m.isPinned);
 
-  // 날짜 구분
   const groupByDate = (msgs: CommunityMessage[]) => {
     const groups: { date: string; messages: CommunityMessage[] }[] = [];
     let currentDate = "";
@@ -125,39 +130,48 @@ export default function CommunityChat() {
     return groups;
   };
 
-  const emojis = ["😊", "😂", "👍", "❤️", "🔥", "📖", "✨", "🤔", "👏", "💡", "🎉", "😍"];
+  const emojis = ["ð", "ð", "ð", "â¤ï¸", "ð¥", "ð", "â¨", "ð¤", "ð", "ð¡", "ð", "ð"];
 
   return (
-    <div className="flex flex-col h-full">
-      {/* 상단: 접속 인원 */}
+    <div className="flex flex-col h-full relative">
+      {/* í ì¤í¸ ë©ìì§ */}
+      {toast && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-mono-900/90 text-white text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none animate-fade-in">
+          {toast}
+        </div>
+      )}
+
+      {/* ìë¨: ì ì ì¸ì */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-mono-200 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-mono-500" />
+          {/* ì¤ìê° ì ì ì¸ëì¼ì´í° */}
+          <div className="relative flex items-center">
+            <span className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping opacity-75" />
+            <span className="w-2 h-2 bg-green-500 rounded-full" />
+          </div>
+          <Users className="w-4 h-4 text-mono-500 ml-1" />
           <span className="text-sm text-mono-600">
-            <span className="font-medium text-primary-500">{onlineCount}</span>명 접속 중
+            <span className="font-semibold text-primary-500">{onlineCount}ëª</span> ì ì ì¤
           </span>
         </div>
         <button
           onClick={() => setShowInvite(true)}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors font-medium"
         >
           <UserPlus className="w-3.5 h-3.5" />
-          초대
+          ì´ë
         </button>
       </div>
 
-      {/* 공지 고정 메시지 */}
+      {/* ê³µì§ ê³ ì  ë©ìì§ */}
       {pinnedMessages.map((msg) => (
-        <div
-          key={msg.id}
-          className="flex items-start gap-2 px-4 py-2 bg-accent-yellow/10 border-b border-accent-yellow/20"
-        >
-          <Pin className="w-3.5 h-3.5 text-accent-orange mt-0.5 flex-shrink-0" />
+        <div key={msg.id} className="flex items-start gap-2 px-4 py-2 bg-amber-50 border-b border-amber-100">
+          <Pin className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-mono-700">{msg.content}</p>
         </div>
       ))}
 
-      {/* 메시지 목록 */}
+      {/* ë©ìì§ ëª©ë¡ */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-3 space-y-1">
         {groupByDate(chatMessages).map((group) => (
           <div key={group.date}>
@@ -169,9 +183,7 @@ export default function CommunityChat() {
             {group.messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`group flex items-start gap-2 py-1.5 ${
-                  msg.userId === "me" ? "flex-row-reverse" : ""
-                }`}
+                className={`group flex items-start gap-2 py-1.5 ${msg.userId === "me" ? "flex-row-reverse" : ""}`}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (msg.userId !== "me") setShowReport(msg.id);
@@ -179,30 +191,22 @@ export default function CommunityChat() {
               >
                 {msg.userId !== "me" && (
                   <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-bold text-primary-600">
-                      {msg.userName[0]}
-                    </span>
+                    <span className="text-[10px] font-bold text-primary-600">{msg.userName[0]}</span>
                   </div>
                 )}
                 <div className={msg.userId === "me" ? "text-right" : ""}>
                   {msg.userId !== "me" && (
-                    <p className="text-xs font-medium text-mono-700 mb-0.5 ml-1">
-                      {msg.userName}
-                    </p>
+                    <p className="text-xs font-medium text-mono-700 mb-0.5 ml-1">{msg.userName}</p>
                   )}
                   <div
                     className={`inline-block px-3 py-2 rounded-xl text-sm max-w-[240px] text-left ${
-                      msg.userId === "me"
-                        ? "bg-primary-500 text-white"
-                        : "bg-mono-50 text-mono-900"
+                      msg.userId === "me" ? "bg-primary-500 text-white" : "bg-mono-50 text-mono-900"
                     }`}
                   >
                     {msg.content}
                   </div>
                   <div className={`flex items-center gap-1 mt-0.5 ${msg.userId === "me" ? "justify-end" : ""}`}>
-                    <span className="text-[10px] text-mono-400">
-                      {formatDate(msg.createdAt)}
-                    </span>
+                    <span className="text-[10px] text-mono-400">{formatDate(msg.createdAt)}</span>
                     {msg.userId !== "me" && (
                       <button
                         onClick={() => setShowReport(msg.id)}
@@ -220,16 +224,13 @@ export default function CommunityChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 이모지 피커 */}
+      {/* ì´ëª¨ì§ í¼ì»¤ */}
       {showEmoji && (
         <div className="px-4 py-2 border-t border-mono-200 flex flex-wrap gap-2">
           {emojis.map((emoji) => (
             <button
               key={emoji}
-              onClick={() => {
-                setInput((prev) => prev + emoji);
-                setShowEmoji(false);
-              }}
+              onClick={() => { setInput((prev) => prev + emoji); setShowEmoji(false); }}
               className="text-xl hover:scale-125 transition-transform"
             >
               {emoji}
@@ -238,16 +239,21 @@ export default function CommunityChat() {
         </div>
       )}
 
-      {/* 입력창 */}
+      {/* ìë ¥ì°½ */}
       <div className="p-3 border-t border-mono-200 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowEmoji(!showEmoji)}
-            className="p-2 text-mono-400 hover:text-mono-600"
+            className="p-2 text-mono-400 hover:text-mono-600 transition-colors"
+            title="ì´ëª¨ì§"
           >
             <Smile className="w-5 h-5" />
           </button>
-          <button className="p-2 text-mono-400 hover:text-mono-600">
+          <button
+            className="p-2 text-mono-400 hover:text-mono-600 transition-colors"
+            title="ì´ë¯¸ì§ ì²¨ë¶ (ì¤ë¹ ì¤)"
+            onClick={() => setToast("ì´ë¯¸ì§ ì²¨ë¶ ê¸°ë¥ì ì¤ë¹ ì¤ì´ìì ð ï¸")}
+          >
             <ImageIcon className="w-5 h-5" />
           </button>
           <input
@@ -255,24 +261,25 @@ export default function CommunityChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="메시지 입력..."
+            placeholder="ë©ìì§ ìë ¥... (Enterë¡ ì ì¡)"
             className="flex-1 px-4 py-2.5 bg-mono-50 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim()}
-            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-40"
+            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-40 transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* 초대 모달 */}
+      {/* ì´ë ëª¨ë¬ */}
       {showInvite && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-mono-900 mb-4">초대하기</h3>
+            <h3 className="text-lg font-semibold text-mono-900 mb-1">ì¹êµ¬ ì´ëíê¸°</h3>
+            <p className="text-sm text-mono-400 mb-4">ë§í¬ë¥¼ ê³µì í´ì í¨ê» ì½ì´ì!</p>
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -280,44 +287,42 @@ export default function CommunityChat() {
                   url.searchParams.set("tab", "community");
                   navigator.clipboard.writeText(url.toString());
                   setShowInvite(false);
+                  setToast("ë§í¬ê° ë³µì¬ëì´ì! ð");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 bg-mono-50 rounded-xl hover:bg-mono-100 transition-colors"
               >
                 <Copy className="w-5 h-5 text-mono-500" />
-                <span className="text-sm">링크 복사</span>
+                <span className="text-sm">ì»¤ë®¤ëí° ë§í¬ ë³µì¬</span>
               </button>
             </div>
-            <button
-              onClick={() => setShowInvite(false)}
-              className="w-full mt-4 py-3 text-mono-500 text-sm"
-            >
-              닫기
+            <button onClick={() => setShowInvite(false)} className="w-full mt-4 py-3 text-mono-500 text-sm">
+              ë«ê¸°
             </button>
           </div>
         </div>
       )}
 
-      {/* 신고 메뉴 */}
+      {/* ì ê³  ë©âm4 */}
       {showReport && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4 md:items-center">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-mono-900 mb-4">신고하기</h3>
+            <h3 className="text-lg font-semibold text-mono-900 mb-4">ì ê³ íê¸°</h3>
             <div className="space-y-2">
-              {["스팸/광고", "욕설/혐오 표현", "부적절한 콘텐츠", "기타"].map((reason) => (
+              {["ì¤í¸/ê´ê³ ", "ìì¤/íì¤ íí", "ë¶ì ì í ì½íì¸ ", "ê¸°í"].map((reason) => (
                 <button
                   key={reason}
-                  onClick={() => setShowReport(null)}
+                  onClick={() => {
+                    setShowReport(null);
+                    setToast("ì ê³ ê° ì ìëì´ì. ê²í  í ì¡°ì¹í ê²ì.");
+                  }}
                   className="w-full px-4 py-3 text-left text-sm bg-mono-50 rounded-xl hover:bg-mono-100 transition-colors"
                 >
                   {reason}
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowReport(null)}
-              className="w-full mt-4 py-3 text-mono-500 text-sm"
-            >
-              취소
+            <button onClick={() => setShowReport(null)} className="w-full mt-4 py-3 text-mono-500 text-sm">
+              ì·¨ì
             </button>
           </div>
         </div>
