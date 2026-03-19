@@ -1,350 +1,559 @@
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  QrCode,
-  Box,
-  MessageCircle,
-  Users,
-  Sparkles,
-  ChevronRight,
-  ArrowLeft,
-  Check,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 
-const FEATURES = [
-  {
-    id: "qr",
-    number: "01",
-    icon: QrCode,
-    title: "QR로 책 속 세계 입장",
-    subtitle: "책 표지·페이지의 QR 코드를 스캔하면 바로 이 세계로",
-    description:
-      "책에 인쇄된 QR 코드를 스캔하면 해당 책의 MetaBook 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 책장에서 — 언제 어디서든 QR 하나로 책 속 세계가 열립니다.",
-    details: [
-      "책 표지 QR → 책 전체 소개 페이지",
-      "본문 페이지 QR → 해당 장면 페이지",
-      "앱 설치 없이 브라우저만으로 이용 가능",
-    ],
-    gradient: "from-emerald-400 to-teal-500",
-    bg: "bg-emerald-50",
-    iconColor: "text-emerald-600",
-    badgeColor: "bg-emerald-100 text-emerald-700",
-    visual: (
-      <div className="relative w-full h-48 flex items-center justify-center">
-        <div className="w-32 h-40 bg-white rounded-xl shadow-lg border border-gray-100 flex flex-col overflow-hidden">
-          <div className="h-24 bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <QrCode className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          <div className="flex-1 p-2 space-y-1">
-            <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-            <div className="h-1.5 bg-gray-100 rounded-full w-3/4" />
-            <div className="h-1.5 bg-emerald-100 rounded-full w-1/2" />
-          </div>
-        </div>
-        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-xl shadow-md border border-gray-100 flex items-center justify-center">
-          <div className="grid grid-cols-3 gap-0.5 w-10 h-10">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className={`rounded-sm ${[0,1,3,4,5,7,8].includes(i) ? "bg-gray-800" : "bg-white"}`} />
-            ))}
-          </div>
-        </div>
-        <div className="absolute left-0 bottom-4 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">
-          QR 스캔
-        </div>
+/* ─── 인라인 SVG 비주얼 컴포넌트들 ─── */
+
+function QRVisual() {
+  return (
+    <div className="relative w-full flex items-center justify-center" style={{height:320}}>
+      {/* 배경 빛 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{width:280,height:280,background:"radial-gradient(ellipse at center, rgba(50,210,157,0.15) 0%, transparent 70%)",borderRadius:"50%"}} />
       </div>
-    ),
+      {/* 책 목업 */}
+      <svg width="320" height="280" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* 책 그림자 */}
+        <ellipse cx="130" cy="260" rx="80" ry="12" fill="rgba(0,0,0,0.08)" />
+        {/* 책 바디 */}
+        <rect x="50" y="40" width="160" height="210" rx="8" fill="#1a1a2e" />
+        <rect x="54" y="44" width="152" height="202" rx="6" fill="#16213e" />
+        {/* 책 표지 그라디언트 */}
+        <rect x="58" y="48" width="144" height="194" rx="4" fill="url(#bookGrad)" />
+        <defs>
+          <linearGradient id="bookGrad" x1="58" y1="48" x2="202" y2="242" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#0f3460" />
+            <stop offset="1" stopColor="#16213e" />
+          </linearGradient>
+        </defs>
+        {/* 책 제목 라인 */}
+        <rect x="74" y="72" width="112" height="8" rx="4" fill="rgba(255,255,255,0.7)" />
+        <rect x="74" y="88" width="80" height="5" rx="2.5" fill="rgba(255,255,255,0.35)" />
+        {/* QR 코드 영역 */}
+        <rect x="88" y="120" width="84" height="84" rx="6" fill="white" />
+        {/* QR 패턴 */}
+        <rect x="94" y="126" width="20" height="20" rx="2" fill="#111" />
+        <rect x="96" y="128" width="16" height="16" rx="1.5" fill="white" />
+        <rect x="99" y="131" width="10" height="10" rx="1" fill="#111" />
+        <rect x="152" y="126" width="20" height="20" rx="2" fill="#111" />
+        <rect x="154" y="128" width="16" height="16" rx="1.5" fill="white" />
+        <rect x="157" y="131" width="10" height="10" rx="1" fill="#111" />
+        <rect x="94" y="184" width="20" height="20" rx="2" fill="#111" />
+        <rect x="96" y="186" width="16" height="16" rx="1.5" fill="white" />
+        <rect x="99" y="189" width="10" height="10" rx="1" fill="#111" />
+        <rect x="120" y="126" width="6" height="6" rx="1" fill="#111" />
+        <rect x="130" y="126" width="6" height="6" rx="1" fill="#111" />
+        <rect x="140" y="126" width="6" height="6" rx="1" fill="#111" />
+        <rect x="120" y="136" width="6" height="6" rx="1" fill="#111" />
+        <rect x="140" y="136" width="6" height="6" rx="1" fill="#111" />
+        <rect x="120" y="146" width="6" height="6" rx="1" fill="#111" />
+        <rect x="130" y="146" width="6" height="6" rx="1" fill="#111" />
+        <rect x="140" y="146" width="6" height="6" rx="1" fill="#111" />
+        <rect x="120" y="156" width="6" height="6" rx="1" fill="#111" />
+        <rect x="130" y="156" width="6" height="6" rx="1" fill="#111" />
+        <rect x="120" y="166" width="6" height="6" rx="1" fill="#111" />
+        <rect x="130" y="166" width="6" height="6" rx="1" fill="#111" />
+        <rect x="140" y="166" width="6" height="6" rx="1" fill="#111" />
+        <rect x="120" y="176" width="6" height="6" rx="1" fill="#111" />
+        <rect x="140" y="176" width="6" height="6" rx="1" fill="#111" />
+        <rect x="130" y="176" width="6" height="6" rx="1" fill="#111" />
+        {/* QR 스캔 라인 애니메이션 */}
+        <rect x="88" y="162" width="84" height="2" rx="1" fill="rgba(50,210,157,0.8)">
+          <animateTransform attributeName="transform" type="translate" values="0 -36; 0 36; 0 -36" dur="2s" repeatCount="indefinite" />
+        </rect>
+        {/* 폰 */}
+        <rect x="210" y="80" width="78" height="140" rx="12" fill="#0d0d0d" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+        <rect x="215" y="88" width="68" height="124" rx="8" fill="#111827" />
+        {/* 폰 화면 내용 */}
+        <rect x="219" y="100" width="60" height="10" rx="3" fill="rgba(50,210,157,0.7)" />
+        <rect x="219" y="116" width="40" height="6" rx="3" fill="rgba(255,255,255,0.3)" />
+        <rect x="219" y="128" width="52" height="6" rx="3" fill="rgba(255,255,255,0.2)" />
+        <rect x="219" y="140" width="44" height="6" rx="3" fill="rgba(255,255,255,0.2)" />
+        {/* 연결선 */}
+        <path d="M172 162 Q191 162 210 140" stroke="rgba(50,210,157,0.5)" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
+        {/* MetaBook 레이블 */}
+        <rect x="215" y="158" width="60" height="20" rx="4" fill="rgba(50,210,157,0.15)" stroke="rgba(50,210,157,0.3)" strokeWidth="1" />
+        <text x="245" y="172" textAnchor="middle" fontSize="8" fontWeight="600" fill="rgba(50,210,157,0.9)" fontFamily="system-ui">MetaBook</text>
+      </svg>
+    </div>
+  );
+}
+
+function WorldVisual() {
+  return (
+    <div className="relative w-full flex items-center justify-center" style={{height:320}}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{width:300,height:300,background:"radial-gradient(ellipse at 40% 40%, rgba(124,58,237,0.18) 0%, transparent 65%)",borderRadius:"50%"}} />
+      </div>
+      <svg width="340" height="300" viewBox="0 0 340 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* 3D 방 바닥 */}
+        <path d="M60 200 L170 260 L280 200 L170 140 Z" fill="url(#floorGrad)" />
+        <defs>
+          <linearGradient id="floorGrad" x1="60" y1="200" x2="280" y2="260" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#1e1b4b" />
+            <stop offset="1" stopColor="#312e81" />
+          </linearGradient>
+          <linearGradient id="wallLeft" x1="60" y1="200" x2="170" y2="140" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#0f172a" />
+            <stop offset="1" stopColor="#1e1b4b" />
+          </linearGradient>
+          <linearGradient id="wallRight" x1="280" y1="200" x2="170" y2="140" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#1e1b4b" />
+            <stop offset="1" stopColor="#2d1d6e" />
+          </linearGradient>
+        </defs>
+        {/* 왼쪽 벽 */}
+        <path d="M60 200 L170 140 L170 40 L60 100 Z" fill="url(#wallLeft)" />
+        {/* 오른쪽 벽 */}
+        <path d="M280 200 L170 140 L170 40 L280 100 Z" fill="url(#wallRight)" />
+        {/* 벽 모서리 선 */}
+        <line x1="170" y1="40" x2="170" y2="140" stroke="rgba(139,92,246,0.5)" strokeWidth="1" />
+        <line x1="170" y1="140" x2="60" y2="200" stroke="rgba(139,92,246,0.3)" strokeWidth="1" />
+        <line x1="170" y1="140" x2="280" y2="200" stroke="rgba(139,92,246,0.3)" strokeWidth="1" />
+        {/* 바닥 그리드 */}
+        <line x1="115" y1="170" x2="225" y2="230" stroke="rgba(139,92,246,0.2)" strokeWidth="0.5" />
+        <line x1="140" y1="155" x2="250" y2="215" stroke="rgba(139,92,246,0.2)" strokeWidth="0.5" />
+        <line x1="90" y1="185" x2="200" y2="245" stroke="rgba(139,92,246,0.2)" strokeWidth="0.5" />
+        <line x1="100" y1="215" x2="210" y2="170" stroke="rgba(139,92,246,0.15)" strokeWidth="0.5" />
+        <line x1="120" y1="230" x2="230" y2="185" stroke="rgba(139,92,246,0.15)" strokeWidth="0.5" />
+        {/* 3D 가구 - 소파 */}
+        <path d="M95 195 L135 218 L135 208 L155 219 L155 229 L95 205 Z" fill="#4c1d95" />
+        <path d="M95 195 L135 218 L155 208 L115 185 Z" fill="#6d28d9" />
+        <path d="M155 208 L155 229 L175 218 L175 197 Z" fill="#5b21b6" />
+        {/* 창문 효과 */}
+        <rect x="90" y="55" width="60" height="70" rx="3" fill="rgba(139,92,246,0.05)" stroke="rgba(139,92,246,0.2)" strokeWidth="1" />
+        <line x1="120" y1="55" x2="120" y2="125" stroke="rgba(139,92,246,0.2)" strokeWidth="0.5" />
+        <line x1="90" y1="90" x2="150" y2="90" stroke="rgba(139,92,246,0.2)" strokeWidth="0.5" />
+        {/* 빛 줄기 */}
+        <path d="M90 55 L60 200" stroke="rgba(196,181,253,0.06)" strokeWidth="25" />
+        {/* 조작 힌트 원형 */}
+        <circle cx="260" cy="80" r="26" fill="rgba(139,92,246,0.12)" stroke="rgba(139,92,246,0.4)" strokeWidth="1.5" />
+        <circle cx="260" cy="80" r="18" fill="rgba(139,92,246,0.18)" />
+        <text x="260" y="76" textAnchor="middle" fontSize="10" fill="rgba(196,181,253,0.9)">360°</text>
+        <text x="260" y="88" textAnchor="middle" fontSize="7" fill="rgba(196,181,253,0.6)">자유시점</text>
+        {/* 네비게이션 도트 */}
+        <circle cx="170" cy="260" r="3" fill="rgba(139,92,246,0.8)" />
+        <circle cx="155" cy="255" r="2" fill="rgba(139,92,246,0.4)" />
+        <circle cx="185" cy="255" r="2" fill="rgba(139,92,246,0.4)" />
+        <circle cx="140" cy="248" r="1.5" fill="rgba(139,92,246,0.2)" />
+        <circle cx="200" cy="248" r="1.5" fill="rgba(139,92,246,0.2)" />
+      </svg>
+    </div>
+  );
+}
+
+function ChatVisual() {
+  return (
+    <div className="relative w-full flex items-center justify-center" style={{height:320}}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{width:260,height:260,background:"radial-gradient(ellipse at center, rgba(14,165,233,0.12) 0%, transparent 70%)",borderRadius:"50%"}} />
+      </div>
+      <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* 채팅 창 메인 */}
+        <rect x="40" y="30" width="220" height="240" rx="20" fill="#0c1a2e" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5" />
+        {/* 헤더 */}
+        <rect x="40" y="30" width="220" height="56" rx="20" fill="#0e2233" />
+        <rect x="40" y="64" width="220" height="22" fill="#0e2233" />
+        {/* 아바타 */}
+        <circle cx="78" cy="58" r="18" fill="url(#avatarGrad)" />
+        <defs>
+          <radialGradient id="avatarGrad" cx="50%" cy="30%" r="70%">
+            <stop stopColor="#38bdf8" />
+            <stop offset="1" stopColor="#0284c7" />
+          </radialGradient>
+        </defs>
+        <text x="78" y="63" textAnchor="middle" fontSize="13" fontWeight="700" fill="white" fontFamily="system-ui">재</text>
+        {/* 캐릭터 이름 */}
+        <text x="104" y="54" fontSize="11" fontWeight="600" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">재레드 다이아모드</text>
+        <text x="104" y="68" fontSize="9" fill="rgba(56,189,248,0.7)" fontFamily="system-ui">AI 캐릭터 · 온라인</text>
+        {/* 온라인 점 */}
+        <circle cx="92" cy="72" r="4" fill="#22c55e" stroke="#0c1a2e" strokeWidth="1.5" />
+        {/* 메시지들 */}
+        {/* 캐릭터 메시지 1 */}
+        <rect x="56" y="102" width="148" height="36" rx="14" rx2="4" fill="#1e3a5f" />
+        <path d="M56 112 L46 120 L56 122 Z" fill="#1e3a5f" />
+        <text x="74" y="117" fontSize="9" fill="rgba(255,255,255,0.85)" fontFamily="system-ui">안녕하세요, 저는 재레드입니다.</text>
+        <text x="74" y="130" fontSize="9" fill="rgba(255,255,255,0.85)" fontFamily="system-ui">묵었든 묻어보세요!</text>
+        {/* 내 메시지 */}
+        <rect x="110" y="152" width="134" height="28" rx="14" fill="url(#myMsgGrad)" />
+        <path d="M244 158 L254 164 L244 168 Z" fill="url(#myMsgGrad)" />
+        <defs>
+          <linearGradient id="myMsgGrad" x1="110" y1="152" x2="244" y2="180" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#0ea5e9" />
+            <stop offset="1" stopColor="#0284c7" />
+          </linearGradient>
+        </defs>
+        <text x="177" y="171" textAnchor="middle" fontSize="9" fill="white" fontFamily="system-ui">문명이 발전한 이유가 뫐가요?</text>
+        {/* 캐릭터 메시지 2 (타이핑) */}
+        <rect x="56" y="196" width="100" height="30" rx="14" fill="#1e3a5f" />
+        <path d="M56 206 L46 213 L56 216 Z" fill="#1e3a5f" />
+        {/* 타이핑 도트 */}
+        <circle cx="86" cy="211" r="3" fill="rgba(56,189,248,0.7)">
+          <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" begin="0s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="101" cy="211" r="3" fill="rgba(56,189,248,0.7)">
+          <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="116" cy="211" r="3" fill="rgba(56,189,248,0.7)">
+          <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+        </circle>
+        {/* 입력창 */}
+        <rect x="50" y="240" width="200" height="20" rx="10" fill="#1a2740" stroke="rgba(14,165,233,0.2)" strokeWidth="1" />
+        <text x="70" y="254" fontSize="8" fill="rgba(255,255,255,0.25)" fontFamily="system-ui">메시지를 입력하세요...</text>
+        <circle cx="238" cy="250" r="7" fill="#0ea5e9" />
+        <path d="M234 250 L239 247 L239 253 Z" fill="white" />
+      </svg>
+    </div>
+  );
+}
+
+function CommunityVisual() {
+  return (
+    <div className="relative w-full flex items-center justify-center" style={{height:320}}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{width:280,height:280,background:"radial-gradient(ellipse at center, rgba(244,63,94,0.1) 0%, transparent 70%)",borderRadius:"50%"}} />
+      </div>
+      <svg width="320" height="300" viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* 메인 채팅방 카드 */}
+        <rect x="40" y="20" width="240" height="260" rx="20" fill="#12141a" stroke="rgba(244,63,94,0.12)" strokeWidth="1.5" />
+        {/* 헤더 */}
+        <rect x="40" y="20" width="240" height="52" rx="20" fill="#1a1d26" />
+        <rect x="40" y="52" width="240" height="20" fill="#1a1d26" />
+        {/* 실시간 dot */}
+        <circle cx="62" cy="46" r="5" fill="#22c55e">
+          <animate attributeName="r" values="5;7;5" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="62" cy="46" r="4" fill="#22c55e" />
+        <text x="74" y="42" fontSize="11" fontWeight="600" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">독자 커뮤니티</text>
+        <text x="74" y="56" fontSize="9" fill="rgba(34,197,94,0.8)" fontFamily="system-ui">24명 실시간 접속</text>
+        {/* 메시지 1 */}
+        <circle cx="62" cy="92" r="12" fill="#be123c" />
+        <text x="62" y="96" textAnchor="middle" fontSize="9" fontWeight="700" fill="white" fontFamily="system-ui">민</text>
+        <rect x="82" y="80" width="156" height="32" rx="12" fill="#1f2937" />
+        <text x="96" y="93" fontSize="9" fill="rgba(255,255,255,0.8)" fontFamily="system-ui">결말이 너무 충격적이에요 😱</text>
+        <text x="96" y="105" fontSize="8" fill="rgba(255,255,255,0.4)" fontFamily="system-ui">민지 · 오후 2:34</text>
+        {/* 메시지 2 */}
+        <circle cx="62" cy="138" r="12" fill="#1d4ed8" />
+        <text x="62" y="142" textAnchor="middle" fontSize="9" fontWeight="700" fill="white" fontFamily="system-ui">수</text>
+        <rect x="82" y="126" width="148" height="32" rx="12" fill="#1f2937" />
+        <text x="96" y="139" fontSize="9" fill="rgba(255,255,255,0.8)" fontFamily="system-ui">3장부터 복선이있었어요!</text>
+        <text x="96" y="151" fontSize="8" fill="rgba(255,255,255,0.4)" fontFamily="system-ui">수연 · 오후 2:35</text>
+        {/* 내 메시지 (오른쪽) */}
+        <rect x="100" y="174" width="148" height="30" rx="12" fill="url(#commGrad)" />
+        <defs>
+          <linearGradient id="commGrad" x1="100" y1="174" x2="248" y2="204" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#f43f5e" />
+            <stop offset="1" stopColor="#e11d48" />
+          </linearGradient>
+        </defs>
+        <text x="174" y="191" textAnchor="middle" fontSize="9" fill="white" fontFamily="system-ui">작가님 천재인듯 🔥</text>
+        <text x="238" y="205" fontSize="8" fill="rgba(255,255,255,0.35)" fontFamily="system-ui">나 · 오후 2:35</text>
+        {/* 이모지 반응 바 */}
+        <rect x="82" y="216" width="176" height="24" rx="12" fill="#1f2937" />
+        <text x="98" y="232" fontSize="10" fontFamily="system-ui">🔥</text>
+        <text x="110" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">12</text>
+        <text x="126" y="232" fontSize="10" fontFamily="system-ui">😮</text>
+        <text x="138" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">8</text>
+        <text x="154" y="232" fontSize="10" fontFamily="system-ui">❤️</text>
+        <text x="166" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">24</text>
+        <text x="190" y="232" fontSize="9" fill="rgba(244,63,94,0.7)" fontFamily="system-ui">+ 반응</text>
+        {/* 하단 입력 */}
+        <rect x="50" y="254" width="220" height="18" rx="9" fill="#1f2937" stroke="rgba(244,63,94,0.15)" strokeWidth="1" />
+        <text x="70" y="267" fontSize="8" fill="rgba(255,255,255,0.2)" fontFamily="system-ui">감상을 나눠보세요...</text>
+      </svg>
+    </div>
+  );
+}
+
+function CreationVisual() {
+  return (
+    <div className="relative w-full flex items-center justify-center" style={{height:320}}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{width:300,height:300,background:"radial-gradient(ellipse at 60% 40%, rgba(245,158,11,0.15) 0%, transparent 65%)",borderRadius:"50%"}} />
+      </div>
+      <svg width="340" height="300" viewBox="0 0 340 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* 숏북 카드 */}
+        <rect x="30" y="50" width="88" height="120" rx="10" fill="url(#sbGrad)" />
+        <defs>
+          <linearGradient id="sbGrad" x1="30" y1="50" x2="118" y2="170" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#10b981" />
+            <stop offset="1" stopColor="#047857" />
+          </linearGradient>
+          <linearGradient id="smGrad" x1="126" y1="30" x2="214" y2="190" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#8b5cf6" />
+            <stop offset="1" stopColor="#5b21b6" />
+          </linearGradient>
+          <linearGradient id="gdGrad" x1="222" y1="50" x2="310" y2="170" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#f59e0b" />
+            <stop offset="1" stopColor="#d97706" />
+          </linearGradient>
+        </defs>
+        <rect x="34" y="58" width="80" height="5" rx="2.5" fill="rgba(255,255,255,0.5)" />
+        <rect x="34" y="68" width="56" height="3.5" rx="1.75" fill="rgba(255,255,255,0.3)" />
+        <rect x="34" y="78" width="64" height="3.5" rx="1.75" fill="rgba(255,255,255,0.25)" />
+        <rect x="34" y="88" width="48" height="3.5" rx="1.75" fill="rgba(255,255,255,0.2)" />
+        <text x="44" y="138" fontSize="20" textAnchor="middle" fontFamily="system-ui">📖</text>
+        <rect x="34" y="154" width="80" height="10" rx="5" fill="rgba(255,255,255,0.2)" />
+        <text x="74" y="163" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">숯북</text>
+        <text x="34" y="182" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">다른 시점으로</text>
+        <text x="34" y="194" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">재집필</text>
+        {/* 숏뮤비 카드 (가운데, 위로) */}
+        <rect x="126" y="30" width="88" height="160" rx="10" fill="url(#smGrad)" />
+        <rect x="130" y="50" width="80" height="45" rx="6" fill="rgba(0,0,0,0.3)" />
+        <circle cx="170" cy="72" r="14" fill="rgba(255,255,255,0.15)" />
+        <path d="M165 65 L165 79 L179 72 Z" fill="white" />
+        <text x="170" y="118" fontSize="20" textAnchor="middle" fontFamily="system-ui">🎬</text>
+        <rect x="130" y="134" width="80" height="10" rx="5" fill="rgba(255,255,255,0.2)" />
+        <text x="170" y="143" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">숯뮤비</text>
+        <text x="130" y="160" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">AI 영상으로</text>
+        <text x="130" y="172" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">장면 구현</text>
+        {/* 굿즈 카드 */}
+        <rect x="222" y="50" width="88" height="120" rx="10" fill="url(#gdGrad)" />
+        <rect x="226" y="58" width="80" height="5" rx="2.5" fill="rgba(255,255,255,0.5)" />
+        <rect x="226" y="68" width="56" height="3.5" rx="1.75" fill="rgba(255,255,255,0.3)" />
+        <rect x="226" y="78" width="64" height="3.5" rx="1.75" fill="rgba(255,255,255,0.25)" />
+        <text x="236" y="138" fontSize="20" textAnchor="middle" fontFamily="system-ui">🎁</text>
+        <rect x="226" y="154" width="80" height="10" rx="5" fill="rgba(255,255,255,0.2)" />
+        <text x="266" y="163" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">굿즈</text>
+        <text x="226" y="182" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">체감을 굿즈로</text>
+        {/* 하단 "AI와 함께" 레이블 */}
+        <rect x="110" y="218" width="120" height="26" rx="13" fill="#1a1a2e" stroke="rgba(245,158,11,0.4)" strokeWidth="1" />
+        <text x="170" y="234" textAnchor="middle" fontSize="9" fontWeight="600" fill="rgba(245,158,11,0.9)" fontFamily="system-ui">✨ AI와 함기 만들기</text>
+        {/* 별 효과 */}
+        <text x="52" y="34" fontSize="14" fontFamily="system-ui" opacity="0.6">✨</text>
+        <text x="270" y="40" fontSize="10" fontFamily="system-ui" opacity="0.5">✨</text>
+        <text x="155" y="280" fontSize="12" fontFamily="system-ui" opacity="0.4">✨</text>
+      </svg>
+    </div>
+  );
+}
+
+/* ─── 섹션 컴포넌트 ─── */
+const SECTIONS = [
+  {
+    num: "01",
+    tag: "QR 입장",
+    title: "QR 코드 하나로
+체에 들어오세요",
+    desc: "체 표지나 본문 페이지에 인쇄된 QR 코드를 스캔하면, 해당 체의 MetaBook 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 첵장에서 — QR 하나로 체 속 세계가 열립니다.",
+    pills: ["체 표지 QR", "본문 페이지 QR", "앱 설치 불필요"],
+    accent: "#32d29d",
+    accentLight: "rgba(50,210,157,0.08)",
+    accentBorder: "rgba(50,210,157,0.15)",
+    visual: QRVisual,
+    flip: false,
   },
   {
-    id: "3d",
-    number: "02",
-    icon: Box,
-    title: "책 속 세계를 3D로 탐험",
-    subtitle: "장면 이미지를 선택하면 3D 공간으로 입장",
-    description:
-      "책 속 배경과 장면들을 실제 3D 공간으로 재현했습니다. 카페, 저택, 골목길 — 작가가 묘사한 그 공간을 직접 걷는 듯한 몰입감을 경험하세요.",
-    details: [
-      "360° 자유 시점으로 공간 탐험",
-      "책 속 주요 장면의 3D 재현",
-      "장면 이미지 클릭 → 즉시 3D 입장",
-    ],
-    gradient: "from-violet-400 to-purple-500",
-    bg: "bg-violet-50",
-    iconColor: "text-violet-600",
-    badgeColor: "bg-violet-100 text-violet-700",
-    visual: (
-      <div className="relative w-full h-48 flex items-center justify-center">
-        <div className="w-44 h-32 rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-violet-900 to-indigo-900 relative">
-          <div className="absolute inset-0 opacity-30">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="absolute border border-violet-300/30" style={{ left: `${i * 20}%`, top: 0, bottom: 0, width: "1px", transform: `perspective(100px) rotateY(${i * 5}deg)` }} />
-            ))}
-          </div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-            {[1,2,3].map(i => (
-              <div key={i} className="w-2 h-8 bg-violet-300/40 rounded-sm" style={{ transform: `scaleY(${0.5 + i * 0.2})` }} />
-            ))}
-          </div>
-          <div className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1">
-            <Box className="w-3 h-3 text-violet-200" />
-            <span className="text-violet-100 text-[9px] font-medium">3D MODE</span>
-          </div>
-        </div>
-        <div className="absolute -bottom-1 right-2 bg-white rounded-full shadow-md px-2 py-1 flex items-center gap-1 text-[10px] font-semibold text-violet-600 border border-violet-100">
-          <Box className="w-3 h-3" /> 3D 탐험
-        </div>
-      </div>
-    ),
+    num: "02",
+    tag: "3D 탐험",
+    title: "체 속 공간을
+직접 돌아다니세요",
+    desc: "직접 장면 이미지를 선택하면 360° 3D 공간으로 입장합니다. 작가가 묘사한 카페, 저택, 골목길을 실제로 걸는 듯한 며칠감으로 경험하세요.",
+    pills: ["360° 자유 시점", "주요 장면 재현", "멋진 분위기"],
+    accent: "#8b5cf6",
+    accentLight: "rgba(139,92,246,0.08)",
+    accentBorder: "rgba(139,92,246,0.15)",
+    visual: WorldVisual,
+    flip: true,
   },
   {
-    id: "chat",
-    number: "03",
-    icon: MessageCircle,
-    title: "책 속 인물과 1:1 채팅",
-    subtitle: "캐릭터가 직접 대답합니다 — AI로 구현된 책 속 인물",
-    description:
-      "주인공에게 묻고 싶은 게 있었나요? MetaBook에서는 책 속 인물과 직접 대화할 수 있습니다. AI가 캐릭터의 성격, 말투, 가치관을 학습해 진짜처럼 대답합니다.",
-    details: [
-      "캐릭터 고유의 말투와 성격 반영",
-      "책 내용을 기반으로 한 답변",
-      "무한 대화 — 책이 끝나도 이야기는 계속",
-    ],
-    gradient: "from-sky-400 to-blue-500",
-    bg: "bg-sky-50",
-    iconColor: "text-sky-600",
-    badgeColor: "bg-sky-100 text-sky-700",
-    visual: (
-      <div className="relative w-full h-48 flex items-center justify-center">
-        <div className="w-48 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-sky-400 to-blue-500 px-3 py-2 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white text-[10px] font-bold">재</div>
-            <span className="text-white text-xs font-semibold">재레드 다이아몬드</span>
-          </div>
-          <div className="p-2 space-y-1.5">
-            <div className="flex justify-end"><div className="bg-sky-500 text-white text-[9px] rounded-xl rounded-tr-sm px-2 py-1 max-w-[80%]">왜 문명이 발전한 건가요?</div></div>
-            <div className="flex"><div className="bg-gray-100 text-gray-700 text-[9px] rounded-xl rounded-tl-sm px-2 py-1 max-w-[80%]">지리적 환경이 결정적 역할을 했습니다. 작물화 가능한 식물과...</div></div>
-            <div className="flex justify-end"><div className="bg-sky-500 text-white text-[9px] rounded-xl rounded-tr-sm px-2 py-1">더 자세히 알고 싶어요!</div></div>
-            <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" /><div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{animationDelay:"0.1s"}} /><div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{animationDelay:"0.2s"}} /></div>
-          </div>
-        </div>
-      </div>
-    ),
+    num: "03",
+    tag: "AI 캐릭터",
+    title: "체 속 인물과
+직접 대화하세요",
+    desc: "주인공에게 묻고 싶은 게 있었나요? MetaBook에서는 체 속 인물과 직접 1:1 대화할 수 있습니다. AI가 캐릭터의 성격, 말투, 가치관을 학습해 진짜체럼 대답합니다.",
+    pills: ["캐릭터 말투 반영", "쭅 내용 기반", "무한 대화"],
+    accent: "#0ea5e9",
+    accentLight: "rgba(14,165,233,0.08)",
+    accentBorder: "rgba(14,165,233,0.15)",
+    visual: ChatVisual,
+    flip: false,
   },
   {
-    id: "community",
-    number: "04",
-    icon: Users,
-    title: "독자들과 실시간 감상 공유",
-    subtitle: "같은 책을 읽은 독자들과 지금 바로 이야기하세요",
-    description:
-      "혼자 읽고 끝내기 아쉬웠나요? MetaBook 커뮤니티에서 같은 책을 읽은 독자들과 실시간으로 감상을 나누세요. 누군가와 함께라면 책이 더 풍부해집니다.",
-    details: [
-      "책별 전용 커뮤니티 채팅방",
-      "실시간 메시지 + 이모지 반응",
-      "독자 초대 링크로 친구와 함께",
-    ],
-    gradient: "from-rose-400 to-pink-500",
-    bg: "bg-rose-50",
-    iconColor: "text-rose-600",
-    badgeColor: "bg-rose-100 text-rose-700",
-    visual: (
-      <div className="relative w-full h-48 flex items-center justify-center">
-        <div className="w-48 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b border-gray-100">
-            <div className="flex items-center gap-1.5">
-              <div className="relative w-2 h-2"><span className="absolute w-full h-full bg-green-400 rounded-full animate-ping opacity-75" /><span className="w-full h-full bg-green-500 rounded-full block" /></div>
-              <span className="text-[10px] font-semibold text-gray-700">독자 커뮤니티</span>
-            </div>
-            <span className="text-[9px] text-green-600 font-semibold">12명 온라인</span>
-          </div>
-          <div className="p-2 space-y-1.5">
-            {[{name:"민지", msg:"결말이 너무 충격적이에요 😱", isMe:false},{name:"수연", msg:"저도요!! 3장부터 복선이...", isMe:false},{name:"나", msg:"작가님 천재인듯 🔥", isMe:true}].map((item) => (
-              <div key={item.name} className={`flex ${item.isMe ? "justify-end" : ""} gap-1.5`}>
-                {!item.isMe && <div className="w-4 h-4 rounded-full bg-rose-200 flex items-center justify-center text-[8px] font-bold text-rose-600 flex-shrink-0">{item.name[0]}</div>}
-                <div className={`text-[9px] rounded-xl px-2 py-1 max-w-[75%] ${item.isMe ? "bg-rose-500 text-white rounded-tr-sm" : "bg-gray-100 text-gray-700 rounded-tl-sm"}`}>{item.msg}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
+    num: "04",
+    tag: "커뮤니티",
+    title: "같은 체를 읽은 독자들과
+실시간으로",
+    desc: "혼자 읽고 끝내기 아쉬웠나요? MetaBook 커뮤니티에서 같은 체를 읽은 독자들과 실시간으로 감상을 나두세요. 업로드, 이모지, 리액션으로 활발하게 이야기하세요.",
+    pills: ["체별 전용 채팅방", "실시간 메시지", "이모지 반응"],
+    accent: "#f43f5e",
+    accentLight: "rgba(244,63,94,0.08)",
+    accentBorder: "rgba(244,63,94,0.15)",
+    visual: CommunityVisual,
+    flip: true,
   },
   {
-    id: "creation",
-    number: "05",
-    icon: Sparkles,
-    title: "마음에 드는 장면으로 2차 창작",
-    subtitle: "숏북·숏뮤비·굿즈 — AI와 함께 나만의 창작물",
-    description:
-      "책에서 마음에 드는 구절이나 장면을 골라 나만의 2차 창작물을 만들어보세요. AI가 함께하기 때문에 글솜씨나 디자인 실력이 없어도 됩니다.",
-    details: [
-      "숏북 — 다른 시점·결말로 재집필",
-      "숏뮤비 — 책 장면을 AI 영상으로",
-      "굿즈 — 책갈피·스티커·일러스트",
-    ],
-    gradient: "from-amber-400 to-orange-500",
-    bg: "bg-amber-50",
-    iconColor: "text-amber-600",
-    badgeColor: "bg-amber-100 text-amber-700",
-    visual: (
-      <div className="relative w-full h-48 flex items-center justify-center gap-2">
-        {[
-          { label: "숏북", color: "from-emerald-400 to-teal-500", icon: "📖" },
-          { label: "숏뮤비", color: "from-violet-400 to-purple-500", icon: "🎬" },
-          { label: "굿즈", color: "from-amber-400 to-orange-500", icon: "🎁" },
-        ].map((item) => (
-          <div key={item.label} className="flex flex-col items-center gap-1.5">
-            <div className={`w-14 rounded-xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center shadow-md`} style={{height:"72px"}}>
-              <span className="text-2xl">{item.icon}</span>
-            </div>
-            <span className="text-[10px] font-semibold text-gray-600">{item.label}</span>
-          </div>
-        ))}
-      </div>
-    ),
+    num: "05",
+    tag: "2차 시작",
+    title: "마음에 드는 장면으로
+나만의 시작을",
+    desc: "체에서 마음에 드는 구절이나 장면을 골라 나만의 2차 시작물을 만들어보세요. AI가 함께하기 때문에 글솔씨나 디자인 실력이 없어도 됩니다.",
+    pills: ["숨북 — 다른 시점·결말", "숨뮤비 — AI 영상", "굿즈 — 체갈피·스티커"],
+    accent: "#f59e0b",
+    accentLight: "rgba(245,158,11,0.08)",
+    accentBorder: "rgba(245,158,11,0.15)",
+    visual: CreationVisual,
+    flip: false,
   },
 ];
 
+/* ─── 메인 페이지 ─── */
 export default function AboutPage() {
   const router = useRouter();
-  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [visibleSections, setVisibleSections] = useState<boolean[]>(new Array(SECTIONS.length).fill(false));
+
+  useEffect(() => {
+    const observers = sectionRefs.current.map((ref, i) => {
+      if (!ref) return null;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setVisibleSections(prev => { const next = [...prev]; next[i] = true; return next; });
+            obs.disconnect();
+          }
+        },
+        { threshold: 0.15 }
+      );
+      obs.observe(ref);
+      return obs;
+    });
+    return () => observers.forEach(o => o?.disconnect());
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* 헤더 */}
-      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            돌아가기
-          </button>
-          <span className="text-sm font-semibold text-gray-900">MetaBook 소개</span>
-          <button
-            onClick={() => router.push("/library")}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-primary-500)] text-white rounded-full text-xs font-semibold hover:opacity-90 transition-opacity"
-          >
-            시작하기 <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
+    <div style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif", background: "#09090b", minHeight: "100vh", color: "white" }}>
 
-      {/* 히어로 */}
-      <div className="bg-gradient-to-b from-gray-950 to-gray-900 text-white py-16 px-4">
-        <div className="max-w-2xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium mb-2">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-gray-200">책이 살아있는 세계</span>
+      {/* ─── 상단 네비게이션 ─── */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", height: 56, background: "rgba(9,9,11,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <button onClick={() => router.back()} style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+          <ArrowLeft size={16} />
+          돌아가기
+        </button>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)", letterSpacing: "0.02em" }}>MetaBook 소개</span>
+        <button
+          onClick={() => router.push("/library")}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 999, background: "#32d29d", color: "#09090b", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}
+        >
+          시작하기 <ChevronRight size={14} />
+        </button>
+      </nav>
+
+      {/* ─── 히어로 ─── */}
+      <header style={{ paddingTop: 140, paddingBottom: 100, textAlign: "center", position: "relative", overflow: "hidden" }}>
+        {/* 배경 오로라 효과 */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+          <div style={{ position: "absolute", top: "10%", left: "15%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(50,210,157,0.08) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", top: "20%", right: "10%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(139,92,246,0.07) 0%, transparent 70%)", filter: "blur(60px)" }} />
+        </div>
+        <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 999, background: "rgba(50,210,157,0.1)", border: "1px solid rgba(50,210,157,0.2)", marginBottom: 32, fontSize: 12, fontWeight: 600, color: "#32d29d", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            체이 살아있는 세계
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-            책 속 세계가
-            <br />
-            <span className="text-[#32d29d]">살아납니다.</span>
+          <h1 style={{ fontSize: "clamp(40px, 8vw, 80px)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 24 }}>
+            체 속 세계가<br />
+            <span style={{ color: "#32d29d" }}>살아납니다.</span>
           </h1>
-          <p className="text-gray-400 text-base leading-relaxed max-w-lg mx-auto">
-            MetaBook은 책을 읽는 경험을 완전히 바꿉니다.<br />
-            QR 하나로 들어와 3D 세계를 탐험하고, 캐릭터와 대화하고,<br />
-            독자들과 실시간으로 이야기를 나누세요.
+          <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "rgba(255,255,255,0.45)", lineHeight: 1.8, maxWidth: 520, margin: "0 auto 40px" }}>
+            QR 하나로 들어와 3D 세계를 탐험하고,<br />
+            캐릭터와 대화하고, 독자들과 함께 이야기하세요.
           </p>
-          <div className="flex flex-wrap justify-center gap-2 pt-2">
-            {["QR 입장", "3D 탐험", "AI 채팅", "커뮤니티", "2차 창작"].map((tag) => (
-              <span key={tag} className="px-3 py-1 bg-white/10 rounded-full text-xs text-gray-300 font-medium">
-                {tag}
+          {/* 기능 태그 나열 */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+            {SECTIONS.map(s => (
+              <span key={s.num} style={{ padding: "6px 14px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.45)" }}>
+                {s.tag}
               </span>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* 기능 목록 */}
-      <div className="max-w-4xl mx-auto px-4 py-12 space-y-6">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">5가지 핵심 기능</h2>
-          <p className="text-gray-500 text-sm">지금까지 경험하지 못한 새로운 독서의 세계</p>
+        {/* 스크롤 힌트 */}
+        <div style={{ marginTop: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.2)", fontSize: 11 }}>
+          <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.15))" }} />
+          스크롤해서 보기
         </div>
+      </header>
 
-        {FEATURES.map((feature) => {
-          const Icon = feature.icon;
-          const isActive = activeFeature === feature.id;
+      {/* ─── 구분선 ─── */}
+      <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)" }} />
+
+      {/* ─── 기능 섹션들 ─── */}
+      <main>
+        {SECTIONS.map((section, i) => {
+          const Visual = section.visual;
+          const isFlip = section.flip;
+          const isVisible = visibleSections[i];
           return (
             <div
-              key={feature.id}
-              className="rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
-              onClick={() => setActiveFeature(isActive ? null : feature.id)}
+              key={section.num}
+              ref={el => { sectionRefs.current[i] = el; }}
+              style={{
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                background: i % 2 === 0 ? "#09090b" : "#0c0c0f",
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? "translateY(0)" : "translateY(40px)",
+                transition: "opacity 0.7s ease, transform 0.7s ease",
+              }}
             >
-              {/* 카드 헤더 */}
-              <div className={`${feature.bg} px-6 py-5`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-sm`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${feature.badgeColor}`}>
-                          {feature.number}
-                        </span>
-                        <h3 className="text-base font-bold text-gray-900">{feature.title}</h3>
-                      </div>
-                      <p className="text-sm text-gray-500">{feature.subtitle}</p>
-                    </div>
+              <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+                {/* 텍스트 */}
+                <div style={{ order: isFlip ? 2 : 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: section.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>{section.num}</span>
+                    <span style={{ width: 32, height: 1, background: section.accent, opacity: 0.5 }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{section.tag}</span>
                   </div>
-                  <ChevronRight
-                    className={`w-5 h-5 text-gray-400 flex-shrink-0 mt-1 transition-transform duration-300 ${isActive ? "rotate-90" : ""}`}
-                  />
+                  <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: 20, whiteSpace: "pre-line" }}>
+                    {section.title}
+                  </h2>
+                  <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.85, marginBottom: 28 }}>
+                    {section.desc}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {section.pills.map(pill => (
+                      <div key={pill} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: section.accent, flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>{pill}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* 비주얼 */}
+                <div style={{ order: isFlip ? 1 : 2, display: "flex", alignItems: "center", justifyContent: "center", background: section.accentLight, border: `1px solid ${section.accentBorder}`, borderRadius: 24, overflow: "hidden" }}>
+                  <Visual />
                 </div>
               </div>
-
-              {/* 카드 상세 (펼침) */}
-              {isActive && (
-                <div className="px-6 py-5 bg-white border-t border-gray-100 grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
-                    <ul className="space-y-2">
-                      {feature.details.map((detail) => (
-                        <li key={detail} className="flex items-start gap-2 text-sm text-gray-700">
-                          <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${feature.iconColor}`} />
-                          {detail}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="flex items-center justify-center">
-                    {feature.visual}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
-      </div>
+      </main>
 
-      {/* 하단 CTA */}
-      <div className="bg-gradient-to-b from-white to-gray-50 py-14 px-4">
-        <div className="max-w-md mx-auto text-center space-y-5">
-          <h2 className="text-2xl font-bold text-gray-900">지금 바로 시작해보세요</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            QR 코드를 스캔하거나, 도서 목록에서 책을 선택하면<br />
-            MetaBook의 세계가 펼쳐집니다.
+      {/* ─── CTA ─── */}
+      <footer style={{ textAlign: "center", padding: "100px 24px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 0%, rgba(50,210,157,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", maxWidth: 480, margin: "0 auto" }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "#32d29d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>READY TO START</p>
+          <h2 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.025em", marginBottom: 16 }}>
+            지금 바로<br />시작해보세요
+          </h2>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.35)", marginBottom: 40, lineHeight: 1.7 }}>
+            QR 코드를 스캔하거나, 도서 목록에서 체를 선택하면<br />MetaBook의 세계가 펼쳐집니다.
           </p>
           <button
             onClick={() => router.push("/library")}
-            className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold text-base shadow-lg hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: "var(--color-primary-500)" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 36px", borderRadius: 999, background: "#32d29d", color: "#09090b", fontSize: 15, fontWeight: 800, border: "none", cursor: "pointer", letterSpacing: "-0.01em" }}
           >
-            <Sparkles className="w-5 h-5" />
             도서 목록 보러 가기
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight size={18} />
           </button>
-          <p className="text-xs text-gray-400">앱 설치 없이 브라우저에서 바로 이용 가능합니다</p>
+          <p style={{ marginTop: 20, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+            앱 설치 없이 브라우저에서 바로 이용 가능
+          </p>
         </div>
-      </div>
+      </footer>
+
     </div>
   );
 }
