@@ -3,16 +3,17 @@
 import { useState } from "react";
 import { X, Loader2, Download } from "lucide-react";
 import { getChaptersByBookId } from "@/lib/mock-content";
-import { addCreation } from "@/lib/creation-store";
+import { addCreation, type CreationItem } from "@/lib/creation-store";
 
 interface Props {
   bookTitle: string;
   bookId: string;
   onClose: () => void;
   onSaved: () => void;
+  item?: CreationItem;
 }
 
-export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }: Props) {
+export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved, item }: Props) {
   const chapters = getChaptersByBookId(bookId);
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
@@ -78,6 +79,29 @@ export default function ShortMovieModal({ bookTitle, bookId, onClose, onSaved }:
     onSaved();
     onClose();
   };
+
+  // 뷰어 모드: 기존 창작물 읽기 전용
+  if (item) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-mono-200">
+            <h2 className="text-lg font-bold text-mono-900">{item.title}</h2>
+            <button onClick={onClose} className="p-1 hover:bg-mono-100 rounded-lg">
+              <X className="w-5 h-5 text-mono-500" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            {item.content ? (
+              <video src={item.content} controls autoPlay className="w-full rounded-xl" />
+            ) : (
+              <p className="text-sm text-mono-500 text-center py-8">영상이 없습니다.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

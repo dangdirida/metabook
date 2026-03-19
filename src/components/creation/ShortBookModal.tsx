@@ -3,18 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import { X, BookOpen, GitBranch, ChevronRight, Loader2 } from "lucide-react";
 import { getChaptersByBookId } from "@/lib/mock-content";
-import { addCreation } from "@/lib/creation-store";
+import { addCreation, type CreationItem } from "@/lib/creation-store";
 
 interface Props {
   bookTitle: string;
   bookId: string;
   onClose: () => void;
   onSaved: () => void;
+  item?: CreationItem;
 }
 
 type StepType = "select" | "perspective" | "ending" | "generating";
 
-export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: Props) {
+export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved, item }: Props) {
   const chapters = getChaptersByBookId(bookId);
   const [step, setStep] = useState<StepType>("select");
   const [subType, setSubType] = useState<"perspective" | "ending">("perspective");
@@ -139,6 +140,27 @@ export default function ShortBookModal({ bookTitle, bookId, onClose, onSaved }: 
     onSaved();
     onClose();
   };
+
+  // 뷰어 모드: 기존 창작물 읽기 전용
+  if (item) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-mono-200">
+            <h2 className="text-lg font-bold text-mono-900">{item.title}</h2>
+            <button onClick={onClose} className="p-1 hover:bg-mono-100 rounded-lg">
+              <X className="w-5 h-5 text-mono-500" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            <div className="prose prose-sm max-w-none bg-mono-50 rounded-xl p-4 whitespace-pre-wrap text-mono-800 leading-relaxed">
+              {item.content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

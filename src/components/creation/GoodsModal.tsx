@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Download, Bookmark, Sticker, Image as ImageIcon } from "lucide-react";
-import { addCreation } from "@/lib/creation-store";
+import { addCreation, type CreationItem } from "@/lib/creation-store";
 
 interface Props {
   bookTitle: string;
   bookId: string;
   onClose: () => void;
   onSaved: () => void;
+  item?: CreationItem;
 }
 
 type GoodsType = "bookmark" | "sticker" | "illustration";
@@ -28,7 +29,7 @@ const ILLUST_STYLES = [
   { value: "realistic", label: "사실적" },
 ];
 
-export default function GoodsModal({ bookTitle, bookId, onClose, onSaved }: Props) {
+export default function GoodsModal({ bookTitle, bookId, onClose, onSaved, item }: Props) {
   const [step, setStep] = useState<Step>("select");
   const [goodsType, setGoodsType] = useState<GoodsType>("bookmark");
 
@@ -223,6 +224,37 @@ export default function GoodsModal({ bookTitle, bookId, onClose, onSaved }: Prop
     onSaved();
     onClose();
   };
+
+  // 뷰어 모드: 기존 창작물 읽기 전용
+  if (item) {
+    const isImage = item.thumbnail || item.content?.startsWith("http") || item.content?.startsWith("data:");
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-mono-200">
+            <h2 className="text-lg font-bold text-mono-900">{item.title}</h2>
+            <button onClick={onClose} className="p-1 hover:bg-mono-100 rounded-lg">
+              <X className="w-5 h-5 text-mono-500" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5 flex items-center justify-center">
+            {isImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.thumbnail || item.content}
+                alt={item.title}
+                className="max-w-full max-h-96 object-contain rounded-xl"
+              />
+            ) : (
+              <div className="prose prose-sm max-w-none bg-mono-50 rounded-xl p-4 whitespace-pre-wrap text-mono-800 leading-relaxed w-full">
+                {item.content}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
