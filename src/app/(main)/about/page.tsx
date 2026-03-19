@@ -171,7 +171,7 @@ function ChatVisual() {
         <circle cx="92" cy="72" r="4" fill="#22c55e" stroke="#0c1a2e" strokeWidth="1.5" />
         {/* 메시지들 */}
         {/* 캐릭터 메시지 1 */}
-        <rect x="56" y="102" width="148" height="36" rx="14" rx2="4" fill="#1e3a5f" />
+        <rect x="56" y="102" width="148" height="36" rx="14" fill="#1e3a5f" />
         <path d="M56 112 L46 120 L56 122 Z" fill="#1e3a5f" />
         <text x="74" y="117" fontSize="9" fill="rgba(255,255,255,0.85)" fontFamily="system-ui">안녕하세요, 저는 재레드입니다.</text>
         <text x="74" y="130" fontSize="9" fill="rgba(255,255,255,0.85)" fontFamily="system-ui">묵었든 묻어보세요!</text>
