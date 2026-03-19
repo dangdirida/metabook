@@ -15,13 +15,14 @@ import {
   Bookmark,
   Smile,
   Image as ImageIcon,
+  GripHorizontal,
 } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 
-const TYPE_BADGE: Record<string, { label: string; color: string }> = {
-  shortbook: { label: "숏북", color: "bg-emerald-100 text-emerald-700" },
-  shortmovie: { label: "숏뮤비", color: "bg-purple-100 text-purple-700" },
-  goods: { label: "굿즈", color: "bg-orange-100 text-orange-700" },
+const TYPE_CONFIG: Record<string, { label: string; gradient: string; icon: React.ElementType }> = {
+  shortbook:  { label: "숏북",   gradient: "from-emerald-400 to-teal-600",  icon: BookOpen },
+  shortmovie: { label: "숏뮤비", gradient: "from-purple-400 to-violet-600", icon: Film     },
+  goods:      { label: "굿즈",   gradient: "from-orange-400 to-rose-500",   icon: Gift     },
 };
 
 type ModalType = "shortbook" | "shortmovie" | "goods" | null;
@@ -29,11 +30,13 @@ type ModalType = "shortbook" | "shortmovie" | "goods" | null;
 export default function TopTabs() {
   const { bookId } = useParams();
   const router = useRouter();
-  const [galleryOpen, setGalleryOpen] = useState(true);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [openModal, setOpenModal] = useState<ModalType>(null);
   const [creations, setCreations] = useState<CreationItem[]>([]);
+  const [galleryHeight, setGalleryHeight] = useState(256);
 
   useEffect(() => {
+    setGalleryOpen(false);
     setCreations(getCreations(bookId as string));
   }, [bookId]);
 
@@ -63,8 +66,35 @@ export default function TopTabs() {
         />
       </button>
 
+      {/* 드래그 핸들 */}
+      {galleryOpen && (
+        <div
+          className="flex justify-center py-1 cursor-ns-resize hover:bg-mono-50"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const startY = e.clientY;
+            const startH = galleryHeight;
+            const onMove = (ev: MouseEvent) => {
+              const delta = ev.clientY - startY;
+              setGalleryHeight(Math.min(520, Math.max(120, startH + delta)));
+            };
+            const onUp = () => {
+              window.removeEventListener("mousemove", onMove);
+              window.removeEventListener("mouseup", onUp);
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+          }}
+        >
+          <GripHorizontal className="w-4 h-4 text-mono-300" strokeWidth={1.5} />
+        </div>
+      )}
+
       {/* 열릴 때만 보이는 콘텐츠 */}
-      <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? "max-h-64" : "max-h-0"}`}>
+      <div
+        className={`overflow-hidden transition-all duration-300 ${galleryOpen ? "" : "max-h-0"}`}
+        style={galleryOpen ? { maxHeight: galleryHeight } : undefined}
+      >
         {/* CTA 버튼 3개 */}
         <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-200 dark:border-mono-800">
           <button
@@ -88,7 +118,7 @@ export default function TopTabs() {
         </div>
 
         {/* 창작물 피드 */}
-        <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: "calc(16rem - 80px)" }}>
+        <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: "calc(100% - 52px)" }}>
           {creations.length === 0 ? (
             <div className="text-center py-4">
               <Sparkles className="w-8 h-8 text-mono-300 mx-auto mb-2" strokeWidth={1.5} />
@@ -96,37 +126,41 @@ export default function TopTabs() {
               <p className="text-xs text-mono-500 mt-1">위 버튼을 눌러 첫 창작물을 만들어보세요!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {creations.map((item) => {
-                const badge = TYPE_BADGE[item.type];
+                const cfg = TYPE_CONFIG[item.type];
+                const Icon = cfg.icon;
                 return (
                   <div
                     key={item.id}
-                    className="rounded-lg overflow-hidden hover:shadow-md transition-shadow relative aspect-[3/4] bg-gradient-to-br from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-700"
+                    onClick={() => setOpenModal(item.type as ModalType)}
+                    className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-300 hover:shadow-md transition-all"
                   >
-                    {item.thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {item.type === "shortbook" && <BookOpen className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
-                        {item.type === "shortmovie" && <Film className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
-                        {item.type === "goods" && <Gift className="w-5 h-5 text-mono-300" strokeWidth={1.5} />}
-                      </div>
-                    )}
-                    {badge && (
-                      <span className={`absolute top-1 left-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${badge.color}`}>
-                        {badge.label}
+                    <div className="aspect-[3/4] relative overflow-hidden">
+                      {item.thumbnail ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${cfg.gradient} flex flex-col items-center justify-center gap-1.5 p-2`}>
+                          <Icon className="w-5 h-5 text-white/80" strokeWidth={1.5} />
+                          <p className="text-[9px] text-white/90 font-medium text-center line-clamp-3 leading-tight">
+                            {item.title}
+                          </p>
+                        </div>
+                      )}
+                      <span className="absolute top-1.5 left-1.5 text-[8px] font-semibold bg-black/40 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                        {cfg.label}
                       </span>
-                    )}
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 pb-1.5 pt-4">
-                      <p className="text-xs font-medium text-white truncate">{item.title}</p>
                       <button
-                        onClick={() => handleHeart(item.id)}
-                        className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 text-[10px] text-white/70 hover:text-red-400 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); handleHeart(item.id); }}
+                        className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/30 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Heart className={`w-3 h-3 ${item.hearted ? "fill-red-400 text-red-400" : ""}`} strokeWidth={1.5} />
-                        {item.hearts}
+                        <Heart className={`w-2.5 h-2.5 ${item.hearted ? "fill-red-400 text-red-400" : "text-white"}`} />
+                        <span className="text-[8px] text-white">{item.hearts}</span>
                       </button>
                     </div>
                   </div>
