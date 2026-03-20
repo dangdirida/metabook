@@ -5,8 +5,8 @@ import { X, BookOpen, Film, Gift, Heart, Sparkles, ChevronRight, ChevronUp, Refr
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor: string; icon: React.ElementType }> = {
-  shortbook: { label: "숯북", gradient: "from-emerald-400 via-teal-500 to-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
-  shortmovie: { label: "숯뮤비", gradient: "from-violet-500 via-purple-500 to-indigo-600", accentColor: "text-violet-500", icon: Film },
+  shortbook: { label: "숏북", gradient: "from-emerald-400 via-teal-500 t-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
+  shortmovie: { label: "숏뮤비", gradient: "from-violet-500 via-purple-500 to-indigo-600", accentColor: "text-violet-500", icon: Film },
   goods: { label: "굿즈", gradient: "from-orange-400 via-rose-400 to-pink-500", accentColor: "text-orange-500", icon: Gift },
 };
 type ModalType = "shortbook" | "shortmovie" | "goods" | null;
@@ -49,7 +49,7 @@ export default function TopTabs() {
             <div className="text-center py-6">
               <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
               <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
-              <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숯북, 뮤비, 굿즈를 낙닭 만들 수 있어요 ✨</p>
+              <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 낙낙 만들 수 있어요 ✨</p>
               <button onClick={()=>setOpenModal("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
             </div>
           ) : (
@@ -95,8 +95,8 @@ const FEATURE_ICONS: Record<string, ReactNode> = {
 
 function IntroModal({type,bookId,onClose,onNavigate}:{type:"shortbook"|"shortmovie"|"goods";bookId:string;onClose:()=>void;onNavigate:(path:string)=>void}) {
   const configs = {
-    shortbook: { title: "숯북 만들기", emoji: "📖", desc: "책의 특정 구간을 AI가 새롭게 재집필해요. 다른 인물의 시점으로 보거나, 결말을 바꾼볼 수 있어요.", features: [{ title: "다른 시점으로", desc: "선택한 인물의 눈으로 이야기를 다시 써요" },{ title: "다른 결말으로", desc: "내가 원하는 방향으로 결말을 바꾽요" }], ctaLabel: "숯북 만들러 가기", ctaClass: "bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)]", path: `/creation/shortbook?bookId=${bookId}` },
-    shortmovie: { title: "숯뮤비 만들기", emoji: "🎬", desc: "책 속 장면을 AI가 실제 움직이는 영상으로 만들어줘요. 원하는 구간과 인물을 선택하면 5~8초 영상이 완성돼요.", features: [{ title: "장면 영상화", desc: "텍스트 장면을 720p HD 영상으로 변환해요" }], ctaLabel: "숯뮤비 만들러 가기", ctaClass: "bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]", path: `/creation/shortmovie?bookId=${bookId}` },
+    shortbook: { title: "숏북 만들기", emoji: "📖", desc: "책의 특정 구간을 AI가 새롭게 재집필해요. 다른 인물의 시점으로 보거나, 결말을 바꾼볼 수 있어요.", features: [{ title: "다른 시점으로", desc: "선택한 인물의 눈으로 이야기를 다시 써요" },{ title: "다른 결말으로", desc: "내가 원하는 방향으로 결말을 바꾽요" }], ctaLabel: "숏북 만들러 가기", ctaClass: "bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)]", path: `/creation/shortbook?bookId=${bookId}` },
+    shortmovie: { title: "숏뮤비 만들기", emoji: "🎬", desc: "책 속 장면을 AI가 실제 움직이는 영상으로 만들어줘요. 원하는 구간과 인물을 선택하면 5~8초 영상이 완성돼요.", features: [{ title: "장면 영상화", desc: "텍스트 장면을 720p HD 영상으로 변환해요" }], ctaLabel: "숏뮤비 만들러 가기", ctaClass: "bg-[var(--color-secondary-500)] hover:bg-[var(--color-secondary-600)]", path: `/creation/shortmovie?bookId=${bookId}` },
     goods: { title: "굿즈 만들기", emoji: "🎁", desc: "책에서 마음에 드는 구절이나 장면으로 나만의 굿즈를 만들어요.", features: [{ title: "책갈피", desc: "좋아하는 구절로 나만의 책갈피를 만들어요" },{ title: "스티커", desc: "캐릭터/장면을 AI 일러스트 스티커로" },{ title: "일러스트", desc: "장면을 다양한 스타일의 일러스트로" }], ctaLabel: "굿즈 만들러 가기", ctaClass: "hover:opacity-90", ctaStyle: { backgroundColor: "#f5a623" } as React.CSSProperties, path: `/creation/goods?bookId=${bookId}` },
   };
   const config = configs[type];
