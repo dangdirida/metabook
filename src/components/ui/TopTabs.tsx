@@ -49,7 +49,7 @@ export default function TopTabs() {
             <div className="text-center py-6">
               <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
               <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
-              <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 낙낙 만들 수 있어요 ✨</p>
+              <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 만들 수 있어요 ✨</p>
               <button onClick={()=>setOpenModal("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
             </div>
           ) : (
