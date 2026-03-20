@@ -336,7 +336,7 @@ const SECTIONS = [
     num: "01",
     tag: "QR 입장",
     title: "QR 코드 하나로 책에 들어오세요",
-    desc: "체 표지나 본문 페이지에 인쇄된 QR 코드를 스캔하면, 해당 체의 MetaBook 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 첵장에서 — QR 하나로 체 속 세계가 열립니다.",
+    desc: "책 표지나 본문 페이지에 인쇄된 QR 코드를 스캔하면, 해당 책의 MetaBook 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 첵장에서 — QR 하나로 책 속 세계가 열립니다.",
     pills: ["체 표지 QR", "본문 페이지 QR", "앱 설치 불필요"],
     accent: "#32d29d",
     accentLight: "rgba(50,210,157,0.08)",
@@ -445,10 +445,10 @@ export default function AboutPage() {
         </div>
         <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 999, background: "rgba(50,210,157,0.1)", border: "1px solid rgba(50,210,157,0.2)", marginBottom: 32, fontSize: 12, fontWeight: 600, color: "#32d29d", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-            체이 살아있는 세계
+            책이 살아있는 세계
           </div>
           <h1 style={{ fontSize: "clamp(40px, 8vw, 80px)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 24 }}>
-            체 속 세계가<br />
+            책 속 세계가<br />
             <span style={{ color: "#32d29d" }}>살아납니다.</span>
           </h1>
           <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "rgba(255,255,255,0.45)", lineHeight: 1.8, maxWidth: 520, margin: "0 auto 40px" }}>
