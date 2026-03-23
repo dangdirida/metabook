@@ -120,7 +120,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             if (!data || data === "[DONE]") continue;
             try {
               const parsed = JSON.parse(data);
-              const delta = parsed.type === "content_block_delta" ? parsed.delta?.text : parsed.content;
+              const delta = parsed.type === "content_block_delta" ? parsed.delta?.text : parsed.type === "content_block_start" ? parsed.content_block?.text : parsed.content;
               if (delta) { fullContent += delta; setMessages((prev) => { const u = [...prev]; u[u.length - 1] = { ...u[u.length - 1], content: fullContent }; return u; }); }
             } catch { /* ignore */ }
           }
@@ -223,15 +223,16 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
       </div>
 
       <div className="p-3 border-t border-mono-200 flex-shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <button className="p-2 text-mono-400 hover:text-mono-600 transition-colors" title="대화 스냅샷 저장">
             <Camera className="w-5 h-5" />
           </button>
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+          <textarea value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             placeholder={currentAgent ? `${currentAgent.name}에게 메시지...` : "Agent를 선택하세요"}
-            disabled={!currentAgent || isStreaming}
-            className="flex-1 px-4 py-2.5 bg-mono-50 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50" />
+            disabled={!currentAgent}
+            rows={1}
+            className="flex-1 px-4 py-2.5 bg-mono-50 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 resize-none max-h-32 overflow-y-auto" />
           <button onClick={sendMessage} disabled={!input.trim() || isStreaming || !currentAgent}
             className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors disabled:opacity-40">
             <Send className="w-4 h-4" />
