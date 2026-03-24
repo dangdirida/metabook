@@ -40,7 +40,7 @@ export default function CenterPanel() {
   const [showHint, setShowHint] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null);
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
-  const bookWorldUrlMap = useMemo(() => {
+  const worldUrlMap = useMemo(() => {
     const map: Record<string, string> = {};
     book?.images?.forEach(img => { map[img.id] = img.worldUrl || book?.worldUrl || ""; });
     return map;
