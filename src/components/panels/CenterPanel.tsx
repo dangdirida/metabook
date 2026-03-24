@@ -42,7 +42,9 @@ export default function CenterPanel() {
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const bookWorldUrlMap = useMemo(() => {
     const map: Record<string, string> = {};
-    book?.images?.forEach(img => { map[img.id] = img.url || ""; }); const worldUrlMap: Record<string, string> = {}; book?.images?.forEach(img => { worldUrlMap[img.id] = img.worldUrl || book?.worldUrl || ""; });
+    book?.images?.forEach(img => { map[img.id] = img.url || ""; });
+    const worldUrlMap: Record<string, string> = {};
+    book?.images?.forEach(img => { worldUrlMap[img.id] = img.worldUrl || book?.worldUrl || ""; });
     return map;
   }, [book]);
   const [popover, setPopover] = useState<{ x: number; y: number; name: string; role: string; chapters: string } | null>(null);
