@@ -188,7 +188,7 @@ const bookChaptersMap: Record<string, ChapterContent[]> = {
 
 전투가 끝난 후, 엘더가 리안에게 말했다. "이제 넌 진정한 드래곤 기사다." 미라가 옆에서 웃었고, 이그니스가 하늘을 향해 포효했다.`,
     },
-  ],,
+  ],
   "what-moves-me": [
     { id: "wmm-ch1", number: 1, title: "알리의 질문", characters: [], images: [{ id: "wmm-ch1-img1", caption: "뉴기니 해안의 풍경" }], content: "1972년 7월, 나는 뉴기니 해안을 따라 걷고 있었다. 열대의 습한 공기가 피부에 달라붙었고, 멀리서 파도 소리가 들려왔다." },
     { id: "wmm-ch2", number: 2, title: "문명의 발자취", characters: [], images: [{ id: "wmm-ch2-img1", caption: "수도원의 아침" }], content: "질문은 여전히 공기 속에 떠 있었다. 왜 어떤 민족은 번영하고, 다른 민족은 그렇지 못했는가." },
