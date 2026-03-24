@@ -42,7 +42,7 @@ export default function CenterPanel() {
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const bookWorldUrlMap = useMemo(() => {
     const map: Record<string, string> = {};
-    book?.images?.forEach(img => { map[img.id] = img.url || ""; });
+    book?.images?.forEach(img => { map[img.id] = img.url || ""; }); const worldUrlMap: Record<string, string> = {}; book?.images?.forEach(img => { worldUrlMap[img.id] = img.worldUrl || book?.worldUrl || ""; });
     return map;
   }, [book]);
   const [popover, setPopover] = useState<{ x: number; y: number; name: string; role: string; chapters: string } | null>(null);
@@ -219,8 +219,8 @@ export default function CenterPanel() {
             {chapter.content.split("\n\n").map((paragraph, i) => (
               <div key={i}>
                 <p className="mb-7">{renderContent(paragraph)}</p>
-                {i === 0 && chapter.images[0] && (<ImageFigure caption={chapter.images[0].caption} url={bookImageMap[chapter.images[0].id]} isDark={isDark} onClick={() => setShowWorldModal({ imageId: chapter.images[0].id, worldUrl: bookWorldUrlMap[chapter.images[0].id] })} />)}
-                {i === 2 && chapter.images[1] && (<ImageFigure caption={chapter.images[1].caption} url={bookImageMap[chapter.images[1].id]} isDark={isDark} onClick={() => setShowWorldModal({ imageId: chapter.images[1].id, worldUrl: bookWorldUrlMap[chapter.images[1].id] })} />)}
+                {i === 0 && chapter.images[0] && (<ImageFigure caption={chapter.images[0].caption} url={bookImageMap[chapter.images[0].id]} isDark={isDark} onClick={() => setShowWorldModal({ imageId: chapter.images[0].id, worldUrl: worldUrlMap[chapter.images[0].id] })} />)}
+                {i === 2 && chapter.images[1] && (<ImageFigure caption={chapter.images[1].caption} url={bookImageMap[chapter.images[1].id]} isDark={isDark} onClick={() => setShowWorldModal({ imageId: chapter.images[1].id, worldUrl: worldUrlMap[chapter.images[1].id] })} />)}
               </div>
             ))}
           </div>
