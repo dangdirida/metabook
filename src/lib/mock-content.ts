@@ -189,45 +189,129 @@ const bookChaptersMap: Record<string, ChapterContent[]> = {
 전투가 끝난 후, 엘더가 리안에게 말했다. "이제 넌 진정한 드래곤 기사다." 미라가 옆에서 웃었고, 이그니스가 하늘을 향해 포효했다.`,
     },
   ],,
-,
   "what-moves-me": [
-    { id: "wmm-ch1", number: 1, title: "\uc54c\ub9ac\uc758 \uc9c8\ubb38", characters: [], images: [{ id: "wmm-ch1-img1", caption: "\ub274\uae30\ub2c8 \ud574\uc548\uc758 \ud48d\uacbd" }], content: "1972\ub144 7\uc6d4, \ub098\ub294 \ub274\uae30\ub2c8 \ud574\uc548\uc744 \ub530\ub77c \uac77\uace0 \uc788\uc5c8\ub2e4." },
-    { id: "wmm-ch2", number: 2, title: "\ubb38\uba85\uc758 \ubc1c\uc790\ucchwi", characters: [], images: [{ id: "wmm-ch2-img1", caption: "\uc218\ub3c4\uc6d0\uc758 \uc544\uce68" }], content: "\uc9c8\ubb38\uc740 \uc5ec\uc804\ud788 \uacf5\uae30 \uc18d\uc5d0 \ub5a0 \uc788\uc5c8\ub2e4." },
-    { id: "wmm-ch3", number: 3, title: "\uc2a4\ud399\uc758 \ud2b8\ub77c\uc6b0\ub9c8", characters: [], images: [{ id: "wmm-ch3-img1", caption: "\uba85\uc0c1\uc758 \uc21c\uac04" }], content: "\uacb0\uad6d \ub2f5\uc740 \uc548\uc5d0 \uc788\uc5c8\ub2e4." }
+    { id: "wmm-ch1", number: 1, title: "알리의 질문", characters: [], images: [{ id: "wmm-ch1-img1", caption: "뉴기니 해안의 풍경" }], content: "1972년 7월, 나는 뉴기니 해안을 따라 걷고 있었다. 열대의 습한 공기가 피부에 달라붙었고, 멀리서 파도 소리가 들려왔다." },
+    { id: "wmm-ch2", number: 2, title: "문명의 발자취", characters: [], images: [{ id: "wmm-ch2-img1", caption: "수도원의 아침" }], content: "질문은 여전히 공기 속에 떠 있었다. 왜 어떤 민족은 번영하고, 다른 민족은 그렇지 못했는가." },
+    { id: "wmm-ch3", number: 3, title: "스펙의 트라우마", characters: [], images: [{ id: "wmm-ch3-img1", caption: "명상의 순간" }], content: "결국 답은 안에 있었다. 지리, 환경, 그리고 역사의 우연이 모든 것을 결정했다." }
   ],
   "difficult-people": [
-    { id: "dp-ch1", number: 1, title: "\uc65c \uc5b4\ub825\uac8c \ub290\ub07c\ub294\uac00", characters: [], images: [{ id: "dp-ch1-img1", caption: "\ud68c\uc758\uc2e4 \ud48d\uacbd" }], content: "\ubaa8\ub4e0 \uc9c1\uc7a5\uc5d0\ub294 \ub2e4\ub8e8\uae30 \ud798\ub4e0 \uc0ac\ub78c\uc774 \uc788\ub2e4." },
-    { id: "dp-ch2", number: 2, title: "\ucda9\ub3cc\uc758 \uc2ec\ub9ac\ud559", characters: [], images: [{ id: "dp-ch2-img1", caption: "\ud300 \ud611\uc5c5 \uc7a5\uba74" }], content: "\uac08\ub4f1\uc758 \uadfc\ubcf8\uc5d0\ub294 \uc11c\ub85c \ub2e4\ub978 \uac00\uce58\uad00\uc774 \uc788\ub2e4." },
-    { id: "dp-ch3", number: 3, title: "\uad00\uacc4\ub97c \ubc14\uafb8\ub294 \uae30\uc220", characters: [], images: [{ id: "dp-ch3-img1", caption: "\ub300\ud654\uc758 \uc21c\uac04" }], content: "\uc774\ud574\uc640 \uc874\uc911\uc774 \ubaa8\ub4e0 \uac83\uc744 \ubc14\uafbc\ub2e4." }
+    { id: "dp-ch1", number: 1, title: "왜 어렵게 느끼는가", characters: [], images: [{ id: "dp-ch1-img1", caption: "회의실 풍경" }], content: "모든 직장에는 다루기 힘든 사람이 있다. 그것은 피할 수 없는 현실이다." },
+    { id: "dp-ch2", number: 2, title: "충돌의 심리학", characters: [], images: [{ id: "dp-ch2-img1", caption: "팀 협업 장면" }], content: "갈등의 근본에는 서로 다른 가치관이 있다. 이해가 해결의 첫걸음이다." },
+    { id: "dp-ch3", number: 3, title: "관계를 바꾸는 기술", characters: [], images: [{ id: "dp-ch3-img1", caption: "대화의 순간" }], content: "이해와 존중이 모든 것을 바꾼다." }
   ],
   "black-comedy": [
-    { id: "bc-ch1", number: 1, title: "\uc6c3\uc74c\uacfc \uc2ac\ud514", characters: [], images: [{ id: "bc-ch1-img1", caption: "\ucf54\ubbf8\ub514 \ud074\ub7fd" }], content: "\uc6c3\uc74c\uc740 \uac00\uc7a5 \uc5b4\ub450\uc6b4 \uace7\uc5d0\uc11c \ud53c\uc5b4\ub09c\ub2e4." },
-    { id: "bc-ch2", number: 2, title: "\ube14\ub799 \ucf54\ubbf8\ub514\uc758 \uade0\ud615", characters: [], images: [{ id: "bc-ch2-img1", caption: "\ubb34\ub300 \uc704\uc758 \uc870\uba85" }], content: "\ud48d\uc790\ub294 \ud604\uc2e4\uc744 \uac70\uc6b8\uc5d0 \ube44\uccd0\ub2e4." },
-    { id: "bc-ch3", number: 3, title: "\ub9c8\uc9c0\ub9c9 \uc655\ub300", characters: [], images: [{ id: "bc-ch3-img1", caption: "\uc6c3\uc74c\uacfc \ub208\ubb3c" }], content: "\uc6c3\uc74c\uc18d\uc5d0 \ub208\ubb3c\uc774 \uc788\ub2e4." }
+    { id: "bc-ch1", number: 1, title: "웃음과 슬픔", characters: [], images: [{ id: "bc-ch1-img1", caption: "코미디 클럽" }], content: "웃음은 가장 어두운 곳에서 피어난다." },
+    { id: "bc-ch2", number: 2, title: "블랙 코미디의 균형", characters: [], images: [{ id: "bc-ch2-img1", caption: "무대 위의 조명" }], content: "풍자는 현실을 거울에 비춰다." },
+    { id: "bc-ch3", number: 3, title: "마지막 왕대", characters: [], images: [{ id: "bc-ch3-img1", caption: "웃음과 눈물" }], content: "웃음속에 눈물이 있다." }
   ],
   "weather-interview": [
-    { id: "wi-ch1", number: 1, title: "\ube44\uc640 \uc778\ud130\ubdf0", characters: [], images: [{ id: "wi-ch1-img1", caption: "\ube44 \uc624\ub294 \ucc3d\uac00" }], content: "\ub0a0\uc528\ub294 \uc5b8\uc81c\ub098 \uc815\uc9c1\ud558\ub2e4." },
-    { id: "wi-ch2", number: 2, title: "\uad6c\ub984\uc758 \ub9d0", characters: [], images: [{ id: "wi-ch2-img1", caption: "\uad6c\ub984 \uc0ac\uc774\ub85c" }], content: "\ud558\ub298\uc740 \ub9e4\uc77c \ub2e4\ub978 \uc774\uc57c\uae30\ub97c \ud55c\ub2e4." },
-    { id: "wi-ch3", number: 3, title: "\ub9d1\uc740 \ub0a0\uc758 \uc57d\uc18d", characters: [], images: [{ id: "wi-ch3-img1", caption: "\ub9d1\uc740 \ud558\ub298" }], content: "\ub9d1\uc740 \ub0a0\uc740 \uc5b8\uc81c\ub098 \ub3cc\uc544\uc628\ub2e4." }
+    { id: "wi-ch1", number: 1, title: "비와 인터뷰", characters: [], images: [{ id: "wi-ch1-img1", caption: "비 오는 창가" }], content: "날씨는 언제나 정직하다." },
+    { id: "wi-ch2", number: 2, title: "구름의 말", characters: [], images: [{ id: "wi-ch2-img1", caption: "구름 사이로" }], content: "하늘은 매일 다른 이야기를 한다." },
+    { id: "wi-ch3", number: 3, title: "맑은 날의 약속", characters: [], images: [{ id: "wi-ch3-img1", caption: "맑은 하늘" }], content: "맑은 날은 언제나 돌아온다." }
   ],
   "big-pumpkin-house": [
-    { id: "bph-ch1", number: 1, title: "\ud638\ubc15 \uc9d1\uc758 \ube44\ubc00", characters: [], images: [{ id: "bph-ch1-img1", caption: "\ud070 \ud638\ubc15 \uc9d1" }], content: "\ub9c8\uc744 \uc5b4\ub514\uc5d0\ub3c4 \ubcfc \uc218 \uc788\ub294 \ucee4\ub2e4\ub780 \ud638\ubc15\uc9d1\uc774 \uc788\uc5c8\ub2e4." },
-    { id: "bph-ch2", number: 2, title: "\ub9c8\uc744 \uc0ac\ub78c\ub4e4", characters: [], images: [{ id: "bph-ch2-img1", caption: "\ub9c8\uc744 \uad11\uc7a5" }], content: "\ub9c8\uc744 \uc0ac\ub78c\ub4e4\uc740 \uc11c\ub85c\ub97c \ub3c4\uc654\ub2e4." },
-    { id: "bph-ch3", number: 3, title: "\ud638\ubc15\uc758 \uc120\ubb3c", characters: [], images: [{ id: "bph-ch3-img1", caption: "\uc218\ud655\uc758 \uacc4\uc808" }], content: "\ud638\ubc15\uc740 \ubaa8\ub450\uc5d0\uac8c \ub098\ub204\uc5b4\uc84c\ub2e4." }
+    { id: "bph-ch1", number: 1, title: "호박 집의 비밀", characters: [], images: [{ id: "bph-ch1-img1", caption: "큰 호박 집" }], content: "마을 어디에도 볼 수 있는 커다란 호박집이 있었다." },
+    { id: "bph-ch2", number: 2, title: "마을 사람들", characters: [], images: [{ id: "bph-ch2-img1", caption: "마을 광장" }], content: "마을 사람들은 서로를 도왔다." },
+    { id: "bph-ch3", number: 3, title: "호박의 선물", characters: [], images: [{ id: "bph-ch3-img1", caption: "수확의 계절" }], content: "호박은 모두에게 나누어졌다." }
   ],
   "science-level-up-4": [
-    { id: "slu-ch1", number: 1, title: "\ud798\uc774\ub780 \ubb34\uc5c7\uc778\uac00", characters: [], images: [{ id: "slu-ch1-img1", caption: "\uacfc\ud559 \uc2e4\ud5d8\uc2e4" }], content: "\ud798\uc740 \ubb3c\uccb4\ub97c \uc6c0\uc9c1\uc774\uac8c \ud558\ub294 \ub2a5\ub825\uc774\ub2e4." },
-    { id: "slu-ch2", number: 2, title: "\uc18c\ub9ac\uc758 \ube44\ubc00", characters: [], images: [{ id: "slu-ch2-img1", caption: "\ud798\uacfc \uc6b4\ub3d9" }], content: "\uc18c\ub9ac\ub294 \uacf5\uae30\uc758 \ub5a8\ub9bc\uc774\ub2e4." },
-    { id: "slu-ch3", number: 3, title: "\uc5d0\ub108\uc9c0\uc758 \ubcc0\ud658", characters: [], images: [{ id: "slu-ch3-img1", caption: "\uc18c\ub9ac\uc758 \uc138\uacc4" }], content: "\uc5d0\ub108\uc9c0\ub294 \uc0c8\ub85c\uc6b4 \ud615\ud0dc\ub85c \ubcc0\ud55c\ub2e4." }
+    { id: "slu-ch1", number: 1, title: "힘이란 무엇인가", characters: [], images: [{ id: "slu-ch1-img1", caption: "과학 실험실" }], content: "힘은 물체를 움직이게 하는 능력이다." },
+    { id: "slu-ch2", number: 2, title: "소리의 비밀", characters: [], images: [{ id: "slu-ch2-img1", caption: "힘과 운동" }], content: "소리는 공기의 떨림이다." },
+    { id: "slu-ch3", number: 3, title: "에너지의 변환", characters: [], images: [{ id: "slu-ch3-img1", caption: "소리의 세계" }], content: "에너지는 새로운 형태로 변한다." }
   ],
   "became-a-child": [
-    { id: "bac-ch1", number: 1, title: "\uc5b4\ub978\uc774 \uc5b4\ub9b0\uc774\uac00 \ub418\ub2e4", characters: [], images: [{ id: "bac-ch1-img1", caption: "\uc5b4\ub9b0\uc774 \ub208\ub192\uc774" }], content: "\uc5b4\ub290 \ub0a0 \uc544\uce68 \uc77c\uc5b4\ub098\ubcf4\ub2c8 \ub9f8\uc2a4\uac00 \ub2ec\ub77c\uc838 \uc788\uc5c8\ub2e4." },
-    { id: "bac-ch2", number: 2, title: "\uc5b4\ub9b0\uc774\uc758 \uc138\uacc4", characters: [], images: [{ id: "bac-ch2-img1", caption: "\ub180\uc774\ud130" }], content: "\ubaa8\ub4e0 \uac83\uc774 \ud06c\uace0 \uc2e0\uae30\ud558\uac8c \ub3d9\uc774\ub2e4." },
-    { id: "bac-ch3", number: 3, title: "\ub2e4\uc2dc \uc5b4\ub978\uc73c\ub85c", characters: [], images: [{ id: "bac-ch3-img1", caption: "\uc11c\ub85c\ub2e4\ub978 \uc138\uacc4" }], content: "\uc5b4\ub978\uc758 \ub208\uc73c\ub85c \ubcf4\ub294 \ub2e4\ub978 \ud48d\uacbd\uc774 \ud3bc\uccd0\uc84c\ub2e4." }
+    { id: "bac-ch1", number: 1, title: "어른이 어린이가 되다", characters: [], images: [{ id: "bac-ch1-img1", caption: "어린이 눈높이" }], content: "어느 날 아침 일어나보니 맨스가 달라져 있었다." },
+    { id: "bac-ch2", number: 2, title: "어린이의 세계", characters: [], images: [{ id: "bac-ch2-img1", caption: "놀이터" }], content: "모든 것이 크고 신기하게 동이다." },
+    { id: "bac-ch3", number: 3, title: "다시 어른으로", characters: [], images: [{ id: "bac-ch3-img1", caption: "서로다른 세계" }], content: "어른의 눈으로 보는 다른 풍경이 펼쳐졌다." }
   ],
   "yokai-bus-5": [
-    { id: "yb-ch1", number: 1, title: "\uc694\uad34\ubc84\uc2a4\uc758 \ube44\ubc00", characters: [], images: [{ id: "yb-ch1-img1", caption: "\uc694\uad34 \ubc84\uc2a4" }], content: "\ub108\uc800\ub141\ud558\uac8c \uc6c0\uc9c1\uc774\ub294 \ubc84\uc2a4\uc5d0 \uc62c\ub790\ub2e4." },
-    { id: "yb-ch2", number: 2, title: "\uc2e0\ube44\ub85c\uc6b4 \uc2b9\uac1d\ub4e4", characters: [], images: [{ id: "yb-ch2-img1", caption: "\uc2e0\ube44\ub85c\uc6b4 \uc5ec\ud589" }], content: "\uc694\uad34\ub4e4\uc740 \uc800\ub9c8\ub2e4\uc758 \uc774\uc57c\uae30\ub97c \uac16\uace0 \uc788\uc5c8\ub2e4." },
-    { id: "yb-ch3", number: 3, title: "\uc0ac\ub77c\uc9c4 \uadf8\ub9bc\uc790\uc758 \uc138\uacc4", characters: [], images: [{ id: "yb-ch3-img1", caption: "\uc0ac\ub77c\uc9c4 \uadf8\ub9bc\uc790" }], content: "\uadf8\ub9bc\uc790\ub97c \ucc3e\uc544 \uba40\ub9ac \ub5a0\ub09c \uc5ec\ud589\uc774 \uc2dc\uc791\ub418\uc5c8\ub2e4." }
+    { id: "yb-ch1", number: 1, title: "요괴버스의 비밀", characters: [], images: [{ id: "yb-ch1-img1", caption: "요괴 버스" }], content: "너저덕하게 움직이는 버스에 올랐다." },
+    { id: "yb-ch2", number: 2, title: "신비로운 승객들", characters: [], images: [{ id: "yb-ch2-img1", caption: "신비로운 여행" }], content: "요괴들은 저마다의 이야기를 갖고 있었다." },
+    { id: "yb-ch3", number: 3, title: "사라진 그림자의 세계", characters: [], images: [{ id: "yb-ch3-img1", caption: "사라진 그림자" }], content: "그림자를 찾아 멀리 떠난 여행이 시작되었다." }
   ]
 };
+
+// 기본 챕터 (bookId에 매칭되는 데이터가 없을 때 사용)
+const defaultChapters: ChapterContent[] = [
+  {
+    id: "ch1",
+    number: 1,
+    title: "얄리의 질문",
+    characters: ["얄리", "재레드 다이아몬드"],
+    images: [
+      { id: "ch1-img1", caption: "뉴기니 해안의 풍경" },
+      { id: "ch1-img2", caption: "얄리와의 만남" },
+    ],
+    content: `1972년 7월, 나는 뉴기니 해안을 따라 걷고 있었다. 열대의 습한 공기가 피부에 달라붙었고, 멀리서 파도 소리가 들려왔다.
+
+그때 얄리가 내게 다가왔다. 그는 현지 정치인으로, 카리스마 넘치는 눈빛과 강인한 체격의 소유자였다. 얄리는 해변을 함께 걸으며 서양 문명에 대한 깊은 관심을 보였다.
+
+"당신네 백인들은 그렇게 많은 화물을 발전시켜 뉴기니에 가져왔는데," 얄리가 물었다. "어째서 우리 흑인들은 그런 화물을 만들지 못한 거요?"
+
+이 단순해 보이는 질문이 나의 연구 인생을 바꿔놓았다. 재레드 다이아몬드로서 나는 이 질문에 과학적으로 답하고 싶었다. 왜 각 대륙의 문명 발전 속도는 달랐을까?
+
+대답은 인종의 우열이 아니라, 지리와 환경에 있었다. 각 대륙이 가진 야생 동식물, 대륙의 축 방향, 그리고 지리적 장벽이 문명의 발전 속도를 결정했다.
+
+얄리의 질문은 단순한 호기심이 아니었다. 그것은 인류 역사의 가장 큰 수수께끼를 관통하는 질문이었다.`,
+  },
+  {
+    id: "ch2",
+    number: 2,
+    title: "식량 생산의 힘",
+    characters: ["얄리", "재레드 다이아몬드"],
+    images: [
+      { id: "ch2-img1", caption: "비옥한 초승달 지대의 밀밭" },
+      { id: "ch2-img2", caption: "고대 농경의 시작" },
+    ],
+    content: `약 1만 1천 년 전, 인류 역사에 가장 중요한 전환점이 찾아왔다. 바로 식량 생산의 시작이다.
+
+비옥한 초승달 지대에서 밀과 보리가 재배되기 시작했다. 얄리의 조상들이 살던 뉴기니에서도 농업이 독립적으로 발생했지만, 결정적 차이가 있었다.
+
+재레드 다이아몬드가 주목한 것은 이것이었다. 비옥한 초승달 지대에는 재배에 적합한 야생 곡물이 풍부했다. 밀, 보리, 완두콩, 렌즈콩 — 이 식물들은 자연 상태에서도 열량이 높았고, 재배가 비교적 쉬웠다.
+
+반면 뉴기니의 야생 식물은 대부분 열량이 낮고 재배가 어려웠다. 얄리의 조상들이 게을렀거나 무능해서가 아니다. 환경이 달랐을 뿐이다.
+
+식량 생산은 연쇄 반응을 일으켰다. 잉여 식량이 생기자 모든 사람이 농사를 짓지 않아도 되었다. 일부는 도공이 되고, 일부는 대장장이가 되고, 일부는 군인이 되었다. 전문화와 분업이 시작된 것이다.
+
+이것이 문명의 시작이었다. 그리고 이 모든 것의 출발점은 각 대륙이 가진 야생 동식물의 차이였다.`,
+  },
+  {
+    id: "ch3",
+    number: 3,
+    title: "가축화의 비밀",
+    characters: ["얄리", "재레드 다이아몬드"],
+    images: [
+      { id: "ch3-img1", caption: "가축화된 동물들" },
+      { id: "ch3-img2", caption: "유라시아 대륙의 가축" },
+    ],
+    content: `인류가 가축화에 성공한 대형 포유류는 전 세계에 단 14종뿐이다. 그리고 그 중 13종이 유라시아 대륙 출신이었다.
+
+얄리에게 이 사실을 설명하면, 그는 아마 고개를 끄덕일 것이다. 왜 아프리카에서는 얼룩말을 길들이지 못했을까? 왜 아메리카에서는 들소를 가축으로 만들지 못했을까?
+
+재레드 다이아몬드는 "안나 카레니나 원칙"을 제시한다. 톨스토이의 명언 "행복한 가정은 모두 비슷하고, 불행한 가정은 저마다의 이유로 불행하다"처럼, 가축화에 성공하려면 모든 조건이 충족되어야 한다.
+
+동물이 가축화되려면 다음 조건을 모두 만족해야 한다:
+• 성장 속도가 빨라야 한다
+• 사육 환경에서 번식이 가능해야 한다
+• 성격이 온순해야 한다
+• 공황 반응이 적어야 한다
+• 사회적 위계 구조가 있어야 한다
+
+유라시아 대륙은 운이 좋았다. 소, 말, 양, 돼지, 염소 — 이 동물들이 가축화의 모든 조건을 우연히 충족했기 때문이다. 이것은 유라시아인의 능력이 아니라, 생물지리학적 행운이었다.
+
+가축은 식량만 제공한 것이 아니다. 말은 군사력과 이동 수단을 제공했고, 소는 농업 혁명을 가속했다. 그리고 가축과 가까이 사는 사람들은 동물 유래 질병에 대한 면역력을 키웠다. 이것이 훗날 아메리카 정복에서 결정적 역할을 하게 된다.`,
+  },
+];
+
+// bookId로 챕터 가져오기 (없으면 기본 챕터 반환)
+export function getChaptersByBookId(bookId: string): ChapterContent[] {
+  return bookChaptersMap[bookId] || defaultChapters;
+}
+
+// 하위 호환: 기존 코드에서 사용하던 export
+export const mockChapters = defaultChapters;
+
+export function getChapterByNumber(num: number, bookId?: string): ChapterContent | undefined {
+  const chapters = bookId ? getChaptersByBookId(bookId) : defaultChapters;
+  return chapters.find((ch) => ch.number === num);
+}
