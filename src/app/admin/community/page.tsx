@@ -1,85 +1,80 @@
 "use client";
-
 import { useState } from "react";
-import { Pin, AlertTriangle, Ban, MessageSquare } from "lucide-react";
+import { Search, Shield, Ban, Eye, Users } from "lucide-react";
 
 const MOCK_USERS = [
-  { id: "u1", name: "독서광민수", status: "active", warnings: 0 },
-  { id: "u2", name: "역사덕후", status: "active", warnings: 1 },
-  { id: "u3", name: "과학소녀", status: "active", warnings: 0 },
+  { id: "u001", email: "user1@example.com", name: "콤니니", books: 3, creations: 8, joined: "2024-11-01", status: "active" },
+  { id: "u002", email: "user2@example.com", name: "시오연", books: 7, creations: 23, joined: "2024-10-15", status: "active" },
+  { id: "u003", email: "user3@example.com", name: "레이나", books: 1, creations: 2, joined: "2025-01-20", status: "active" },
+  { id: "u004", email: "user4@example.com", name: "미나", books: 5, creations: 15, joined: "2024-12-05", status: "suspended" },
+  { id: "u005", email: "user5@example.com", name: "하루", books: 2, creations: 4, joined: "2025-02-11", status: "active" },
 ];
 
 export default function AdminCommunityPage() {
-  const [notice, setNotice] = useState("환영합니다! 서로 존중하며 대화해주세요.");
+  const [search, setSearch] = useState("");
+  const filtered = MOCK_USERS.filter(u => u.name.includes(search) || u.email.includes(search));
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-mono-900 mb-6">커뮤니티 관리</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 공지 관리 */}
-        <div className="bg-white rounded-xl border border-mono-200 p-5">
-          <h3 className="font-semibold text-mono-900 mb-3 flex items-center gap-2">
-            <Pin className="w-4 h-4 text-accent-orange" /> 공지 관리
-          </h3>
-          <textarea
-            value={notice}
-            onChange={(e) => setNotice(e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
-          />
-          <button className="px-4 py-2 bg-primary-500 text-white rounded-xl text-sm hover:bg-primary-600">
-            공지 저장
-          </button>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-mono-900">커뮤니티 관리</h1>
+          <p className="text-sm text-mono-500 mt-1">전체 멤버 {MOCK_USERS.length}명</p>
         </div>
+        <div className="flex gap-2">
+          <span className="text-xs bg-primary-050 text-primary-600 px-3 py-1.5 rounded-full font-medium">활성 {MOCK_USERS.filter(u=>u.status==="active").length}</span>
+          <span className="text-xs bg-red-050 text-red-300 px-3 py-1.5 rounded-full font-medium">정지 {MOCK_USERS.filter(u=>u.status==="suspended").length}</span>
+        </div>
+      </div>
 
-        {/* 사용자 제재 */}
-        <div className="bg-white rounded-xl border border-mono-200 p-5">
-          <h3 className="font-semibold text-mono-900 mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-300" /> 사용자 관리
-          </h3>
-          <div className="space-y-2">
-            {MOCK_USERS.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-3 bg-mono-50 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-mono-900">{user.name}</p>
-                  <p className="text-xs text-mono-500">경고: {user.warnings}회</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-3 py-1 text-xs bg-accent-orange/10 text-accent-orange rounded-lg hover:bg-accent-orange/20">
-                    경고
-                  </button>
-                  <button className="px-3 py-1 text-xs bg-red-50 text-red-300 rounded-lg hover:bg-red-100">
-                    1일 정지
-                  </button>
-                  <button className="px-3 py-1 text-xs bg-mono-900 text-white rounded-lg hover:bg-mono-800">
-                    <Ban className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+      <div className="bg-white rounded-xl border border-mono-080 overflow-hidden">
+        <div className="p-4 border-b border-mono-050">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-mono-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="이름, 이메일 검색..."
+              className="w-full pl-9 pr-4 py-2 text-sm border border-mono-080 rounded-lg focus:outline-none focus:border-primary-400" />
           </div>
         </div>
-
-        {/* 채팅 로그 */}
-        <div className="bg-white rounded-xl border border-mono-200 p-5 lg:col-span-2">
-          <h3 className="font-semibold text-mono-900 mb-3 flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-primary-500" /> 채팅 로그
-          </h3>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {[
-              { user: "독서광민수", msg: "이 책 진짜 인상적이에요.", time: "10:30" },
-              { user: "역사덕후", msg: "얄리의 질문이 가장 인상깊었어요.", time: "10:35" },
-              { user: "과학소녀", msg: "가축화 안나 카레니나 원칙 부분 정말 재미있었어요 😂", time: "11:00" },
-            ].map((log, i) => (
-              <div key={i} className="flex items-start gap-3 p-2 hover:bg-mono-50 rounded-lg text-sm">
-                <span className="text-xs text-mono-400 w-12 flex-shrink-0">{log.time}</span>
-                <span className="font-medium text-mono-700 w-24 flex-shrink-0">{log.user}</span>
-                <span className="text-mono-600">{log.msg}</span>
-              </div>
+        <table className="w-full">
+          <thead className="bg-mono-050">
+            <tr>
+              {["사용자", "이메일", "도서", "2차창작", "가입일", "상태", "관리"].map(h => (
+                <th key={h} className="text-left text-xs font-medium text-mono-500 px-4 py-3">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((user) => (
+              <tr key={user.id} className="border-t border-mono-050 hover:bg-mono-010">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-primary-050 flex items-center justify-center text-xs font-medium text-primary-600">
+                      {user.name[0]}
+                    </div>
+                    <span className="text-sm font-medium text-mono-900">{user.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-sm text-mono-500">{user.email}</td>
+                <td className="px-4 py-3 text-sm text-mono-600">{user.books}</td>
+                <td className="px-4 py-3 text-sm text-mono-600">{user.creations}</td>
+                <td className="px-4 py-3 text-sm text-mono-500">{user.joined}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${user.status === "active" ? "bg-primary-050 text-primary-600" : "bg-red-050 text-red-300"}`}>
+                    {user.status === "active" ? "활성" : "정지"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <button className="p-1 hover:bg-mono-050 rounded text-mono-400 hover:text-blue-300"><Eye className="w-4 h-4" /></button>
+                    <button className="p-1 hover:bg-mono-050 rounded text-mono-400 hover:text-primary-500"><Shield className="w-4 h-4" /></button>
+                    <button className="p-1 hover:bg-mono-050 rounded text-mono-400 hover:text-red-300"><Ban className="w-4 h-4" /></button>
+                  </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

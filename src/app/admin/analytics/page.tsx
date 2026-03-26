@@ -1,32 +1,59 @@
-import { BarChart3, Users, Bot, MessageSquare, Palette } from "lucide-react";
+"use client";
+import { TrendingUp, Users, BookOpen, Palette, Eye, Heart } from "lucide-react";
 
 const METRICS = [
-  { label: "MAU", value: "1,234", change: "+12%", icon: Users },
-  { label: "DAU", value: "342", change: "+8%", icon: Users },
-  { label: "AI 대화", value: "5,678", change: "+23%", icon: Bot },
-  { label: "커뮤니티 메시지", value: "12,345", change: "+15%", icon: MessageSquare },
-  { label: "2차 창작", value: "45", change: "+5%", icon: Palette },
+  { label: "DAU", value: "1,234", change: "+8.2%", up: true },
+  { label: "MAU", value: "4,521", change: "+12.1%", up: true },
+  { label: "평균 독서 시간", value: "23분", change: "+3분", up: true },
+  { label: "숨북 생성수", value: "142", change: "+18%", up: true },
+  { label: "커뮤니티 참여율", value: "34%", change: "-2%", up: false },
+  { label: "신규 가입", value: "89", change: "+5", up: true },
+];
+
+const TOP_BOOKS = [
+  { title: "나를 모르는 나에게", views: 12400, likes: 587 },
+  { title: "애인의 애인에게", views: 9800, likes: 341 },
+  { title: "무엇이 나를 움직이게 하는가", views: 7200, likes: 276 },
+  { title: "통증 어를 때 깨내 보는 백과", views: 6100, likes: 287 },
+  { title: "까다로운 사람과 함께 일하는 법", views: 4300, likes: 203 },
 ];
 
 export default function AdminAnalyticsPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-mono-900 mb-6">애널리틱스</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-mono-900">통계</h1>
+        <p className="text-sm text-mono-500 mt-1">최근 30일 기준</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {METRICS.map((m) => (
-          <div key={m.label} className="bg-white rounded-xl border border-mono-200 p-4">
-            <m.icon className="w-4 h-4 text-primary-500 mb-2" />
-            <p className="text-2xl font-bold text-mono-900">{m.value}</p>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-xs text-mono-500">{m.label}</span>
-              <span className="text-xs text-primary-500 font-medium">{m.change}</span>
-            </div>
+          <div key={m.label} className="bg-white rounded-xl border border-mono-080 p-5">
+            <p className="text-sm text-mono-500">{m.label}</p>
+            <p className="text-2xl font-bold text-mono-900 mt-1">{m.value}</p>
+            <p className={`text-xs mt-1 font-medium ${m.up ? "text-primary-600" : "text-red-300"}`}>
+              {m.change} 저번 대비
+            </p>
           </div>
         ))}
       </div>
-      <div className="bg-white rounded-xl border border-mono-200 p-10 text-center">
-        <BarChart3 className="w-12 h-12 text-mono-300 mx-auto mb-3" />
-        <p className="text-mono-500">차트 대시보드 (recharts 연동 예정)</p>
+
+      <div className="bg-white rounded-xl border border-mono-080 p-5">
+        <h2 className="text-sm font-semibold text-mono-900 mb-4">TOP 5 도서</h2>
+        <div className="space-y-3">
+          {TOP_BOOKS.map((book, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-sm font-bold text-mono-300 w-5">{i+1}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-mono-800 truncate">{book.title}</p>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-mono-400 shrink-0">
+                <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{book.views.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{book.likes}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
