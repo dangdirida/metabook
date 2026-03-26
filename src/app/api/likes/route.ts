@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { bookId } = await req.json();
-  const userId = (session.user as any).id;
+  const userId = (session.user as { id: string; email: string; name: string; image?: string }).id;
   const ref = doc(db, "books", bookId, "likes", userId);
   const snap = await getDoc(ref);
   if (snap.exists()) {

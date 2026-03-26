@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const { bookId, text } = await req.json();
   if (!bookId || !text) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   const doc = await addDoc(collection(db, "books", bookId, "chat"), {
-    userId: (session.user as any).id,
+    userId: (session.user as { id: string; email: string; name: string; image?: string }).id,
     userName: session.user.name,
     userImage: session.user.image,
     text,
