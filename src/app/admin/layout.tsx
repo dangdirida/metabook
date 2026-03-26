@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, Settings, Home } from "lucide-react";
+import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, Home } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "대시보드", icon: Home },
