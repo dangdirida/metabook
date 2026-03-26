@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Search, Shield, Ban, Eye, Users } from "lucide-react";
+import { Search, Shield, Ban, Eye } from "lucide-react";
 
 const MOCK_USERS = [
   { id: "u001", email: "user1@example.com", name: "콤니니", books: 3, creations: 8, joined: "2024-11-01", status: "active" },

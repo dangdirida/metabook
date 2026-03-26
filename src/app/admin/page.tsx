@@ -1,4 +1,4 @@
-import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, TrendingUp, Eye, Heart, MessageCircle } from "lucide-react";
+import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 const STATS = [

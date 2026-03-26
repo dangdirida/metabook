@@ -1,5 +1,5 @@
 "use client";
-import { TrendingUp, Users, BookOpen, Palette, Eye, Heart } from "lucide-react";
+import { TrendingUp, Eye, Heart } from "lucide-react";
 
 const METRICS = [
   { label: "DAU", value: "1,234", change: "+8.2%", up: true },
