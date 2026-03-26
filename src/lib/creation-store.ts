@@ -3,6 +3,7 @@ export interface CreationItem {
   bookId: string;
   bookTitle: string;
   type: "shortbook" | "shortmovie" | "goods";
+  goodsType?: "bookmark" | "sticker" | "illustration";
   title: string;
   thumbnail: string;
   content: string;
@@ -15,11 +16,8 @@ const STORAGE_KEY = "metabook_creations";
 
 function load(): CreationItem[] {
   if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { return []; }
 }
 
 function save(items: CreationItem[]) {
@@ -44,6 +42,11 @@ export function addCreation(item: Omit<CreationItem, "id" | "createdAt" | "heart
   list.unshift(newItem);
   save(list);
   return newItem;
+}
+
+export function deleteCreation(id: string) {
+  const list = load().filter((c) => c.id !== id);
+  save(list);
 }
 
 export function toggleHeart(id: string): CreationItem | undefined {
