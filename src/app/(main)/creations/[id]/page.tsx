@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Heart, ExternalLink, Palette, BookOpen, Film, Gift, Tag } from "lucide-react";
 import { mockCreations } from "@/lib/mock-creations";
 import { getCreations, type CreationItem } from "@/lib/creation-store";
-import type { Creation, CreationType } from "@/types";
+import type { Creation } from "@/types";
 
 const TYPE_LABELS: Record<string, string> = {
   sticker: "스티커",
