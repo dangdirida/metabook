@@ -7,12 +7,12 @@
 - GitHub push 시 Vercel이 자동으로 감지해서 배포함 → 중복 배포 방지.
 - 배포 명령 순서: `git add` → `git commit` → `git push` 까지만.
 - **사용자가 명시적으로 "배포해"라고 말할 때만 git push 실행.**
-- 평소 수정은 로컬(http://localhost:3000)에서 확인. 배포 요청 없으면 push 하지 않음.
+- 평소 수정은 로컬(http://localhost:3001)에서 확인. 배포 요청 없으면 push 하지 않음.
 
 ## 로컬 개발 환경
 
-- 로컬 주소: http://localhost:3000
-- 개발 서버 실행: `npm run dev`
+- 로컬 주소: http://localhost:3001
+- 개발 서버 실행: `npm run dev` (포트 3001)
 - 수정 후 로컬에서 확인 → 사용자가 "배포해"라고 할 때만 git push
 
 ## 기술 스택
