@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, ExternalLink, Palette, Sparkles, X } from "lucide-react";
-import { useParams } from "next/navigation";
+import { Heart, ExternalLink, Palette, Sparkles } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { getCreationsByBookId } from "@/lib/mock-creations";
-import type { Creation, CreationType } from "@/types";
+import type { CreationType } from "@/types";
 
 const TYPE_LABELS: Record<CreationType, string> = {
   sticker: "스티커",
@@ -37,8 +37,8 @@ const SORT_OPTIONS = [
 
 export default function CreationTab() {
   const { bookId } = useParams();
+  const router = useRouter();
   const [sort, setSort] = useState("ranking");
-  const [selectedCreation, setSelectedCreation] = useState<Creation | null>(null);
   const creations = getCreationsByBookId(bookId as string);
 
   const sorted = [...creations].sort((a, b) => {
@@ -46,14 +46,6 @@ export default function CreationTab() {
     if (sort === "likes") return b.likes - a.likes;
     return b.likes - a.likes; // ranking = likes
   });
-
-  const handleCardClick = (creation: Creation) => {
-    if (creation.ogqUrl) {
-      window.open(creation.ogqUrl, "_blank");
-    } else {
-      setSelectedCreation(creation);
-    }
-  };
 
   if (creations.length === 0) {
     return (
@@ -101,7 +93,7 @@ export default function CreationTab() {
           {sorted.map((creation) => (
             <button
               key={creation.id}
-              onClick={() => handleCardClick(creation)}
+              onClick={() => router.push(`/creations/${creation.id}`)}
               className="bg-white rounded-xl border border-mono-200 overflow-hidden hover:shadow-md transition-shadow text-left"
             >
               {/* 썸네일 */}
@@ -144,65 +136,6 @@ export default function CreationTab() {
           ))}
         </div>
       </div>
-
-      {/* 창작물 상세 모달 */}
-      {selectedCreation && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setSelectedCreation(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-mono-100">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
-                    TYPE_COLORS[selectedCreation.type] || "bg-mono-100 text-mono-600"
-                  }`}
-                >
-                  {TYPE_LABELS[selectedCreation.type]}
-                </span>
-                <h2 className="text-lg font-bold text-mono-900 line-clamp-1">
-                  {selectedCreation.title}
-                </h2>
-              </div>
-              <button
-                onClick={() => setSelectedCreation(null)}
-                className="p-1.5 hover:bg-mono-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-mono-500" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-mono-500">{selectedCreation.userName}</span>
-                <span className="flex items-center gap-1 text-mono-400">
-                  <Heart className="w-3.5 h-3.5" />
-                  {selectedCreation.likes}
-                </span>
-              </div>
-              {selectedCreation.description && (
-                <p className="text-sm text-mono-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedCreation.description}
-                </p>
-              )}
-              {selectedCreation.ogqUrl && (
-                <a
-                  href={selectedCreation.ogqUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  OGQ Market에서 보기
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

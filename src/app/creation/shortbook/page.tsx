@@ -210,9 +210,10 @@ function ShortBookContent() {
               else if (step === "perspective" || step === "ending") setStep("select");
               else if (step === "generating") setStep(subType);
             }}
-            className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors text-[var(--color-mono-600)] hover:text-[var(--color-mono-900)]"
           >
-            <ArrowLeft className="w-5 h-5 text-[var(--color-mono-700)]" />
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">돌아가기</span>
           </button>
           <h1 className="text-lg font-bold text-[var(--color-mono-990)]">숏북 만들기</h1>
         </div>
