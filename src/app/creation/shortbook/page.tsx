@@ -205,7 +205,11 @@ function ShortBookContent() {
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
-            onClick={() => router.push(`/library/${bookId}`)}
+            onClick={() => {
+              if (step === "select") router.push(`/library/${bookId}`);
+              else if (step === "perspective" || step === "ending") setStep("select");
+              else if (step === "generating") setStep(subType);
+            }}
             className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-mono-700)]" />
@@ -285,7 +289,6 @@ function ShortBookContent() {
             {step === "perspective" && (
               <div className="max-w-lg mx-auto space-y-6">
                 <div>
-                  <button onClick={() => setStep("select")} className="text-sm text-[var(--color-primary-500)] hover:underline mb-2">← 돌아가기</button>
                   <h2 className="text-xl font-bold text-[var(--color-mono-990)]">다른 시점으로 다시 쓰기</h2>
                 </div>
 
@@ -395,7 +398,6 @@ function ShortBookContent() {
             {step === "ending" && (
               <div className="max-w-lg mx-auto space-y-6">
                 <div>
-                  <button onClick={() => setStep("select")} className="text-sm text-[var(--color-primary-500)] hover:underline mb-2">← 돌아가기</button>
                   <h2 className="text-xl font-bold text-[var(--color-mono-990)]">다른 결말로 다시 쓰기</h2>
                 </div>
 

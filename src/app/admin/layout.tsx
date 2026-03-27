@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, Home } from "lucide-react";
+import { BookOpen, Bot, Users, Palette, ShoppingBag, BarChart3, Home, UserCircle } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "대시보드", icon: Home },
   { href: "/admin/books", label: "도서 관리", icon: BookOpen },
   { href: "/admin/agents", label: "AI 에이전트", icon: Bot },
+  { href: "/admin/users", label: "회원 관리", icon: UserCircle },
   { href: "/admin/community", label: "커뮤니티", icon: Users },
   { href: "/admin/creations", label: "2차 창작", icon: Palette },
   { href: "/admin/commerce", label: "굿즈", icon: ShoppingBag },
