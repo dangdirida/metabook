@@ -23,9 +23,9 @@ export default function UserMenu() {
 
   if (!session?.user) {
     return (
-      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+      <Link href="/mypage" className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
         <User className="w-4 h-4 text-primary-600" />
-      </div>
+      </Link>
     );
   }
 
@@ -73,6 +73,14 @@ export default function UserMenu() {
             </p>
             <p className="text-xs text-mono-500 truncate">{user.email}</p>
           </div>
+          <Link
+            href="/mypage"
+            onClick={() => setOpen(false)}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-mono-600 hover:bg-mono-50 transition-colors"
+          >
+            <User className="w-4 h-4" />
+            마이페이지
+          </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-mono-600 hover:bg-mono-50 transition-colors"

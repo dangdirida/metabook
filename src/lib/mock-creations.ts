@@ -102,6 +102,98 @@ export const mockCreations: Creation[] = [
   },
 ];
 
+// lovers-lover 책 창작물
+export const loversCreations: Creation[] = [
+  {
+    id: "ll-c1",
+    bookId: "lovers-lover",
+    userId: "user10",
+    userName: "콤니니",
+    title: "수연의 편지 스티커팩",
+    description: "수연이 보내지 못한 편지들을 감성 스티커로 만들었어요",
+    type: "sticker",
+    fileUrl: "",
+    thumbnailUrl: "",
+    tags: ["수연", "편지", "감성스티커"],
+    status: "approved",
+    likes: 38,
+    ogqLinked: true,
+    ogqUrl: "https://ogq.me",
+    createdAt: "2025-01-10",
+  },
+  {
+    id: "ll-c2",
+    bookId: "lovers-lover",
+    userId: "user11",
+    userName: "음악하는독자",
+    title: "애인의 애인에게 OST - 빗소리",
+    description: "3장에서 영감받은 피아노 연주곡. 빗소리와 함께 듣기 좋아요.",
+    type: "music",
+    fileUrl: "",
+    thumbnailUrl: "",
+    tags: ["OST", "피아노", "감성"],
+    status: "approved",
+    likes: 25,
+    ogqLinked: false,
+    createdAt: "2025-01-15",
+  },
+  {
+    id: "ll-c3",
+    bookId: "lovers-lover",
+    userId: "user12",
+    userName: "웹툰작가지망",
+    title: "수연과 지호 - 숏툰",
+    description: "두 사람의 엇갈린 마음을 4컷 만화로 그려봤어요",
+    type: "webtoon",
+    fileUrl: "",
+    thumbnailUrl: "",
+    tags: ["숏툰", "수연", "지호"],
+    status: "approved",
+    likes: 47,
+    ogqLinked: false,
+    createdAt: "2025-01-20",
+  },
+  {
+    id: "ll-c4",
+    bookId: "lovers-lover",
+    userId: "user13",
+    userName: "소설가지니",
+    title: "만약 수연이 먼저 말했다면",
+    description: "IF 시나리오. 수연이 용기를 냈다면 결말이 어떻게 바뀌었을까?",
+    type: "novel",
+    fileUrl: "",
+    thumbnailUrl: "",
+    tags: ["IF", "대체결말", "소설"],
+    status: "approved",
+    likes: 33,
+    ogqLinked: false,
+    createdAt: "2025-02-01",
+  },
+  {
+    id: "ll-c5",
+    bookId: "lovers-lover",
+    userId: "user14",
+    userName: "영상크리에이터",
+    title: "애인의 애인에게 - 북트레일러",
+    description: "이 책의 감성을 1분 영상으로 담아봤습니다",
+    type: "video",
+    fileUrl: "",
+    thumbnailUrl: "",
+    tags: ["북트레일러", "영상", "감성"],
+    status: "approved",
+    likes: 29,
+    ogqLinked: true,
+    ogqUrl: "https://ogq.me",
+    createdAt: "2025-02-10",
+  },
+];
+
+const allCreations = [...mockCreations, ...loversCreations];
+
 export function getCreationsByBookId(bookId: string): Creation[] {
-  return mockCreations.filter((c) => c.bookId === bookId);
+  return allCreations.filter((c) => c.bookId === bookId);
+}
+
+export function getCreationById(id: string): Creation | undefined {
+  return allCreations.find((c) => c.id === id);
 }

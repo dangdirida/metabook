@@ -261,7 +261,7 @@ function LibraryContent() {
       <main className="max-w-7xl mx-auto px-4 pt-10">
         {/* 히어로 배너 */}
         {!isFiltering && (
-          <div className="relative w-full overflow-hidden bg-[#0a0a0a] rounded-2xl" style={{height: '420px'}}>
+          <div className="relative w-full overflow-hidden bg-[#0a0a0a] rounded-2xl isolate" style={{height: '420px', borderRadius: '16px'}}>
             {/* 책 표지 흐르는 배경 — 3줄, 반대방향 */}
             <div className="absolute inset-0 flex flex-col gap-3 opacity-35" style={{top: '-20px'}}>
               {/* 1번 줄 — 왼쪽으로 */}

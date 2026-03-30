@@ -1,21 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, GripHorizontal, Play, Plus } from "lucide-react";
+import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor: string; icon: React.ElementType }> = {
-  shortbook: { label: "숏북", gradient: "from-emerald-400 via-teal-500 t-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
+  shortbook: { label: "숏북", gradient: "from-emerald-400 via-teal-500 to-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
   shortmovie: { label: "숏뮤비", gradient: "from-violet-500 via-purple-500 to-indigo-600", accentColor: "text-violet-500", icon: Film },
   goods: { label: "굿즈", gradient: "from-orange-400 via-rose-400 to-pink-500", accentColor: "text-orange-500", icon: Gift },
 };
+
+const OPEN_HEIGHT = 280;
 
 export default function TopTabs() {
   const { bookId } = useParams();
   const router = useRouter();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [creations, setCreations] = useState<CreationItem[]>([]);
-  const [galleryHeight, setGalleryHeight] = useState(280);
   useEffect(() => { setGalleryOpen(false); setCreations(getCreations(bookId as string)); }, [bookId]);
   const refreshCreations = () => setCreations(getCreations(bookId as string));
   const handleHeart = (id: string) => { toggleHeart(id); refreshCreations(); };
@@ -34,20 +35,14 @@ export default function TopTabs() {
         </div>
         <ChevronUp className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`} strokeWidth={1.5} />
       </button>
-      {galleryOpen && (
-        <div className="flex justify-center py-1 cursor-ns-resize hover:bg-mono-50 select-none"
-          onMouseDown={(e) => { e.preventDefault(); const sY=e.clientY,sH=galleryHeight; const oM=(ev: MouseEvent)=>setGalleryHeight(Math.min(560,Math.max(140,sH+ev.clientY-sY))); const oU=()=>{window.removeEventListener("mousemove",oM);window.removeEventListener("mouseup",oU);}; window.addEventListener("mousemove",oM);window.addEventListener("mouseup",oU); }}>
-          <GripHorizontal className="w-4 h-4 text-mono-300" strokeWidth={1.5} />
-        </div>
-      )}
-      <div className={`overflow-hidden transition-all duration-300 ${galleryOpen ? "" : "max-h-0"}`} style={galleryOpen ? { maxHeight: galleryHeight } : undefined}>
+      <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: galleryOpen ? OPEN_HEIGHT : 0 }}>
         <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-100 dark:border-mono-800">
           {(["shortbook","shortmovie","goods"] as const).map((type) => {
             const cfg=TYPE_CONFIG[type]; const Icon=cfg.icon;
             return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-mono-200 text-mono-700 hover:bg-mono-50 hover:border-mono-300 dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
           })}
         </div>
-        <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: "calc(100% - 56px)" }}>
+        <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
           {creations.length === 0 ? (
             <div className="text-center py-6">
               <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>

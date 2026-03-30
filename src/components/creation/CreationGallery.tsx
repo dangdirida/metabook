@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, GripHorizontal } from "lucide-react";
+import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; icon: React.ElementType; textColor: string }> = {
@@ -10,22 +10,15 @@ const TYPE_CONFIG: Record<string, { label: string; gradient: string; icon: React
   goods:      { label: "굿즈",  gradient: "from-orange-400 to-rose-500",    icon: Gift,     textColor: "text-orange-700" },
 };
 
-const COLLAPSED_H = 48;
-const DEFAULT_H   = 48;
-const MAX_H       = 520;
-const MIN_OPEN_H  = 180;
+const OPEN_HEIGHT = 280;
 
 export default function CreationGallery() {
   const { bookId } = useParams();
   const router = useRouter();
   const [creations, setCreations] = useState<CreationItem[]>([]);
-  const [panelH, setPanelH] = useState(DEFAULT_H);
   const [isOpen, setIsOpen] = useState(false);
-  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setPanelH(DEFAULT_H);
     setIsOpen(false);
   }, [bookId]);
 
@@ -41,43 +34,6 @@ export default function CreationGallery() {
     refreshCreations();
   };
 
-  const togglePanel = () => {
-    if (isOpen) {
-      setPanelH(COLLAPSED_H);
-      setIsOpen(false);
-    } else {
-      setPanelH(MIN_OPEN_H);
-      setIsOpen(true);
-    }
-  };
-
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    dragRef.current = { startY: e.clientY, startH: panelH };
-
-    const onMove = (ev: MouseEvent) => {
-      if (!dragRef.current) return;
-      const delta = dragRef.current.startY - ev.clientY;
-      const newH = Math.min(MAX_H, Math.max(COLLAPSED_H, dragRef.current.startH + delta));
-      setPanelH(newH);
-      setIsOpen(newH > COLLAPSED_H);
-    };
-
-    const onUp = () => {
-      setPanelH(prev => {
-        if (prev > COLLAPSED_H && prev < MIN_OPEN_H) return MIN_OPEN_H;
-        if (prev <= COLLAPSED_H) { setIsOpen(false); return COLLAPSED_H; }
-        return prev;
-      });
-      dragRef.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, [panelH]);
-
   const handleCreate = (type: "shortbook" | "shortmovie" | "goods") => {
     router.push(`/creation/${type}?bookId=${bookId}`);
   };
@@ -89,56 +45,45 @@ export default function CreationGallery() {
   ];
 
   return (
-    <div
-      ref={panelRef}
-      className="flex-shrink-0 border-t border-mono-200 bg-white flex flex-col overflow-hidden transition-[height] duration-200 ease-out"
-      style={{ height: panelH }}
-    >
-      {/* 드래그 핸들 + 헤더 */}
+    <div className="flex-shrink-0 border-t border-mono-200 bg-white flex flex-col overflow-hidden">
+      {/* 헤더 (토글만) */}
       <div
-        className="flex-shrink-0 cursor-ns-resize select-none"
-        onMouseDown={onMouseDown}
+        className="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none hover:bg-mono-050 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="flex justify-center pt-1 pb-0.5">
-          <GripHorizontal className="w-4 h-4 text-mono-300" strokeWidth={1.5} />
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-primary-500" strokeWidth={1.5} />
+          <span className="text-xs font-semibold text-mono-800">창작 갤러리</span>
+          {creations.length > 0 && (
+            <span className="text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full font-medium">
+              {creations.length}
+            </span>
+          )}
         </div>
-
-        <div
-          className="flex items-center justify-between px-3 pb-2 cursor-pointer"
-          onClick={togglePanel}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-primary-500" strokeWidth={1.5} />
-            <span className="text-xs font-semibold text-mono-800">창작 갤러리</span>
-            {creations.length > 0 && (
-              <span className="text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full font-medium">
-                {creations.length}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {ctaButtons.map((btn) => (
-              <button
-                key={btn.type}
-                onClick={(e) => { e.stopPropagation(); handleCreate(btn.type); }}
-                className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg border border-mono-200 text-mono-500 transition-all ${btn.color}`}
-              >
-                <btn.icon className="w-3 h-3" strokeWidth={1.5} />
-                {btn.label}
-              </button>
-            ))}
-            <ChevronUp
-              className={`w-3.5 h-3.5 text-mono-400 transition-transform duration-200 ${isOpen ? "" : "rotate-180"}`}
-              strokeWidth={1.5}
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          {ctaButtons.map((btn) => (
+            <button
+              key={btn.type}
+              onClick={(e) => { e.stopPropagation(); handleCreate(btn.type); }}
+              className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg border border-mono-200 text-mono-500 transition-all ${btn.color}`}
+            >
+              <btn.icon className="w-3 h-3" strokeWidth={1.5} />
+              {btn.label}
+            </button>
+          ))}
+          <ChevronUp
+            className={`w-3.5 h-3.5 text-mono-400 transition-transform duration-200 ${isOpen ? "" : "rotate-180"}`}
+            strokeWidth={1.5}
+          />
         </div>
       </div>
 
-      {/* 갤러리 콘텐츠 */}
-      {isOpen && (
-        <div className="flex-1 overflow-y-auto px-3 pb-3" style={{ minHeight: 0 }}>
+      {/* 갤러리 콘텐츠 (고정 높이) */}
+      <div
+        className="overflow-hidden transition-all duration-200 ease-out"
+        style={{ maxHeight: isOpen ? OPEN_HEIGHT : 0 }}
+      >
+        <div className="overflow-y-auto px-3 pb-3" style={{ maxHeight: OPEN_HEIGHT }}>
           {creations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Sparkles className="w-8 h-8 text-mono-300 mb-2" strokeWidth={1.5} />
@@ -188,7 +133,7 @@ export default function CreationGallery() {
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

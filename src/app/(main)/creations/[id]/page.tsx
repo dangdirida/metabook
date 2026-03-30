@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Heart, ExternalLink, Palette, BookOpen, Film, Gift, Tag } from "lucide-react";
-import { mockCreations } from "@/lib/mock-creations";
+import { getCreationById } from "@/lib/mock-creations";
 import { getCreations, type CreationItem } from "@/lib/creation-store";
 import type { Creation } from "@/types";
 
@@ -91,7 +91,7 @@ export default function CreationDetailPage() {
   const router = useRouter();
 
   // mock-creations에서 찾기
-  const mockItem = mockCreations.find((c) => c.id === id);
+  const mockItem = getCreationById(id as string);
   // creation-store(localStorage)에서 찾기
   const storeItems = typeof window !== "undefined" ? getCreations() : [];
   const storeItem = storeItems.find((c) => c.id === id);
