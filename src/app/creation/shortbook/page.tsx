@@ -219,7 +219,7 @@ function ShortBookContent() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 flex gap-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8 flex gap-8">
         {/* 좌측 사이드바 */}
         <aside className="hidden md:block w-64 flex-shrink-0">
           <div className="bg-white rounded-2xl border border-[var(--color-mono-080)] p-5 sticky top-24">

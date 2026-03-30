@@ -238,9 +238,9 @@ function LibraryContent() {
     <div className="min-h-screen bg-[var(--color-mono-010)]">
       {/* 헤더 */}
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-2xl font-bold text-[var(--color-mono-990)]">
+            <h1 className="text-xl md:text-2xl font-bold text-[var(--color-mono-990)]">
               Meta<span className="text-[var(--color-primary-500)]">Book</span>
             </h1>
             <UserMenu />
@@ -258,10 +258,10 @@ function LibraryContent() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 pt-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-10">
         {/* 히어로 배너 */}
         {!isFiltering && (
-          <div className="relative w-full overflow-hidden bg-[#0a0a0a] rounded-2xl isolate" style={{height: '420px', borderRadius: '16px'}}>
+          <div className="relative w-full overflow-hidden bg-[#0a0a0a] rounded-2xl isolate h-48 md:h-72 lg:h-80 xl:h-[420px]" style={{borderRadius: '16px'}}>
             {/* 책 표지 흐르는 배경 — 3줄, 반대방향 */}
             <div className="absolute inset-0 flex flex-col gap-3 opacity-35" style={{top: '-20px'}}>
               {/* 1번 줄 — 왼쪽으로 */}
@@ -273,7 +273,7 @@ function LibraryContent() {
                   '/covers/jr-1.jpg', '/covers/jr-2.png', '/covers/jr-3.png',
                 ]).map((src, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={`row1-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                  <img key={`row1-${i}`} src={src} alt="" className="h-24 md:h-36 lg:h-48 w-auto rounded object-cover flex-shrink-0" />
                 ))}
               </div>
               {/* 2번 줄 — 오른쪽으로 */}
@@ -284,7 +284,7 @@ function LibraryContent() {
                   '/covers/jr-1.jpg', '/covers/gy-2.png', '/covers/jr-2.png',
                 ]).map((src, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={`row2-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                  <img key={`row2-${i}`} src={src} alt="" className="h-24 md:h-36 lg:h-48 w-auto rounded object-cover flex-shrink-0" />
                 ))}
               </div>
               {/* 3번 줄 — 왼쪽으로 (느리게) */}
@@ -295,7 +295,7 @@ function LibraryContent() {
                   '/covers/gy-7.jpg', '/covers/gy-1.png', '/covers/gy-3.png',
                 ]).map((src, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={`row3-${i}`} src={src} alt="" className="h-48 w-auto rounded object-cover flex-shrink-0" />
+                  <img key={`row3-${i}`} src={src} alt="" className="h-24 md:h-36 lg:h-48 w-auto rounded object-cover flex-shrink-0" />
                 ))}
               </div>
             </div>
@@ -306,19 +306,19 @@ function LibraryContent() {
             <div className="absolute inset-0 bg-[#0a0a0a]/50" />
 
             {/* 텍스트 콘텐츠 */}
-            <div className="absolute inset-0 flex flex-col justify-center px-12">
-              <h1 className="text-white font-bold leading-none mb-4" style={{fontSize: '72px', letterSpacing: '-2px'}}>
+            <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-12">
+              <h1 className="text-white font-bold leading-none mb-2 md:mb-4 text-3xl md:text-5xl lg:text-6xl xl:text-7xl" style={{letterSpacing: '-1px'}}>
                 책 속 세계가<br />
                 <span style={{color: '#32d29d'}}>살아납니다.</span>
               </h1>
-              <p className="text-white/60 text-lg leading-relaxed" style={{maxWidth: '480px'}}>
+              <p className="text-white/60 text-sm md:text-lg leading-relaxed hidden sm:block" style={{maxWidth: '480px'}}>
                 김영사의 책들을 AI 캐릭터와 함께 탐험하고,<br />
                 나만의 독서 세계를 만들어보세요.
               </p>
-              <div className="mt-6 flex items-center gap-3">
-                <Link href="/about" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full text-sm font-semibold transition-all border border-white/30">
-                  <Sparkles className="w-4 h-4" />
-                  자세히 보기 <ChevronRight className="w-4 h-4" />
+              <div className="mt-3 md:mt-6 flex items-center gap-3">
+                <Link href="/about" className="inline-flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full text-xs md:text-sm font-semibold transition-all border border-white/30">
+                  <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  자세히 보기 <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </Link>
               </div>
             </div>
@@ -344,7 +344,7 @@ function LibraryContent() {
         )}
 
         {/* 슬라이더 ↔ 카테고리 사이 간격 */}
-        <div className="mt-20 border-t border-[var(--color-mono-080)]" />
+        <div className="mt-10 md:mt-20 border-t border-[var(--color-mono-080)]" />
 
         {/* 카테고리 탭바 */}
         <div className="py-4 mb-10 -mx-4 px-4 overflow-x-auto scrollbar-hide">
@@ -370,7 +370,7 @@ function LibraryContent() {
           {filteredForSearch ? (
             // 검색 결과
             filteredForSearch.length > 0 ? (
-              <div className="grid grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                 {filteredForSearch.map((book, i) => (
                   <GalleryCard key={`search-${i}`} {...book} />
                 ))}
@@ -388,7 +388,7 @@ function LibraryContent() {
           ) : filteredByCategory ? (
             // 카테고리 필터 결과
             filteredByCategory.length > 0 ? (
-              <div className="grid grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                 {filteredByCategory.map((book) => (
                   <GalleryCard key={book.id} title={book.title} coverImage={book.coverImage} />
                 ))}
@@ -406,7 +406,7 @@ function LibraryContent() {
           ) : (
             // 무한 순환 스크롤
             <>
-              <div className="grid grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                 {displayedGallery.map((book, i) => (
                   <GalleryCard key={`gallery-${i}`} {...book} />
                 ))}
