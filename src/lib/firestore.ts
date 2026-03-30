@@ -58,3 +58,19 @@ export async function saveCreation(data: {
     likes: 0,
   });
 }
+
+// 어드민: 전체 유저 조회
+export async function getAllUsers() {
+  const snap = await getDocs(collection(db, "users"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// 어드민: 유저 역할 업데이트
+export async function updateUserRole(userId: string, role: string) {
+  await updateDoc(doc(db, "users", userId), { role, updatedAt: serverTimestamp() });
+}
+
+// 어드민: 유저 상태 업데이트
+export async function updateUserStatus(userId: string, status: string) {
+  await updateDoc(doc(db, "users", userId), { status, updatedAt: serverTimestamp() });
+}

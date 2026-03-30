@@ -1,45 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import { Search, X, Users, UserPlus, Activity } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, X, Users, UserPlus, Activity, Loader2, RefreshCw } from "lucide-react";
+import { getAllUsers, updateUserRole, updateUserStatus } from "@/lib/firestore";
 
 type Role = "user" | "creator" | "admin";
 type Status = "active" | "suspended";
 
-interface MockUser {
+interface FirestoreUser {
   id: string;
-  nickname: string;
-  email: string;
-  joinedAt: string;
-  role: Role;
-  status: Status;
-  aiChats: number;
-  communityMessages: number;
-  creations: number;
+  name?: string;
+  email?: string;
+  image?: string;
+  createdAt?: { seconds: number; nanoseconds: number } | string;
+  updatedAt?: { seconds: number; nanoseconds: number } | string;
+  library?: string[];
+  role?: Role;
+  status?: Status;
 }
 
-const MOCK_USERS: MockUser[] = [
-  { id: "u01", nickname: "콤니니", email: "komnini@example.com", joinedAt: "2024-10-01", role: "user", status: "active", aiChats: 45, communityMessages: 12, creations: 3 },
-  { id: "u02", nickname: "시오연", email: "sioyeon@example.com", joinedAt: "2024-10-15", role: "creator", status: "active", aiChats: 120, communityMessages: 58, creations: 23 },
-  { id: "u03", nickname: "레이나", email: "reina@example.com", joinedAt: "2025-01-20", role: "user", status: "active", aiChats: 8, communityMessages: 2, creations: 1 },
-  { id: "u04", nickname: "미나", email: "mina@example.com", joinedAt: "2024-12-05", role: "user", status: "suspended", aiChats: 67, communityMessages: 31, creations: 15 },
-  { id: "u05", nickname: "하루", email: "haru@example.com", joinedAt: "2025-02-11", role: "user", status: "active", aiChats: 22, communityMessages: 5, creations: 4 },
-  { id: "u06", nickname: "북마크", email: "bookmark@example.com", joinedAt: "2024-11-03", role: "creator", status: "active", aiChats: 89, communityMessages: 44, creations: 18 },
-  { id: "u07", nickname: "달빛독서", email: "moonread@example.com", joinedAt: "2024-09-20", role: "user", status: "active", aiChats: 33, communityMessages: 15, creations: 6 },
-  { id: "u08", nickname: "어드민수", email: "adminsu@example.com", joinedAt: "2024-08-01", role: "admin", status: "active", aiChats: 200, communityMessages: 100, creations: 50 },
-  { id: "u09", nickname: "소설가지니", email: "novelist@example.com", joinedAt: "2024-12-20", role: "creator", status: "active", aiChats: 156, communityMessages: 72, creations: 31 },
-  { id: "u10", nickname: "아트민수", email: "artminsu@example.com", joinedAt: "2024-11-15", role: "creator", status: "active", aiChats: 78, communityMessages: 35, creations: 22 },
-  { id: "u11", nickname: "웹툰작가", email: "webtoon@example.com", joinedAt: "2025-01-05", role: "creator", status: "active", aiChats: 95, communityMessages: 28, creations: 14 },
-  { id: "u12", nickname: "음악하는독자", email: "musician@example.com", joinedAt: "2024-12-10", role: "user", status: "active", aiChats: 41, communityMessages: 19, creations: 7 },
-  { id: "u13", nickname: "영상크리에이터", email: "video@example.com", joinedAt: "2024-11-25", role: "creator", status: "active", aiChats: 63, communityMessages: 25, creations: 11 },
-  { id: "u14", nickname: "책벌레", email: "bookworm@example.com", joinedAt: "2025-02-01", role: "user", status: "active", aiChats: 15, communityMessages: 3, creations: 0 },
-  { id: "u15", nickname: "스토리텔러", email: "storyteller@example.com", joinedAt: "2024-10-30", role: "user", status: "suspended", aiChats: 52, communityMessages: 20, creations: 8 },
-  { id: "u16", nickname: "그림쟁이", email: "painter@example.com", joinedAt: "2025-01-15", role: "user", status: "active", aiChats: 29, communityMessages: 11, creations: 5 },
-  { id: "u17", nickname: "독서왕", email: "readking@example.com", joinedAt: "2024-09-10", role: "user", status: "active", aiChats: 110, communityMessages: 48, creations: 9 },
-  { id: "u18", nickname: "창작마스터", email: "master@example.com", joinedAt: "2024-11-08", role: "creator", status: "active", aiChats: 180, communityMessages: 85, creations: 42 },
-  { id: "u19", nickname: "뉴비리더", email: "newbie@example.com", joinedAt: "2025-03-01", role: "user", status: "active", aiChats: 3, communityMessages: 0, creations: 0 },
-  { id: "u20", nickname: "북클럽장", email: "clubleader@example.com", joinedAt: "2024-10-20", role: "admin", status: "active", aiChats: 145, communityMessages: 92, creations: 27 },
-];
+function toDate(val: unknown): string {
+  if (!val) return "-";
+  if (typeof val === "object" && val !== null && "seconds" in val) {
+    return new Date((val as { seconds: number }).seconds * 1000).toLocaleDateString("ko-KR");
+  }
+  if (typeof val === "string") return new Date(val).toLocaleDateString("ko-KR");
+  return "-";
+}
+
+function isWithinDays(val: unknown, days: number): boolean {
+  if (!val) return false;
+  let ts: number;
+  if (typeof val === "object" && val !== null && "seconds" in val) {
+    ts = (val as { seconds: number }).seconds * 1000;
+  } else if (typeof val === "string") {
+    ts = new Date(val).getTime();
+  } else {
+    return false;
+  }
+  return Date.now() - ts < days * 24 * 60 * 60 * 1000;
+}
 
 const ROLE_LABELS: Record<Role, string> = { user: "일반", creator: "크리에이터", admin: "어드민" };
 const ROLE_COLORS: Record<Role, string> = {
@@ -53,53 +53,107 @@ const STATUS_COLORS: Record<Status, string> = {
 };
 
 export default function AdminUsersPage() {
+  const [users, setUsers] = useState<FirestoreUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
-  const [selectedUser, setSelectedUser] = useState<MockUser | null>(null);
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [selectedUser, setSelectedUser] = useState<FirestoreUser | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getAllUsers();
+      setUsers(data as FirestoreUser[]);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filtered = users.filter((u) => {
-    if (search && !u.nickname.includes(search) && !u.email.includes(search)) return false;
-    if (roleFilter !== "all" && u.role !== roleFilter) return false;
-    if (statusFilter !== "all" && u.status !== statusFilter) return false;
+    const name = u.name || "";
+    const email = u.email || "";
+    if (search && !name.includes(search) && !email.includes(search)) return false;
+    const role = u.role || "user";
+    const status = u.status || "active";
+    if (roleFilter !== "all" && role !== roleFilter) return false;
+    if (statusFilter !== "all" && status !== statusFilter) return false;
     return true;
   });
 
   const totalCount = users.length;
-  const thisWeekNew = users.filter((u) => {
-    const d = new Date(u.joinedAt);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    return diff < 7 * 24 * 60 * 60 * 1000;
-  }).length;
-  const activeCount = users.filter((u) => u.status === "active").length;
+  const thisWeekNew = users.filter((u) => isWithinDays(u.createdAt, 7)).length;
+  const activeCount = users.filter((u) => (u.status || "active") === "active").length;
 
-  const handleRoleChange = (userId: string, newRole: Role) => {
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-    if (selectedUser?.id === userId) setSelectedUser((prev) => prev ? { ...prev, role: newRole } : null);
+  const handleRoleChange = async (userId: string, newRole: Role) => {
+    setSaving(true);
+    try {
+      await updateUserRole(userId, newRole);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
+      if (selectedUser?.id === userId) setSelectedUser((prev) => prev ? { ...prev, role: newRole } : null);
+    } catch (e) {
+      alert("역할 변경 실패: " + String(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleStatusToggle = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId ? { ...u, status: u.status === "active" ? "suspended" : "active" } : u
-      )
+  const handleStatusToggle = async (userId: string) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    const currentStatus = user.status || "active";
+    const newStatus: Status = currentStatus === "active" ? "suspended" : "active";
+    setSaving(true);
+    try {
+      await updateUserStatus(userId, newStatus);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)));
+      if (selectedUser?.id === userId) setSelectedUser((prev) => prev ? { ...prev, status: newStatus } : null);
+    } catch (e) {
+      alert("상태 변경 실패: " + String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getInitial = (name?: string) => (name || "U").charAt(0).toUpperCase();
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary-500)] mb-4" />
+        <p className="text-sm text-mono-500">회원 정보를 불러오는 중...</p>
+      </div>
     );
-    if (selectedUser?.id === userId)
-      setSelectedUser((prev) =>
-        prev ? { ...prev, status: prev.status === "active" ? "suspended" : "active" } : null
-      );
-  };
+  }
 
-  const getInitial = (name: string) => name.charAt(0).toUpperCase();
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32">
+        <p className="text-sm text-red-500 mb-4">데이터를 불러오지 못했어요</p>
+        <p className="text-xs text-mono-400 mb-4 max-w-md text-center break-all">{error}</p>
+        <button onClick={loadUsers} className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary-500)] text-white text-sm rounded-lg hover:bg-[var(--color-primary-600)] transition-colors">
+          <RefreshCw className="w-4 h-4" />
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* 헤더 */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-mono-900">회원 관리</h1>
-        <p className="text-sm text-mono-500 mt-1">MetaBook 회원 현황을 관리합니다</p>
+        <p className="text-sm text-mono-500 mt-1">Firestore 기반 실제 회원 데이터</p>
       </div>
 
       {/* 통계 카드 */}
@@ -142,7 +196,6 @@ export default function AdminUsersPage() {
       {/* 필터 영역 */}
       <div className="bg-white rounded-xl border border-mono-080 overflow-hidden">
         <div className="p-4 border-b border-mono-050 space-y-3">
-          {/* 검색 */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-mono-400" />
             <input
@@ -152,7 +205,6 @@ export default function AdminUsersPage() {
               className="w-full pl-9 pr-4 py-2 text-sm border border-mono-080 rounded-lg focus:outline-none focus:border-[var(--color-primary-400)]"
             />
           </div>
-          {/* 역할 필터 */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-mono-500 mr-1">역할:</span>
             {(["all", "user", "creator", "admin"] as const).map((r) => (
@@ -160,9 +212,7 @@ export default function AdminUsersPage() {
                 key={r}
                 onClick={() => setRoleFilter(r)}
                 className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                  roleFilter === r
-                    ? "bg-[var(--color-primary-500)] text-white"
-                    : "text-mono-500 hover:bg-mono-100"
+                  roleFilter === r ? "bg-[var(--color-primary-500)] text-white" : "text-mono-500 hover:bg-mono-100"
                 }`}
               >
                 {r === "all" ? "전체" : ROLE_LABELS[r]}
@@ -175,9 +225,7 @@ export default function AdminUsersPage() {
                 key={s}
                 onClick={() => setStatusFilter(s)}
                 className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                  statusFilter === s
-                    ? "bg-[var(--color-primary-500)] text-white"
-                    : "text-mono-500 hover:bg-mono-100"
+                  statusFilter === s ? "bg-[var(--color-primary-500)] text-white" : "text-mono-500 hover:bg-mono-100"
                 }`}
               >
                 {s === "all" ? "전체" : s === "active" ? "활성" : "정지"}
@@ -187,85 +235,79 @@ export default function AdminUsersPage() {
         </div>
 
         {/* 테이블 */}
-        <table className="w-full">
-          <thead className="bg-mono-050">
-            <tr>
-              {["#", "닉네임", "이메일", "가입일", "역할", "상태", "관리"].map((h) => (
-                <th key={h} className="text-left text-xs font-medium text-mono-500 px-4 py-3">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((user, idx) => (
-              <tr
-                key={user.id}
-                onClick={() => setSelectedUser(user)}
-                className="border-t border-mono-050 hover:bg-mono-050 cursor-pointer transition-colors"
-              >
-                <td className="px-4 py-3 text-xs text-mono-400">{idx + 1}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center text-xs font-bold text-[var(--color-primary-600)]">
-                      {getInitial(user.nickname)}
-                    </div>
-                    <span className="text-sm font-medium text-mono-900">{user.nickname}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-mono-500">{user.email}</td>
-                <td className="px-4 py-3 text-xs text-mono-400">{user.joinedAt}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[user.role]}`}>
-                    {ROLE_LABELS[user.role]}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[user.status]}`}>
-                    {user.status === "active" ? "활성" : "정지"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedUser(user);
-                    }}
-                    className="text-xs text-[var(--color-primary-500)] hover:underline"
-                  >
-                    관리
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
+        {filtered.length === 0 ? (
+          <div className="px-4 py-16 text-center">
+            <Users className="w-10 h-10 text-mono-200 mx-auto mb-3" />
+            <p className="text-sm text-mono-500">{users.length === 0 ? "아직 가입한 회원이 없어요" : "검색 결과가 없습니다"}</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-mono-050">
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-mono-400">
-                  검색 결과가 없습니다
-                </td>
+                {["#", "닉네임", "이메일", "가입일", "역할", "상태", "관리"].map((h) => (
+                  <th key={h} className="text-left text-xs font-medium text-mono-500 px-4 py-3">{h}</th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((user, idx) => {
+                const role = user.role || "user";
+                const status = user.status || "active";
+                return (
+                  <tr
+                    key={user.id}
+                    onClick={() => setSelectedUser(user)}
+                    className="border-t border-mono-050 hover:bg-mono-050 cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3 text-xs text-mono-400">{idx + 1}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {user.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={user.image} alt="" className="w-7 h-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center text-xs font-bold text-[var(--color-primary-600)]">
+                            {getInitial(user.name)}
+                          </div>
+                        )}
+                        <span className="text-sm font-medium text-mono-900">{user.name || "이름 없음"}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-mono-500">{user.email || "-"}</td>
+                    <td className="px-4 py-3 text-xs text-mono-400">{toDate(user.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[role]}`}>
+                        {ROLE_LABELS[role]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[status]}`}>
+                        {status === "active" ? "활성" : "정지"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedUser(user); }}
+                        className="text-xs text-[var(--color-primary-500)] hover:underline"
+                      >
+                        관리
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* 상세 모달 */}
       {selectedUser && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setSelectedUser(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 모달 헤더 */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedUser(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-mono-100">
               <h2 className="text-lg font-bold text-mono-900">회원 상세</h2>
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="p-1.5 hover:bg-mono-100 rounded-lg transition-colors"
-              >
+              <button onClick={() => setSelectedUser(null)} className="p-1.5 hover:bg-mono-100 rounded-lg transition-colors">
                 <X className="w-5 h-5 text-mono-500" />
               </button>
             </div>
@@ -273,31 +315,33 @@ export default function AdminUsersPage() {
             <div className="p-5 space-y-5">
               {/* 프로필 */}
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center text-xl font-bold text-[var(--color-primary-600)]">
-                  {getInitial(selectedUser.nickname)}
-                </div>
+                {selectedUser.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selectedUser.image} alt="" className="w-14 h-14 rounded-full object-cover" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center text-xl font-bold text-[var(--color-primary-600)]">
+                    {getInitial(selectedUser.name)}
+                  </div>
+                )}
                 <div>
-                  <p className="text-lg font-bold text-mono-900">{selectedUser.nickname}</p>
-                  <p className="text-sm text-mono-500">{selectedUser.email}</p>
-                  <p className="text-xs text-mono-400 mt-0.5">가입일: {selectedUser.joinedAt}</p>
+                  <p className="text-lg font-bold text-mono-900">{selectedUser.name || "이름 없음"}</p>
+                  <p className="text-sm text-mono-500">{selectedUser.email || "-"}</p>
+                  <p className="text-xs text-mono-400 mt-0.5">가입일: {toDate(selectedUser.createdAt)}</p>
+                  <p className="text-xs text-mono-400">마지막 로그인: {toDate(selectedUser.updatedAt)}</p>
                 </div>
               </div>
 
               {/* 활동 통계 */}
               <div>
                 <p className="text-xs font-semibold text-mono-600 mb-2">활동 통계</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="bg-mono-050 rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold text-mono-900">{selectedUser.aiChats}</p>
-                    <p className="text-[10px] text-mono-500">AI 대화</p>
+                    <p className="text-lg font-bold text-mono-900">{selectedUser.library?.length ?? 0}</p>
+                    <p className="text-[10px] text-mono-500">서재 책 수</p>
                   </div>
                   <div className="bg-mono-050 rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold text-mono-900">{selectedUser.communityMessages}</p>
-                    <p className="text-[10px] text-mono-500">커뮤니티</p>
-                  </div>
-                  <div className="bg-mono-050 rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold text-mono-900">{selectedUser.creations}</p>
-                    <p className="text-[10px] text-mono-500">창작물</p>
+                    <p className="text-lg font-bold text-mono-900">{toDate(selectedUser.updatedAt)}</p>
+                    <p className="text-[10px] text-mono-500">최근 활동</p>
                   </div>
                 </div>
               </div>
@@ -306,9 +350,10 @@ export default function AdminUsersPage() {
               <div>
                 <p className="text-xs font-semibold text-mono-600 mb-2">권한 변경</p>
                 <select
-                  value={selectedUser.role}
+                  value={selectedUser.role || "user"}
                   onChange={(e) => handleRoleChange(selectedUser.id, e.target.value as Role)}
-                  className="w-full px-3 py-2 text-sm border border-mono-080 rounded-lg focus:outline-none focus:border-[var(--color-primary-400)]"
+                  disabled={saving}
+                  className="w-full px-3 py-2 text-sm border border-mono-080 rounded-lg focus:outline-none focus:border-[var(--color-primary-400)] disabled:opacity-50"
                 >
                   <option value="user">일반</option>
                   <option value="creator">크리에이터</option>
@@ -321,18 +366,19 @@ export default function AdminUsersPage() {
                 <div>
                   <p className="text-xs font-semibold text-mono-600">계정 상태</p>
                   <p className="text-[10px] text-mono-400 mt-0.5">
-                    현재: {selectedUser.status === "active" ? "활성" : "정지"}
+                    현재: {(selectedUser.status || "active") === "active" ? "활성" : "정지"}
                   </p>
                 </div>
                 <button
                   onClick={() => handleStatusToggle(selectedUser.id)}
-                  className={`px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
-                    selectedUser.status === "active"
+                  disabled={saving}
+                  className={`px-4 py-2 text-xs font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                    (selectedUser.status || "active") === "active"
                       ? "bg-red-50 text-red-600 hover:bg-red-100"
                       : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                   }`}
                 >
-                  {selectedUser.status === "active" ? "계정 정지" : "활성화"}
+                  {saving ? "저장 중..." : (selectedUser.status || "active") === "active" ? "계정 정지" : "활성화"}
                 </button>
               </div>
             </div>
