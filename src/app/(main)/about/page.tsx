@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, Moon, Sun } from "lucide-react";
 
 /* ─── 인라인 SVG 비주얼 컴포넌트들 ─── */
 
@@ -394,11 +394,36 @@ const SECTIONS = [
   },
 ];
 
+/* ─── 테마 ─── */
+function getTheme(isDark: boolean) {
+  return {
+    bg: isDark ? "#09090b" : "#ffffff",
+    bgAlt: isDark ? "#0c0c0f" : "#f9fafb",
+    text: isDark ? "white" : "#111827",
+    subtext: isDark ? "rgba(255,255,255,0.45)" : "#6b7280",
+    muted: isDark ? "rgba(255,255,255,0.35)" : "#9ca3af",
+    faint: isDark ? "rgba(255,255,255,0.2)" : "#d1d5db",
+    pillText: isDark ? "rgba(255,255,255,0.55)" : "#4b5563",
+    pillBg: isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6",
+    pillBorder: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
+    tagText: isDark ? "rgba(255,255,255,0.45)" : "#6b7280",
+    navBg: isDark ? "rgba(9,9,11,0.85)" : "rgba(255,255,255,0.9)",
+    navBorder: isDark ? "rgba(255,255,255,0.06)" : "#e5e7eb",
+    navText: isDark ? "rgba(255,255,255,0.5)" : "#6b7280",
+    navTitle: isDark ? "rgba(255,255,255,0.7)" : "#374151",
+    sectionBorder: isDark ? "rgba(255,255,255,0.06)" : "#e5e7eb",
+    cardBg: (accentLight: string) => isDark ? accentLight : "#f3f4f6",
+    scrollHint: isDark ? "rgba(255,255,255,0.15)" : "#d1d5db",
+  };
+}
+
 /* ─── 메인 페이지 ─── */
 export default function AboutPage() {
   const router = useRouter();
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visibleSections, setVisibleSections] = useState<boolean[]>(new Array(SECTIONS.length).fill(false));
+  const [isDark, setIsDark] = useState(false);
+  const t = getTheme(isDark);
 
   useEffect(() => {
     const observers = sectionRefs.current.map((ref, i) => {
@@ -419,29 +444,38 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif", background: "#09090b", minHeight: "100vh", color: "white" }}>
+    <div style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif", background: t.bg, minHeight: "100vh", color: t.text, transition: "background 0.3s, color 0.3s" }}>
 
       {/* ─── 상단 네비게이션 ─── */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", height: 56, background: "rgba(9,9,11,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <button onClick={() => router.back()} style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", height: 56, background: t.navBg, backdropFilter: "blur(20px)", borderBottom: `1px solid ${t.navBorder}`, transition: "background 0.3s, border-color 0.3s" }}>
+        <button onClick={() => router.back()} style={{ display: "flex", alignItems: "center", gap: 8, color: t.navText, fontSize: 13, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           <ArrowLeft size={16} />
           돌아가기
         </button>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)", letterSpacing: "0.02em" }}>MetaBook 소개</span>
-        <button
-          onClick={() => router.push("/library")}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 999, background: "#32d29d", color: "#09090b", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}
-        >
-          시작하기 <ChevronRight size={14} />
-        </button>
+        <span style={{ fontSize: 13, fontWeight: 600, color: t.navTitle, letterSpacing: "0.02em" }}>MetaBook 소개</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={() => setIsDark(!isDark)}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 999, background: isDark ? "rgba(255,255,255,0.1)" : "#f3f4f6", color: isDark ? "rgba(255,255,255,0.7)" : "#374151", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "background 0.3s" }}
+          >
+            {isDark ? <Sun size={14} /> : <Moon size={14} />}
+            {isDark ? "라이트모드" : "다크모드"}
+          </button>
+          <button
+            onClick={() => router.push("/library")}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 999, background: "#32d29d", color: "#09090b", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}
+          >
+            시작하기 <ChevronRight size={14} />
+          </button>
+        </div>
       </nav>
 
       {/* ─── 히어로 ─── */}
       <header style={{ paddingTop: 140, paddingBottom: 100, textAlign: "center", position: "relative", overflow: "hidden" }}>
         {/* 배경 오로라 효과 */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-          <div style={{ position: "absolute", top: "10%", left: "15%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(50,210,157,0.08) 0%, transparent 70%)", filter: "blur(60px)" }} />
-          <div style={{ position: "absolute", top: "20%", right: "10%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(139,92,246,0.07) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", top: "10%", left: "15%", width: 500, height: 500, borderRadius: "50%", background: `radial-gradient(ellipse, rgba(50,210,157,${isDark ? 0.08 : 0.06}) 0%, transparent 70%)`, filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", top: "20%", right: "10%", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(ellipse, rgba(139,92,246,${isDark ? 0.07 : 0.05}) 0%, transparent 70%)`, filter: "blur(60px)" }} />
         </div>
         <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 999, background: "rgba(50,210,157,0.1)", border: "1px solid rgba(50,210,157,0.2)", marginBottom: 32, fontSize: 12, fontWeight: 600, color: "#32d29d", letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -451,28 +485,28 @@ export default function AboutPage() {
             책 속 세계가<br />
             <span style={{ color: "#32d29d" }}>살아납니다.</span>
           </h1>
-          <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "rgba(255,255,255,0.45)", lineHeight: 1.8, maxWidth: 520, margin: "0 auto 40px" }}>
+          <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: t.subtext, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 40px" }}>
             QR 하나로 들어와 3D 세계를 탐험하고,<br />
             캐릭터와 대화하고, 독자들과 함께 이야기하세요.
           </p>
           {/* 기능 태그 나열 */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
             {SECTIONS.map(s => (
-              <span key={s.num} style={{ padding: "6px 14px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.45)" }}>
+              <span key={s.num} style={{ padding: "6px 14px", borderRadius: 999, background: t.pillBg, border: `1px solid ${t.pillBorder}`, fontSize: 12, fontWeight: 500, color: t.tagText }}>
                 {s.tag}
               </span>
             ))}
           </div>
         </div>
         {/* 스크롤 힌트 */}
-        <div style={{ marginTop: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.2)", fontSize: 11 }}>
-          <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.15))" }} />
+        <div style={{ marginTop: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: t.faint, fontSize: 11 }}>
+          <div style={{ width: 1, height: 40, background: `linear-gradient(to bottom, transparent, ${t.scrollHint})` }} />
           스크롤해서 보기
         </div>
       </header>
 
       {/* ─── 구분선 ─── */}
-      <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)" }} />
+      <div style={{ width: "100%", height: 1, background: t.sectionBorder }} />
 
       {/* ─── 기능 섹션들 ─── */}
       <main>
@@ -485,11 +519,11 @@ export default function AboutPage() {
               key={section.num}
               ref={el => { sectionRefs.current[i] = el; }}
               style={{
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                background: i % 2 === 0 ? "#09090b" : "#0c0c0f",
+                borderBottom: `1px solid ${t.sectionBorder}`,
+                background: i % 2 === 0 ? t.bg : t.bgAlt,
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? "translateY(0)" : "translateY(40px)",
-                transition: "opacity 0.7s ease, transform 0.7s ease",
+                transition: "opacity 0.7s ease, transform 0.7s ease, background 0.3s",
               }}
             >
               <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
@@ -498,25 +532,25 @@ export default function AboutPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: section.accent, letterSpacing: "0.1em", textTransform: "uppercase" }}>{section.num}</span>
                     <span style={{ width: 32, height: 1, background: section.accent, opacity: 0.5 }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{section.tag}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: t.muted, letterSpacing: "0.08em", textTransform: "uppercase" }}>{section.tag}</span>
                   </div>
                   <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: 20, whiteSpace: "pre-line" }}>
                     {section.title}
                   </h2>
-                  <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.85, marginBottom: 28 }}>
+                  <p style={{ fontSize: 15, color: t.subtext, lineHeight: 1.85, marginBottom: 28 }}>
                     {section.desc}
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {section.pills.map(pill => (
                       <div key={pill} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 5, height: 5, borderRadius: "50%", background: section.accent, flexShrink: 0 }} />
-                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>{pill}</span>
+                        <span style={{ fontSize: 13, color: t.pillText, fontWeight: 500 }}>{pill}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 {/* 비주얼 */}
-                <div style={{ order: isFlip ? 1 : 2, display: "flex", alignItems: "center", justifyContent: "center", background: section.accentLight, border: `1px solid ${section.accentBorder}`, borderRadius: 24, overflow: "hidden" }}>
+                <div style={{ order: isFlip ? 1 : 2, display: "flex", alignItems: "center", justifyContent: "center", background: t.cardBg(section.accentLight), border: `1px solid ${section.accentBorder}`, borderRadius: 24, overflow: "hidden" }}>
                   <Visual />
                 </div>
               </div>
@@ -527,14 +561,14 @@ export default function AboutPage() {
 
       {/* ─── CTA ─── */}
       <footer style={{ textAlign: "center", padding: "100px 24px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 0%, rgba(50,210,157,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 0%, rgba(50,210,157,${isDark ? 0.08 : 0.06}) 0%, transparent 60%)`, pointerEvents: "none" }} />
         <div style={{ position: "relative", maxWidth: 480, margin: "0 auto" }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: "#32d29d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>READY TO START</p>
           <h2 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.025em", marginBottom: 16 }}>
             지금 바로<br />시작해보세요
           </h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.35)", marginBottom: 40, lineHeight: 1.7 }}>
-            QR 코드를 스캔하거나, 도서 목록에서 체를 선택하면<br />MetaBook의 세계가 펼쳐집니다.
+          <p style={{ fontSize: 15, color: t.subtext, marginBottom: 40, lineHeight: 1.7 }}>
+            QR 코드를 스캔하거나, 도서 목록에서 책을 선택하면<br />MetaBook의 세계가 펼쳐집니다.
           </p>
           <button
             onClick={() => router.push("/library")}
@@ -543,7 +577,7 @@ export default function AboutPage() {
             도서 목록 보러 가기
             <ChevronRight size={18} />
           </button>
-          <p style={{ marginTop: 20, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+          <p style={{ marginTop: 20, fontSize: 12, color: t.faint }}>
             앱 설치 없이 브라우저에서 바로 이용 가능
           </p>
         </div>
