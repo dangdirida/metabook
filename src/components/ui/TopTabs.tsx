@@ -1,8 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus } from "lucide-react";
+import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus, ShoppingBag, Library } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
+import { getGoodsByBookId } from "@/lib/mock-goods";
+import { mockBooks, getBookById } from "@/lib/mock-data";
+import Link from "next/link";
 
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor: string; icon: React.ElementType }> = {
   shortbook: { label: "숏북", gradient: "from-emerald-400 via-teal-500 to-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
@@ -12,14 +15,34 @@ const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor
 
 const OPEN_HEIGHT = 280;
 
+type TabKey = "gallery" | "goods" | "series";
+
 export default function TopTabs() {
   const { bookId } = useParams();
   const router = useRouter();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [creations, setCreations] = useState<CreationItem[]>([]);
+  const [activeTab, setActiveTab] = useState<TabKey>("gallery");
   useEffect(() => { setGalleryOpen(false); setCreations(getCreations(bookId as string)); }, [bookId]);
   const refreshCreations = () => setCreations(getCreations(bookId as string));
   const handleHeart = (id: string) => { toggleHeart(id); refreshCreations(); };
+
+  const book = getBookById(bookId as string);
+  const goods = getGoodsByBookId(bookId as string);
+  const seriesBooks = useMemo(() => {
+    if (!book?.seriesId) return [];
+    return mockBooks.filter((b) => b.seriesId === book.seriesId);
+  }, [book]);
+
+  const hasGoods = goods.length > 0;
+  const hasSeries = seriesBooks.length >= 2;
+
+  const tabs = useMemo(() => {
+    const t: { key: TabKey; label: string }[] = [{ key: "gallery", label: "창작 갤러리" }];
+    if (hasGoods) t.push({ key: "goods", label: "굿즈" });
+    if (hasSeries) t.push({ key: "series", label: "시리즈" });
+    return t;
+  }, [hasGoods, hasSeries]);
 
   const handleCreate = (type: "shortbook" | "shortmovie" | "goods") => {
     router.push(`/creation/${type}?bookId=${bookId}`);
@@ -36,24 +59,90 @@ export default function TopTabs() {
         <ChevronUp className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`} strokeWidth={1.5} />
       </button>
       <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: galleryOpen ? OPEN_HEIGHT : 0 }}>
-        <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-100 dark:border-mono-800">
-          {(["shortbook","shortmovie","goods"] as const).map((type) => {
-            const cfg=TYPE_CONFIG[type]; const Icon=cfg.icon;
-            return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-mono-200 text-mono-700 hover:bg-mono-50 hover:border-mono-300 dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
-          })}
-        </div>
-        <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
-          {creations.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
-              <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
-              <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 만들 수 있어요 ✨</p>
-              <button onClick={()=>handleCreate("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
+        {/* 탭 (조건부) */}
+        {tabs.length > 1 && (
+          <div className="flex border-b border-mono-100 dark:border-mono-800 px-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-3 py-2 text-xs font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? "text-primary-500 border-b-2 border-primary-500"
+                    : "text-mono-400 hover:text-mono-600"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 갤러리 탭 */}
+        {activeTab === "gallery" && (
+          <>
+            <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-100 dark:border-mono-800">
+              {(["shortbook","shortmovie","goods"] as const).map((type) => {
+                const cfg=TYPE_CONFIG[type]; const Icon=cfg.icon;
+                return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-mono-200 text-mono-700 hover:bg-mono-50 hover:border-mono-300 dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
+              })}
             </div>
-          ) : (
-            <div className="grid grid-cols-5 gap-2">{creations.map((item)=>{const cfg=TYPE_CONFIG[item.type];const Icon=cfg.icon;return <CreationCard key={item.id} item={item} cfg={cfg} Icon={Icon} onHeart={()=>handleHeart(item.id)} />;})}</div>
-          )}
-        </div>
+            <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
+              {creations.length === 0 ? (
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
+                  <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
+                  <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 만들 수 있어요 ✨</p>
+                  <button onClick={()=>handleCreate("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-5 gap-2">{creations.map((item)=>{const cfg=TYPE_CONFIG[item.type];const Icon=cfg.icon;return <CreationCard key={item.id} item={item} cfg={cfg} Icon={Icon} onHeart={()=>handleHeart(item.id)} />;})}</div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* 굿즈 탭 */}
+        {activeTab === "goods" && (
+          <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 40 }}>
+            <div className="grid grid-cols-3 gap-2">
+              {goods.map((g) => (
+                <a key={g.id} href={g.externalUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-mono-100 overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+                    <ShoppingBag className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <div className="p-2">
+                    <p className="text-[10px] font-medium text-mono-800 line-clamp-1">{g.name}</p>
+                    <p className="text-[10px] text-primary-500 font-semibold">{g.price.toLocaleString()}원</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 시리즈 탭 */}
+        {activeTab === "series" && (
+          <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 40 }}>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {seriesBooks.map((b) => (
+                <Link key={b.id} href={`/library/${b.id}`} className={`flex-shrink-0 w-20 group ${b.id === bookId ? "ring-2 ring-primary-500 rounded-lg" : ""}`}>
+                  <div className="w-20 aspect-[3/4] rounded-lg overflow-hidden bg-mono-100">
+                    {b.coverImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={b.coverImage} alt={b.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                        <Library className="w-5 h-5 text-primary-400" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-mono-700 font-medium mt-1 line-clamp-2 text-center">{b.title}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
