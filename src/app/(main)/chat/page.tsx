@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { mockBooks } from "@/lib/mock-data";
 import type { Agent, Book } from "@/types";
 import {
@@ -48,7 +49,16 @@ interface BookmarkItem {
   createdAt: string;
 }
 
-export default function ChatPage() {
+export default function ChatPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
+  const searchParams = useSearchParams();
   const [rooms, setRooms] = useState<Record<string, ChatRoom>>({});
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -62,6 +72,24 @@ export default function ChatPage() {
     try { return JSON.parse(localStorage.getItem("chat_bookmarks") || "[]"); }
     catch { return []; }
   });
+
+  // URL 파라미터로 채팅방 자동 오픈
+  useEffect(() => {
+    const bookIdParam = searchParams.get("bookId");
+    const agentIdParam = searchParams.get("agentId");
+    if (!bookIdParam) return;
+    const book = mockBooks.find((b) => b.id === bookIdParam);
+    if (!book) return;
+    if (agentIdParam) {
+      const agent = book.agents.find((a) => a.id === agentIdParam);
+      if (agent) {
+        const roomId = agentIdParam;
+        setRooms((prev) => ({ ...prev, [roomId]: prev[roomId] ?? { id: roomId, agents: [{ agent, book }], messages: [] } }));
+        setCurrentRoomId(roomId);
+        setMobileView("chat");
+      }
+    }
+  }, [searchParams]);
 
   const currentRoom = currentRoomId ? rooms[currentRoomId] : null;
   const currentAgents = currentRoom?.agents || [];
