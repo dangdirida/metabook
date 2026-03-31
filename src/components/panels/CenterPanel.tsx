@@ -122,19 +122,18 @@ export default function CenterPanel() {
 
   const handleCharacterClick = (name: string, e: React.MouseEvent<HTMLSpanElement>) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const agent = book?.agents?.find((a) => a.name === name);
     setPopover({
       x: rect.left + rect.width / 2,
       y: rect.bottom + 8,
       name,
-      role:
-        name === "얄리" ? "뉴기니 현지 정치인"
-        : name === "재레드 다이아몬드" ? "저자, 생물지리학자"
-        : "등장인물",
+      role: agent?.role || "등장인물",
       chapters: `제1~${totalChapters}장`,
     });
-    const agentId = name === "얄리" ? "a2" : "a1";
-    setSelectedAgent(agentId);
-    setActiveTab("ai");
+    if (agent) {
+      setSelectedAgent(agent.id);
+      setActiveTab("ai");
+    }
   };
 
   const renderContent = (text: string) => {
@@ -237,7 +236,7 @@ export default function CenterPanel() {
       </div>
 
       {contextMenu && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-1 flex gap-0.5" style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px`, transform: "translate(-50%, -100%)" }}>{contextActions.map((action) => (<button key={action.label} onClick={action.action} className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg hover:bg-mono-50 transition-colors" title={action.label}><action.icon className="w-4 h-4 text-mono-600" /><span className="text-[10px] text-mono-500">{action.label}</span></button>))}</div>)}
-      {popover && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-4 w-60" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}><div className="flex items-center gap-3 mb-2"><div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-primary-200"><span className="text-primary-600 font-bold text-sm">{popover.name[0]}</span></div><div><p className="font-semibold text-mono-900 text-sm">{popover.name}</p><p className="text-xs text-mono-500">{popover.role}</p></div></div><p className="text-xs text-mono-400">등장: {popover.chapters}</p><p className="text-[11px] text-primary-500 mt-2 font-medium">→ 오른쪽 채팅에서 대화해보세요</p></div>)}
+      {popover && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-4 w-60" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}><div className="flex items-center gap-3 mb-2">{(() => { const a = book?.agents?.find(ag => ag.name === popover.name); return <img src={a?.avatar || "/avatars/default-profile.svg"} alt={popover.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary-200" onError={(ev) => { (ev.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />; })()}<div><p className="font-semibold text-mono-900 text-sm">{popover.name}</p><p className="text-xs text-mono-500">{popover.role}</p></div></div><p className="text-xs text-mono-400">등장: {popover.chapters}</p><p className="text-[11px] text-primary-500 mt-2 font-medium">→ 오른쪽 채팅에서 대화해보세요</p></div>)}
       {showWorldModal && (<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center"><Globe className="w-12 h-12 text-primary-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-mono-900 mb-2">책 속 세계로 들어갈까요?</h3><p className="text-sm text-mono-500 mb-6">삽화 속 공간을 3D로 탐험할 수 있어요.</p><div className="flex gap-3"><button onClick={() => setShowWorldModal(null)} className="flex-1 py-3 rounded-xl border border-mono-200 text-mono-700 font-medium hover:bg-mono-50">취소</button><button onClick={() => { if (showWorldModal?.worldUrl) { window.open(showWorldModal.worldUrl, "_blank", "noopener,noreferrer"); } setShowWorldModal(null); }} className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600">들어가기</button></div></div></div>)}
     </main>
   );
