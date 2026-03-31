@@ -62,18 +62,18 @@ function ChatPageInner() {
   const [rooms, setRooms] = useState<Record<string, ChatRoom>>({});
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
-  const [selectedAgents, setSelectedAgents] = useState<{ agent: Agent; book: Book }[]>([]);
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [showProfile, setShowProfile] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState<"chats" | "explore">("chats");
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>(() => {
     if (typeof window === "undefined") return [];
     try { return JSON.parse(localStorage.getItem("chat_bookmarks") || "[]"); }
     catch { return []; }
   });
 
-  // URL 파라미터로 채팅방 자동 오픈
   useEffect(() => {
     const bookIdParam = searchParams.get("bookId");
     const agentIdParam = searchParams.get("agentId");
@@ -86,6 +86,7 @@ function ChatPageInner() {
         const roomId = agentIdParam;
         setRooms((prev) => ({ ...prev, [roomId]: prev[roomId] ?? { id: roomId, agents: [{ agent, book }], messages: [] } }));
         setCurrentRoomId(roomId);
+        setSidebarTab("chats");
         setMobileView("chat");
       }
     }
@@ -93,53 +94,35 @@ function ChatPageInner() {
 
   const currentRoom = currentRoomId ? rooms[currentRoomId] : null;
   const currentAgents = currentRoom?.agents || [];
-
   const booksWithAgents = mockBooks.filter((b) => b.agents && b.agents.length > 0);
 
-  const filteredBooks = searchQuery.trim() === ""
-    ? booksWithAgents
-    : booksWithAgents.filter((book) => {
-        const q = searchQuery.toLowerCase();
-        return book.title.toLowerCase().includes(q) || book.agents.some((a) => a.name.toLowerCase().includes(q));
-      });
+  const chatRooms = Object.values(rooms).sort((a, b) => {
+    const aLast = a.messages[a.messages.length - 1]?.timestamp || "";
+    const bLast = b.messages[b.messages.length - 1]?.timestamp || "";
+    return bLast.localeCompare(aLast);
+  });
+
+  const filteredRooms = chatRooms.filter((room) =>
+    !searchQuery || room.agents.some((ra) => ra.agent.name.toLowerCase().includes(searchQuery.toLowerCase()) || ra.book.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredBooks = searchQuery
+    ? booksWithAgents.filter((book) => { const q = searchQuery.toLowerCase(); return book.title.toLowerCase().includes(q) || book.agents.some((a) => a.name.toLowerCase().includes(q)); })
+    : booksWithAgents;
 
   const getFilteredAgents = (book: Book) => {
-    if (!searchQuery.trim()) return book.agents || [];
+    if (!searchQuery) return book.agents;
     const q = searchQuery.toLowerCase();
-    if (book.title.toLowerCase().includes(q)) return book.agents || [];
-    return (book.agents || []).filter((a) => a.name.toLowerCase().includes(q));
+    if (book.title.toLowerCase().includes(q)) return book.agents;
+    return book.agents.filter((a) => a.name.toLowerCase().includes(q));
   };
-
-  const groupRooms = Object.values(rooms).filter((r) => r.agents.length > 1);
 
   const openChat = (agent: Agent, book: Book) => {
-    if (selectMode) { toggleSelect(agent, book); return; }
     const roomId = agent.id;
-    if (!rooms[roomId]) {
-      setRooms((prev) => ({ ...prev, [roomId]: { id: roomId, agents: [{ agent, book }], messages: [] } }));
-    }
+    setRooms((prev) => ({ ...prev, [roomId]: prev[roomId] ?? { id: roomId, agents: [{ agent, book }], messages: [] } }));
     setCurrentRoomId(roomId);
+    setSidebarTab("chats");
     setMobileView("chat");
-  };
-
-  const toggleSelect = (agent: Agent, book: Book) => {
-    setSelectedAgents((prev) => {
-      const exists = prev.find((s) => s.agent.id === agent.id);
-      if (exists) return prev.filter((s) => s.agent.id !== agent.id);
-      return [...prev, { agent, book }];
-    });
-  };
-
-  const createGroupChat = () => {
-    if (selectedAgents.length < 2) return;
-    const roomId = selectedAgents.map((s) => s.agent.id).sort().join("_");
-    if (!rooms[roomId]) {
-      setRooms((prev) => ({ ...prev, [roomId]: { id: roomId, agents: [...selectedAgents], messages: [] } }));
-    }
-    setCurrentRoomId(roomId);
-    setMobileView("chat");
-    setSelectMode(false);
-    setSelectedAgents([]);
   };
 
   const inviteAgent = (agent: Agent, book: Book) => {
@@ -155,8 +138,7 @@ function ChatPageInner() {
   const toggleBookmark = (roomId: string, messageId: string, content: string, agentName: string) => {
     setBookmarks((prev) => {
       const exists = prev.find((b) => b.messageId === messageId);
-      const next = exists
-        ? prev.filter((b) => b.messageId !== messageId)
+      const next = exists ? prev.filter((b) => b.messageId !== messageId)
         : [...prev, { id: Date.now().toString(), roomId, messageId, content, agentName, createdAt: new Date().toISOString() }];
       localStorage.setItem("chat_bookmarks", JSON.stringify(next));
       return next;
@@ -164,120 +146,169 @@ function ChatPageInner() {
   };
 
   const invitableAgents = currentRoom
-    ? booksWithAgents.flatMap((b) =>
-        (b.agents || []).filter((a) => !currentRoom.agents.find((ca) => ca.agent.id === a.id)).map((a) => ({ agent: a, book: b }))
-      )
+    ? booksWithAgents.flatMap((b) => (b.agents || []).filter((a) => !currentRoom.agents.find((ca) => ca.agent.id === a.id)).map((a) => ({ agent: a, book: b })))
     : [];
+
+  const fmtTime = (ts: string) => {
+    const d = new Date(ts); const now = new Date(); const diff = now.getTime() - d.getTime();
+    const m = Math.floor(diff / 60000); const h = Math.floor(diff / 3600000); const dy = Math.floor(diff / 86400000);
+    if (m < 1) return "방금"; if (m < 60) return `${m}분`; if (h < 24) return `${h}시간`; if (dy < 7) return `${dy}일`;
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  };
 
   return (
     <div className="flex h-[calc(100vh-60px)] overflow-hidden">
-      {/* 왼쪽: 연락처 목록 */}
-      <div className={`w-full md:w-72 flex-shrink-0 border-r border-[var(--color-mono-080)] flex flex-col bg-white ${mobileView === "chat" ? "hidden md:flex" : "flex"}`}>
-        {/* 헤더 */}
-        <div className="px-4 py-4 border-b border-[var(--color-mono-080)]">
+      {/* 왼쪽 사이드바 */}
+      <aside className={`w-full md:w-72 flex-shrink-0 border-r border-[var(--color-mono-080)] flex flex-col bg-white ${mobileView === "chat" ? "hidden md:flex" : "flex"}`}>
+        <div className="px-4 pt-4 pb-2 border-b border-[var(--color-mono-080)]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Link href="/library" className="p-1.5 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors">
-                <ArrowLeft className="w-4 h-4 text-[var(--color-mono-600)]" />
-              </Link>
-              <h1 className="text-lg font-bold text-[var(--color-mono-990)]">채팅</h1>
+              <Link href="/library" className="p-1.5 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"><ArrowLeft className="w-4 h-4 text-[var(--color-mono-600)]" /></Link>
+              <h1 className="text-[16px] font-bold text-[var(--color-mono-990)]">채팅</h1>
             </div>
-            <button
-              onClick={() => { setSelectMode(!selectMode); setSelectedAgents([]); }}
-              className={`px-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors ${
-                selectMode ? "bg-[var(--color-primary-500)] text-white" : "border border-[var(--color-mono-100)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5 inline mr-1" />
-              {selectMode ? "취소" : "그룹 채팅"}
+            <button onClick={() => { setSelectMode(!selectMode); setSelectedAgentIds([]); if (!selectMode) setSidebarTab("explore"); }}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${selectMode ? "bg-[var(--color-primary-500)] text-white" : "bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-080)]"}`}>
+              <Users className="w-3.5 h-3.5" />{selectMode ? "취소" : "그룹"}
             </button>
           </div>
-          {selectMode && selectedAgents.length > 0 && (
-            <button onClick={createGroupChat} className="w-full py-2 rounded-xl text-[13px] font-semibold bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-600)] transition-colors">
-              {selectedAgents.length}명으로 채팅방 만들기
-            </button>
-          )}
-        </div>
-
-        {/* 그룹 채팅방 목록 */}
-        {groupRooms.length > 0 && (
-          <div className="border-b border-[var(--color-mono-080)]">
-            <div className="px-4 py-2 bg-[var(--color-mono-050)]">
-              <span className="text-[11px] font-semibold text-[var(--color-mono-500)] tracking-wide">그룹 채팅</span>
-            </div>
-            {groupRooms.map((room) => (
-              <div key={room.id} onClick={() => { setCurrentRoomId(room.id); setMobileView("chat"); }}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${currentRoomId === room.id ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  {room.agents.slice(0, 3).map((ra, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={ra.agent.id} src={ra.agent.avatar || "/avatars/default-profile.svg"} alt={ra.agent.name}
-                      style={{ position: "absolute", left: i * 10, top: 0, zIndex: 3 - i }}
-                      className="w-7 h-7 rounded-full object-cover border-2 border-white"
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
-                  ))}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-[var(--color-mono-900)] truncate">{room.agents.map((ra) => ra.agent.name).join(", ")}</p>
-                  <p className="text-[11px] text-[var(--color-mono-400)] truncate">그룹 채팅 · {room.agents.length}명</p>
-                </div>
-              </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-[var(--color-mono-050)] rounded-xl">
+            <Search className="w-3.5 h-3.5 text-[var(--color-mono-400)] flex-shrink-0" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={sidebarTab === "chats" ? "대화 검색" : "인물 또는 책 이름"}
+              className="flex-1 bg-transparent text-[13px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] outline-none" />
+            {searchQuery && <button onClick={() => setSearchQuery("")}><X className="w-3.5 h-3.5 text-[var(--color-mono-300)]" /></button>}
+          </div>
+          <div className="flex gap-2 mt-2.5">
+            {([{ key: "chats", label: "내 채팅" }, { key: "explore", label: "인물 찾기" }] as const).map((tab) => (
+              <button key={tab.key} onClick={() => { setSidebarTab(tab.key); setSearchQuery(""); }}
+                className={`flex-1 py-1.5 rounded-lg text-[12px] font-medium transition-colors border ${sidebarTab === tab.key ? "bg-[var(--color-primary-030)] text-[var(--color-primary-700)] border-[var(--color-primary-200)]" : "bg-white text-[var(--color-mono-500)] border-[var(--color-mono-100)] hover:bg-[var(--color-mono-030)]"}`}>
+                {tab.label}
+              </button>
             ))}
           </div>
-        )}
-
-        {/* 검색창 */}
-        <div className="px-3 py-2 border-b border-[var(--color-mono-080)]">
-          <div className="flex items-center gap-2 px-3 py-2 bg-[var(--color-mono-050)] rounded-xl">
-            <Search className="w-4 h-4 text-[var(--color-mono-400)] flex-shrink-0" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="인물 또는 책 이름 검색"
-              className="flex-1 bg-transparent text-[13px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] outline-none" />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-[var(--color-mono-300)] hover:text-[var(--color-mono-600)]">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
         </div>
 
-        {/* 연락처 목록 */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {filteredBooks.map((book) => {
-            const agents = getFilteredAgents(book);
-            if (agents.length === 0) return null;
-            return (
-              <div key={book.id}>
-                <div className="px-4 py-2 sticky top-0 bg-[var(--color-mono-050)] border-b border-[var(--color-mono-080)]">
-                  <span className="text-[11px] font-semibold text-[var(--color-mono-500)] tracking-wide">{book.title}</span>
+          {sidebarTab === "chats" && (
+            <>
+              {selectMode && selectedAgentIds.length > 0 && (
+                <div className="px-3 py-2 bg-[var(--color-primary-030)] border-b border-[var(--color-primary-100)]">
+                  <p className="text-[11px] text-[var(--color-primary-600)] font-medium mb-1">선택됨 ({selectedAgentIds.length}명)</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedAgentIds.map((id) => { const ag = booksWithAgents.flatMap((b) => b.agents).find((a) => a.id === id); return ag ? (
+                      <span key={id} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-500)] text-white text-[11px]">
+                        {ag.name}<button onClick={() => setSelectedAgentIds((p) => p.filter((x) => x !== id))}><X className="w-3 h-3" /></button>
+                      </span>) : null; })}
+                  </div>
                 </div>
-                {agents.map((agent) => {
-                  const isSelected = selectedAgents.find((s) => s.agent.id === agent.id);
-                  return (
-                    <div key={agent.id} onClick={() => openChat(agent, book)}
-                      className={`flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] cursor-pointer transition-colors ${currentRoomId === agent.id ? "bg-[var(--color-primary-030)]" : ""}`}>
-                      {selectMode && (
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-[var(--color-primary-500)] border-[var(--color-primary-500)]" : "border-[var(--color-mono-200)]"}`}>
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
+              )}
+              {filteredRooms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <MessageCircle className="w-10 h-10 text-[var(--color-mono-200)] mb-3" />
+                  <p className="text-[13px] font-medium text-[var(--color-mono-600)] mb-1">아직 대화한 인물이 없어요</p>
+                  <p className="text-[12px] text-[var(--color-mono-400)] mb-4">인물 찾기에서 대화를 시작해보세요</p>
+                  <button onClick={() => setSidebarTab("explore")} className="px-4 py-2 rounded-xl bg-[var(--color-primary-500)] text-white text-[12px] font-medium hover:bg-[var(--color-primary-600)] transition-colors">인물 찾기</button>
+                </div>
+              ) : (
+                <>
+                  {filteredRooms.map((room) => {
+                    const isGroup = room.agents.length > 1;
+                    const first = room.agents[0];
+                    const lastMsg = room.messages[room.messages.length - 1];
+                    const isCurrent = currentRoomId === room.id;
+                    const timeStr = lastMsg ? fmtTime(lastMsg.timestamp) : "";
+                    return (
+                      <div key={room.id} onClick={() => { setCurrentRoomId(room.id); setMobileView("chat"); }}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--color-mono-050)] ${isCurrent ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
+                        <div className="relative w-11 h-11 flex-shrink-0">
+                          {isGroup ? (<>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={room.agents[0]?.agent.avatar || "/avatars/default-profile.svg"} className="absolute top-0 left-0 w-8 h-8 rounded-full object-cover border-2 border-white" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={room.agents[1]?.agent.avatar || "/avatars/default-profile.svg"} className="absolute bottom-0 right-0 w-7 h-7 rounded-full object-cover border-2 border-white" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                          </>) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={first?.agent.avatar || "/avatars/default-profile.svg"} className="w-11 h-11 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                          )}
                         </div>
-                      )}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</span>
-                        <p className="text-[12px] text-[var(--color-mono-400)] truncate">{agent.speechStyle}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <p className={`text-[13px] font-semibold truncate ${isCurrent ? "text-[var(--color-primary-700)]" : "text-[var(--color-mono-900)]"}`}>
+                              {isGroup ? room.agents.map((ra) => ra.agent.name).join(", ") : first?.agent.name}
+                            </p>
+                            <span className="text-[10px] text-[var(--color-mono-400)] flex-shrink-0 ml-2">{timeStr}</span>
+                          </div>
+                          <p className="text-[12px] text-[var(--color-mono-400)] truncate">
+                            {lastMsg ? (lastMsg.role === "user" ? `나: ${lastMsg.content}` : lastMsg.content) : first?.agent.speechStyle}
+                          </p>
+                          <p className="text-[10px] text-[var(--color-mono-300)] truncate mt-0.5">{first?.book.title}{isGroup && ` · ${room.agents.length}명`}</p>
+                        </div>
                       </div>
+                    );
+                  })}
+                  <button onClick={() => setSidebarTab("explore")} className="w-full py-3 text-[13px] font-medium text-[var(--color-primary-500)] hover:bg-[var(--color-primary-030)] transition-colors border-t border-[var(--color-mono-080)]">+ 새 대화 시작</button>
+                </>
+              )}
+            </>
+          )}
+
+          {sidebarTab === "explore" && (
+            <>
+              {filteredBooks.map((book) => {
+                const agents = getFilteredAgents(book);
+                if (!agents.length) return null;
+                return (
+                  <div key={book.id}>
+                    <div className="px-4 py-2 bg-[var(--color-mono-030)] border-b border-[var(--color-mono-080)] sticky top-0">
+                      <p className="text-[11px] font-semibold text-[var(--color-mono-500)] truncate">{book.title}</p>
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-          {filteredBooks.length === 0 && searchQuery && (
-            <div className="text-center py-12"><p className="text-[13px] text-[var(--color-mono-400)]">검색 결과가 없어요</p></div>
+                    {agents.map((agent) => {
+                      const isSelected = selectedAgentIds.includes(agent.id);
+                      return (
+                        <div key={agent.id} onClick={() => {
+                          if (selectMode) { setSelectedAgentIds((p) => p.includes(agent.id) ? p.filter((x) => x !== agent.id) : [...p, agent.id]); }
+                          else { openChat(agent, book); }
+                        }}
+                          className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--color-mono-050)] ${isSelected ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
+                          {selectMode && (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-[var(--color-primary-500)] border-[var(--color-primary-500)]" : "border-[var(--color-mono-200)]"}`}>
+                              {isSelected && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                          )}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-medium text-[var(--color-mono-900)] truncate">{agent.name}</p>
+                            <p className="text-[11px] text-[var(--color-mono-400)] truncate">{agent.speechStyle}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              {filteredBooks.length === 0 && searchQuery && (
+                <div className="text-center py-12"><p className="text-[13px] text-[var(--color-mono-400)]">검색 결과가 없어요</p></div>
+              )}
+            </>
           )}
         </div>
-      </div>
+
+        {selectMode && selectedAgentIds.length >= 2 && (
+          <div className="p-3 border-t border-[var(--color-mono-080)]">
+            <button onClick={() => {
+              const roomAgents = selectedAgentIds.map((id) => { for (const book of mockBooks) { const agent = book.agents.find((a) => a.id === id); if (agent) return { agent, book }; } return null; }).filter((x): x is { agent: Agent; book: Book } => x !== null);
+              if (roomAgents.length >= 2) {
+                const roomId = selectedAgentIds.slice().sort().join("_");
+                setRooms((prev) => ({ ...prev, [roomId]: prev[roomId] ?? { id: roomId, agents: roomAgents, messages: [] } }));
+                setCurrentRoomId(roomId); setSidebarTab("chats"); setSelectMode(false); setSelectedAgentIds([]); setMobileView("chat");
+              }
+            }} className="w-full py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)] transition-colors">
+              {selectedAgentIds.length}명과 그룹 채팅 시작
+            </button>
+          </div>
+        )}
+      </aside>
 
       {/* 가운데: 채팅 영역 */}
       <div className={`flex-1 flex flex-col min-w-0 ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
