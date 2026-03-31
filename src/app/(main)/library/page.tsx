@@ -241,7 +241,7 @@ function LibraryContent() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl md:text-2xl font-bold text-[var(--color-mono-990)]">
-              Meta<span className="text-[var(--color-primary-500)]">Book</span>
+              OGQ
             </h1>
             <UserMenu />
           </div>

@@ -18,7 +18,7 @@ export default function BookLayout({
       {/* 상단 헤더 */}
       <header className="h-14 border-b border-mono-200 flex items-center justify-between px-4 flex-shrink-0" role="banner">
         <Link href="/library" className="text-xl font-bold text-mono-900 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 rounded">
-          Meta<span className="text-primary-500">Book</span>
+          OGQ
         </Link>
         <div className="flex items-center gap-3">
           <JuniorBadge />

@@ -122,7 +122,7 @@ export default function WorldViewerPage() {
           href={`/library/${bookId}`}
           className="text-lg font-bold"
         >
-          Meta<span className="text-primary-400">Book</span>
+          OGQ
           <span className="text-mono-500 text-sm ml-2">World</span>
         </a>
         <button

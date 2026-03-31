@@ -36,7 +36,7 @@ export default function MyPage() {
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
           <Link href="/library" className="text-2xl font-bold text-[var(--color-mono-990)]">
-            Meta<span className="text-[var(--color-primary-500)]">Book</span>
+            OGQ
           </Link>
           <UserMenu />
         </div>
