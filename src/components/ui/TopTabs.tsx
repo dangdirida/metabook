@@ -5,6 +5,8 @@ import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus, ShoppingB
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 import { getGoodsByBookId } from "@/lib/mock-goods";
 import { mockBooks, getBookById } from "@/lib/mock-data";
+import { getCreationsByBookId } from "@/lib/mock-creations";
+import type { Creation } from "@/types";
 import Link from "next/link";
 
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor: string; icon: React.ElementType }> = {
@@ -21,11 +23,14 @@ export default function TopTabs() {
   const { bookId } = useParams();
   const router = useRouter();
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [creations, setCreations] = useState<CreationItem[]>([]);
+  const [storeCreations, setStoreCreations] = useState<CreationItem[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>("gallery");
-  useEffect(() => { setGalleryOpen(false); setCreations(getCreations(bookId as string)); }, [bookId]);
-  const refreshCreations = () => setCreations(getCreations(bookId as string));
+  useEffect(() => { setGalleryOpen(false); setStoreCreations(getCreations(bookId as string)); }, [bookId]);
+  const refreshCreations = () => setStoreCreations(getCreations(bookId as string));
   const handleHeart = (id: string) => { toggleHeart(id); refreshCreations(); };
+
+  const mockCreations = getCreationsByBookId(bookId as string);
+  const totalCount = storeCreations.length + mockCreations.length;
 
   const book = getBookById(bookId as string);
   const goods = getGoodsByBookId(bookId as string);
@@ -54,7 +59,7 @@ export default function TopTabs() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-primary-500" strokeWidth={1.5} />
           <span className="text-sm font-semibold text-gray-800 dark:text-mono-200">창작 갤러리</span>
-          {creations.length > 0 && <span className="text-[10px] font-semibold bg-primary-500 text-white px-1.5 py-0.5 rounded-full">{creations.length}</span>}
+          {totalCount > 0 && <span className="text-[10px] font-semibold bg-primary-500 text-white px-1.5 py-0.5 rounded-full">{totalCount}</span>}
         </div>
         <ChevronUp className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`} strokeWidth={1.5} />
       </button>
@@ -88,7 +93,7 @@ export default function TopTabs() {
               })}
             </div>
             <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
-              {creations.length === 0 ? (
+              {storeCreations.length === 0 && mockCreations.length === 0 ? (
                 <div className="text-center py-6">
                   <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
                   <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
@@ -96,7 +101,30 @@ export default function TopTabs() {
                   <button onClick={()=>handleCreate("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
                 </div>
               ) : (
-                <div className="grid grid-cols-5 gap-2">{creations.map((item)=>{const cfg=TYPE_CONFIG[item.type];const Icon=cfg.icon;return <CreationCard key={item.id} item={item} cfg={cfg} Icon={Icon} onHeart={()=>handleHeart(item.id)} />;})}</div>
+                <div className="grid grid-cols-5 gap-2">
+                  {mockCreations.map((mc) => (
+                    <MockCreationCard
+                      key={mc.id}
+                      creation={mc}
+                      onClick={() => router.push(`/creations/${mc.id}`)}
+                    />
+                  ))}
+                  {storeCreations.map((item) => {
+                    const cfg = TYPE_CONFIG[item.type];
+                    const Icon = cfg?.icon;
+                    if (!cfg) return null;
+                    return (
+                      <CreationCard
+                        key={item.id}
+                        item={item}
+                        cfg={cfg}
+                        Icon={Icon}
+                        onHeart={() => handleHeart(item.id)}
+                        onClick={() => router.push(`/creations/${item.id}`)}
+                      />
+                    );
+                  })}
+                </div>
               )}
             </div>
           </>
@@ -148,9 +176,9 @@ export default function TopTabs() {
   );
 }
 
-function CreationCard({item,cfg,Icon,onHeart}:{item:CreationItem;cfg:{label:string;gradient:string;accentColor:string;icon:React.ElementType};Icon:React.ElementType;onHeart:()=>void}) {
+function CreationCard({item,cfg,Icon,onHeart,onClick}:{item:CreationItem;cfg:{label:string;gradient:string;accentColor:string;icon:React.ElementType};Icon:React.ElementType;onHeart:()=>void;onClick?:()=>void}) {
   return (
-    <div className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
+    <div onClick={onClick} className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
       <div className="aspect-[3/4] relative overflow-hidden bg-mono-100">
         {item.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -165,6 +193,68 @@ function CreationCard({item,cfg,Icon,onHeart}:{item:CreationItem;cfg:{label:stri
         <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">{cfg.label}</span>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center"><div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md"><Play className="w-3.5 h-3.5 text-mono-800 ml-0.5" strokeWidth={2} /></div></div>
         <button onClick={(e)=>{e.stopPropagation();onHeart();}} className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Heart className={`w-2.5 h-2.5 ${item.hearted?"fill-red-400 text-red-400":"text-white"}`} /><span className="text-[8px] text-white font-medium">{item.hearts}</span></button>
+      </div>
+    </div>
+  );
+}
+
+const TYPE_LABELS_MOCK: Record<string, string> = {
+  sticker:"스티커", music:"음악", photo:"이미지",
+  video:"영상", webtoon:"웹툰", novel:"소설",
+  webdrama:"웹드라마", ai_agent:"AI", prompt:"프롬프트",
+  extension:"익스텐션", goods:"굿즈",
+};
+
+const TYPE_GRADIENTS_MOCK: Record<string, string> = {
+  sticker: "from-emerald-400 via-teal-500 to-cyan-600",
+  music: "from-blue-400 via-blue-500 to-indigo-600",
+  video: "from-red-400 via-rose-500 to-pink-600",
+  webdrama: "from-red-400 via-rose-500 to-pink-600",
+  webtoon: "from-orange-400 via-amber-500 to-yellow-500",
+  novel: "from-violet-400 via-purple-500 to-indigo-600",
+  goods: "from-orange-400 via-rose-400 to-pink-500",
+};
+
+function MockCreationCard({
+  creation,
+  onClick,
+}: {
+  creation: Creation;
+  onClick: () => void;
+}) {
+  const gradient = TYPE_GRADIENTS_MOCK[creation.type] || "from-mono-300 via-mono-400 to-mono-500";
+  return (
+    <div
+      onClick={onClick}
+      className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200"
+    >
+      <div className="aspect-[3/4] relative overflow-hidden bg-mono-100">
+        {creation.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={creation.thumbnailUrl}
+            alt={creation.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${gradient} flex flex-col items-end justify-end p-2`}>
+            <p className="relative text-[9px] text-white/90 font-semibold text-right line-clamp-2 leading-tight z-10">
+              {creation.title}
+            </p>
+          </div>
+        )}
+        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+          {TYPE_LABELS_MOCK[creation.type] || creation.type}
+        </span>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+            <Play className="w-3.5 h-3.5 text-mono-800 ml-0.5" strokeWidth={2} />
+          </div>
+        </div>
+        <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+          <Heart className="w-2.5 h-2.5 text-white" />
+          <span className="text-[8px] text-white font-medium">{creation.likes}</span>
+        </div>
       </div>
     </div>
   );
