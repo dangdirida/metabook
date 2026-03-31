@@ -182,10 +182,11 @@ export default function ChatPage() {
                 className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${currentRoomId === room.id ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
                 <div className="relative w-10 h-10 flex-shrink-0">
                   {room.agents.slice(0, 3).map((ra, i) => (
-                    <div key={ra.agent.id} style={{ position: "absolute", left: i * 10, top: 0, zIndex: 3 - i }}
-                      className="w-7 h-7 rounded-full bg-[var(--color-secondary-100)] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[var(--color-secondary-600)]">
-                      {ra.agent.name[0]}
-                    </div>
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={ra.agent.id} src={ra.agent.avatar || "/avatars/default-profile.svg"} alt={ra.agent.name}
+                      style={{ position: "absolute", left: i * 10, top: 0, zIndex: 3 - i }}
+                      className="w-7 h-7 rounded-full object-cover border-2 border-white"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
                   ))}
                 </div>
                 <div className="flex-1 min-w-0">
