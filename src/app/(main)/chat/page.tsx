@@ -232,14 +232,8 @@ export default function ChatPage() {
                           {isSelected && <Check className="w-3 h-3 text-white" />}
                         </div>
                       )}
-                      {agent.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={agent.avatar} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
-                          <span className="text-[14px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
-                        </div>
-                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</span>
                         <p className="text-[12px] text-[var(--color-mono-400)] truncate">{agent.speechStyle}</p>
@@ -285,14 +279,8 @@ export default function ChatPage() {
         <aside className={`hidden md:flex flex-shrink-0 flex-col bg-white overflow-y-auto transition-all duration-300 ${showProfile ? "w-72 border-l border-[var(--color-mono-080)]" : "w-0 overflow-hidden"}`}>
           {/* 아바타 + 이름 */}
           <div className="flex flex-col items-center pt-8 pb-6 px-4 border-b border-[var(--color-mono-080)]">
-            {currentAgents[0]?.agent.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={currentAgents[0].agent.avatar} alt={currentAgents[0].agent.name} className="w-20 h-20 rounded-full object-cover mb-3" />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center mb-3">
-                <span className="text-2xl font-bold text-[var(--color-primary-600)]">{currentAgents[0]?.agent.name[0]}</span>
-              </div>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={currentAgents[0]?.agent.avatar || "/avatars/default-profile.svg"} alt={currentAgents[0]?.agent.name || ""} className="w-20 h-20 rounded-full object-cover mb-3" />
             <p className="text-[15px] font-bold text-[var(--color-mono-990)]">
               {currentAgents.length === 1 ? currentAgents[0].agent.name : `${currentAgents[0].agent.name} 외 ${currentAgents.length - 1}명`}
             </p>
@@ -301,14 +289,8 @@ export default function ChatPage() {
               <div className="flex gap-2 mt-3 flex-wrap justify-center">
                 {currentAgents.map((ra) => (
                   <div key={ra.agent.id} className="flex flex-col items-center gap-1">
-                    {ra.agent.avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ra.agent.avatar} alt={ra.agent.name} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[var(--color-secondary-100)] flex items-center justify-center">
-                        <span className="text-[12px] font-bold text-[var(--color-secondary-600)]">{ra.agent.name[0]}</span>
-                      </div>
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ra.agent.avatar || "/avatars/default-profile.svg"} alt={ra.agent.name} className="w-10 h-10 rounded-full object-cover" />
                     <span className="text-[10px] text-[var(--color-mono-500)]">{ra.agent.name}</span>
                   </div>
                 ))}
@@ -387,14 +369,8 @@ export default function ChatPage() {
                 invitableAgents.map(({ agent, book }) => (
                   <button key={agent.id} onClick={() => inviteAgent(agent, book)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--color-mono-030)] transition-colors text-left">
-                    {agent.avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={agent.avatar} alt={agent.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
-                        <span className="text-[13px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
-                      </div>
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</p>
                       <p className="text-[11px] text-[var(--color-mono-400)] truncate">{book.title}</p>
@@ -506,14 +482,8 @@ function ChatRoomView({
         <button onClick={onBack} className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-[var(--color-mono-050)] text-[var(--color-mono-600)]">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        {firstAgent.agent.avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={firstAgent.agent.avatar} alt={firstAgent.agent.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-9 h-9 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
-            <span className="text-[13px] font-bold text-[var(--color-primary-600)]">{firstAgent.agent.name[0]}</span>
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={firstAgent.agent.avatar || "/avatars/default-profile.svg"} alt={firstAgent.agent.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-semibold text-[var(--color-mono-990)] truncate">
             {isGroup ? room.agents.map((ra) => ra.agent.name).join(", ") : firstAgent.agent.name}
@@ -538,13 +508,9 @@ function ChatRoomView({
           <div className="flex flex-col items-center pt-12">
             <div className="flex -space-x-3 mb-4">
               {room.agents.map(({ agent }) => (
-                <div key={agent.id} className="w-14 h-14 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center border-3 border-white ring-2 ring-[var(--color-primary-050)]">
-                  {agent.avatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={agent.avatar} alt={agent.name} className="w-14 h-14 rounded-full object-cover" />
-                  ) : (
-                    <span className="text-[18px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
-                  )}
+                <div key={agent.id} className="w-14 h-14 rounded-full overflow-hidden border-3 border-white ring-2 ring-[var(--color-primary-050)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-14 h-14 rounded-full object-cover" />
                 </div>
               ))}
             </div>
@@ -560,17 +526,8 @@ function ChatRoomView({
             <div className={`max-w-[85%] ${msg.role === "user" ? "order-1" : ""}`}>
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-5 h-5 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center overflow-hidden">
-                    {(() => {
-                      const a = room.agents.find((ra) => ra.agent.id === msg.agentId);
-                      return a?.agent.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={a.agent.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
-                      ) : (
-                        <span className="text-[10px] font-bold text-[var(--color-primary-600)]">{msg.agentName?.[0]}</span>
-                      );
-                    })()}
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={room.agents.find((ra) => ra.agent.id === msg.agentId)?.agent.avatar || "/avatars/default-profile.svg"} alt="" className="w-5 h-5 rounded-full object-cover" />
                   <span className="text-[11px] text-[var(--color-mono-500)]">{msg.agentName}</span>
                 </div>
               )}
