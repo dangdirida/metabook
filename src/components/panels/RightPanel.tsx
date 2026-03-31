@@ -146,9 +146,14 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
                 ? "border border-[var(--color-primary-400)] bg-[var(--color-primary-030)] text-[var(--color-primary-700)]"
                 : "border border-[var(--color-mono-100)] bg-white text-mono-600 hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)]"
             }`}>
-            <div className="w-7 h-7 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
-              <span className="text-[12px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
-            </div>
+            {agent.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={agent.avatar} alt={agent.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
+                <span className="text-[12px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
+              </div>
+            )}
             {agent.name}
           </button>
         ))}
@@ -160,9 +165,14 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
         {messages.length === 0 && currentAgent && (
           <div className="flex flex-col items-center pt-6 pb-4">
             <div className="relative mb-4">
-              <div className="w-16 h-16 bg-[var(--color-primary-100)] rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
-                <span className="text-[22px] font-bold text-[var(--color-primary-600)]">{currentAgent.name[0]}</span>
-              </div>
+              {currentAgent.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentAgent.avatar} alt={currentAgent.name} className="w-16 h-16 rounded-full object-cover ring-4 ring-primary-50 shadow-sm" />
+              ) : (
+                <div className="w-16 h-16 bg-[var(--color-primary-100)] rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
+                  <span className="text-[22px] font-bold text-[var(--color-primary-600)]">{currentAgent.name[0]}</span>
+                </div>
+              )}
               <span className="absolute bottom-0 right-0 w-5 h-5 bg-[var(--color-primary-500)] rounded-full border-2 border-white flex items-center justify-center">
                 <MessageCircle className="w-2.5 h-2.5 text-white" />
               </span>

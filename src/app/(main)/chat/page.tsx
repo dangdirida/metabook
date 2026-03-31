@@ -248,9 +248,14 @@ export default function ChatPage() {
                           {isSelected && <Check className="w-3 h-3 text-white" />}
                         </div>
                       )}
-                      <div className="w-10 h-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
-                        <span className="text-[14px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
-                      </div>
+                      {agent.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={agent.avatar} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
+                          <span className="text-[14px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</span>
                         <p className="text-[12px] text-[var(--color-mono-400)] truncate">{agent.speechStyle}</p>
@@ -459,6 +464,9 @@ function ChatRoomView({
                 </div>
               ))}
             </div>
+          ) : room.agents[0].agent.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={room.agents[0].agent.avatar} alt={room.agents[0].agent.name} className="w-9 h-9 rounded-full object-cover" />
           ) : (
             <div className="w-9 h-9 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center">
               <span className="text-[14px] font-bold text-[var(--color-primary-600)]">{room.agents[0].agent.name[0]}</span>
