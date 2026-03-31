@@ -115,6 +115,7 @@ export interface Creation {
   likes: number;
   ogqLinked: boolean;
   ogqUrl?: string;
+  audioUrl?: string;
   createdAt: string;
 }
 

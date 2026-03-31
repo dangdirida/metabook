@@ -5,7 +5,7 @@ import { BookOpen, MessageCircle, Library } from "lucide-react";
 import Link from "next/link";
 import JuniorBadge from "@/components/ui/JuniorBadge";
 import UserMenu from "@/components/ui/UserMenu";
-import BgmPlayer from "@/components/ui/BgmPlayer";
+
 
 export default function BookLayout({
   children,
@@ -56,7 +56,6 @@ export default function BookLayout({
           />
         </nav>
       </div>
-      <BgmPlayer />
     </div>
   );
 }

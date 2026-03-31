@@ -16,11 +16,14 @@ import {
   Share2,
   Heart,
   Type,
+  Music,
 } from "lucide-react";
 import { getChaptersByBookId } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
 import { isFavorite, addFavorite, removeFavorite } from "@/lib/favorites-store";
+import BgmModal from "@/components/ui/BgmModal";
+import BgmMiniPlayer from "@/components/ui/BgmMiniPlayer";
 
 export default function CenterPanel() {
   const { bookId } = useParams();
@@ -38,6 +41,7 @@ export default function CenterPanel() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [showBgmModal, setShowBgmModal] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null);
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const worldUrlMap = useMemo(() => {
@@ -207,6 +211,7 @@ export default function CenterPanel() {
             <span className={`text-[13px] w-7 text-center font-medium tabular-nums ${isDark ? "text-mono-300" : "text-[var(--color-mono-700)]"}`}>{fontSize}</span>
             <button onClick={() => setFontSize(Math.min(24, fontSize + 2))} className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDark ? "hover:bg-mono-700 text-mono-300" : "hover:bg-[var(--color-mono-050)] text-[var(--color-mono-600)]"}`} title="글씨 크기 키우기"><Plus className="w-3.5 h-3.5" /></button>
           </div>
+          <button onClick={(ev) => { ev.stopPropagation(); setShowBgmModal(true); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800 text-mono-400" : "hover:bg-[var(--color-mono-050)] text-mono-500"}`} title="브금 선택"><Music className="w-4 h-4" /></button>
           <button onClick={() => setIsDark(!isDark)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800 text-yellow-400" : "hover:bg-[var(--color-mono-050)] text-mono-500"}`} title={isDark ? "라이트 모드" : "다크 모드"}>{isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
           <button onClick={() => { if (!book) return; if (liked) { removeFavorite(book.id); } else { addFavorite({ bookId: book.id, title: book.title, coverImage: book.coverImage, addedAt: new Date().toISOString() }); } setLiked(!liked); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800" : "hover:bg-[var(--color-mono-050)]"}`} title={liked ? "찜 해제" : "찜하기"}><Heart className={`w-4 h-4 transition-colors ${liked ? "fill-red-500 text-red-500" : "text-mono-400"}`} /></button>
         </div>
@@ -238,6 +243,8 @@ export default function CenterPanel() {
       {contextMenu && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-1 flex gap-0.5" style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px`, transform: "translate(-50%, -100%)" }}>{contextActions.map((action) => (<button key={action.label} onClick={action.action} className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg hover:bg-mono-50 transition-colors" title={action.label}><action.icon className="w-4 h-4 text-mono-600" /><span className="text-[10px] text-mono-500">{action.label}</span></button>))}</div>)}
       {popover && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-4 w-60" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}><div className="flex items-center gap-3 mb-2">{(() => { const a = book?.agents?.find(ag => ag.name === popover.name); return <img src={a?.avatar || "/avatars/default-profile.svg"} alt={popover.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary-200" onError={(ev) => { (ev.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />; })()}<div><p className="font-semibold text-mono-900 text-sm">{popover.name}</p><p className="text-xs text-mono-500">{popover.role}</p></div></div><p className="text-xs text-mono-400">등장: {popover.chapters}</p><p className="text-[11px] text-primary-500 mt-2 font-medium">→ 오른쪽 채팅에서 대화해보세요</p></div>)}
       {showWorldModal && (<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center"><Globe className="w-12 h-12 text-primary-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-mono-900 mb-2">책 속 세계로 들어갈까요?</h3><p className="text-sm text-mono-500 mb-6">삽화 속 공간을 3D로 탐험할 수 있어요.</p><div className="flex gap-3"><button onClick={() => setShowWorldModal(null)} className="flex-1 py-3 rounded-xl border border-mono-200 text-mono-700 font-medium hover:bg-mono-50">취소</button><button onClick={() => { if (showWorldModal?.worldUrl) { window.open(showWorldModal.worldUrl, "_blank", "noopener,noreferrer"); } setShowWorldModal(null); }} className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600">들어가기</button></div></div></div>)}
+      <BgmMiniPlayer />
+      {showBgmModal && <BgmModal bookId={bookId as string} onClose={() => setShowBgmModal(false)} />}
     </main>
   );
 }
