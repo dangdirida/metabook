@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-mono-050 flex">
       <aside className="w-56 bg-white border-r border-mono-080 flex flex-col">
         <div className="px-5 py-4 border-b border-mono-080">
-          <span className="text-sm font-bold text-primary-600">MetaBook</span>
+          <span className="text-sm font-bold text-primary-600">OGQ</span>
           <span className="ml-2 text-xs text-mono-400">Admin</span>
         </div>
         <nav className="flex-1 py-4">

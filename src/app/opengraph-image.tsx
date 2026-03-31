@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'MetaBook'
+export const alt = 'OGQ'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -19,7 +19,7 @@ export default function Image() {
         }}
       >
         <span style={{ fontSize: 120, fontWeight: 'bold', color: 'white' }}>
-          MetaBook
+          OGQ
         </span>
       </div>
     )

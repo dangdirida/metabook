@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "MetaBook";
+export const alt = "OGQ";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -98,8 +98,7 @@ export default async function Image() {
             letterSpacing: "-1px",
           }}
         >
-          Meta
-          <span style={{ color: "#32d29d" }}>Book</span>
+          OGQ
         </div>
 
         {/* 슬로건 */}

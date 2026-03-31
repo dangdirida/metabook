@@ -32,7 +32,7 @@ export default function AdminPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-mono-900">대시보드</h1>
-          <p className="text-sm text-mono-500 mt-1">MetaBook 관리자 패널</p>
+          <p className="text-sm text-mono-500 mt-1">OGQ 관리자 패널</p>
         </div>
         <span className="text-xs text-mono-400">{new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}</span>
       </div>

@@ -187,7 +187,7 @@ export default function UploadPage() {
             <div>
               <h2 className="text-lg font-semibold text-mono-900 mb-4">저작권 동의</h2>
               <div className="bg-mono-50 rounded-xl p-4 mb-4 text-sm text-mono-600 space-y-2">
-                <p>1. 이 창작물은 MetaBook 2차 창작 가이드라인을 준수합니다.</p>
+                <p>1. 이 창작물은 OGQ 2차 창작 가이드라인을 준수합니다.</p>
                 <p>2. 원작의 저작권을 존중하며, 2차 창작 허용 범위 내에서 제작되었습니다.</p>
                 <p>3. OGQ Market 등록 시 수익 분배 정책에 동의합니다.</p>
               </div>

@@ -72,9 +72,9 @@ function QRVisual() {
         <rect x="219" y="140" width="44" height="6" rx="3" fill="rgba(255,255,255,0.2)" />
         {/* 연결선 */}
         <path d="M172 162 Q191 162 210 140" stroke="rgba(50,210,157,0.5)" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
-        {/* MetaBook 레이블 */}
+        {/* OGQ 레이블 */}
         <rect x="215" y="158" width="60" height="20" rx="4" fill="rgba(50,210,157,0.15)" stroke="rgba(50,210,157,0.3)" strokeWidth="1" />
-        <text x="245" y="172" textAnchor="middle" fontSize="8" fontWeight="600" fill="rgba(50,210,157,0.9)" fontFamily="system-ui">MetaBook</text>
+        <text x="245" y="172" textAnchor="middle" fontSize="8" fontWeight="600" fill="rgba(50,210,157,0.9)" fontFamily="system-ui">OGQ</text>
       </svg>
     </div>
   );
@@ -336,7 +336,7 @@ const SECTIONS = [
     num: "01",
     tag: "QR 입장",
     title: "QR 코드 하나로 책에 들어오세요",
-    desc: "책 표지나 본문 페이지에 인쇄된 QR 코드를 스캔하면, 해당 책의 MetaBook 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 첵장에서 — QR 하나로 책 속 세계가 열립니다.",
+    desc: "책 표지나 본문 페이지에 인쇄된 QR 코드를 스캔하면, 해당 책의 OGQ 페이지로 즉시 이동합니다. 서점에서, 도서관에서, 집 첵장에서 — QR 하나로 책 속 세계가 열립니다.",
     pills: ["체 표지 QR", "본문 페이지 QR", "앱 설치 불필요"],
     accent: "#32d29d",
     accentLight: "rgba(50,210,157,0.08)",
@@ -360,7 +360,7 @@ const SECTIONS = [
     num: "03",
     tag: "AI 캐릭터",
     title: "책 속 인물과 직접 대화하세요",
-    desc: "주인공에게 묻고 싶은 게 있었나요? MetaBook에서는 체 속 인물과 직접 1:1 대화할 수 있습니다. AI가 캐릭터의 성격, 말투, 가치관을 학습해 진짜체럼 대답합니다.",
+    desc: "주인공에게 묻고 싶은 게 있었나요? OGQ에서는 체 속 인물과 직접 1:1 대화할 수 있습니다. AI가 캐릭터의 성격, 말투, 가치관을 학습해 진짜체럼 대답합니다.",
     pills: ["캐릭터 말투 반영", "쭅 내용 기반", "무한 대화"],
     accent: "#0ea5e9",
     accentLight: "rgba(14,165,233,0.08)",
@@ -372,7 +372,7 @@ const SECTIONS = [
     num: "04",
     tag: "커뮤니티",
     title: "같은 책을 읽은 독자들과 실시간 감상 공유",
-    desc: "혼자 읽고 끝내기 아쉬웠나요? MetaBook 커뮤니티에서 같은 체를 읽은 독자들과 실시간으로 감상을 나두세요. 업로드, 이모지, 리액션으로 활발하게 이야기하세요.",
+    desc: "혼자 읽고 끝내기 아쉬웠나요? OGQ 커뮤니티에서 같은 체를 읽은 독자들과 실시간으로 감상을 나두세요. 업로드, 이모지, 리액션으로 활발하게 이야기하세요.",
     pills: ["체별 전용 채팅방", "실시간 메시지", "이모지 반응"],
     accent: "#f43f5e",
     accentLight: "rgba(244,63,94,0.08)",
@@ -452,7 +452,7 @@ export default function AboutPage() {
           <ArrowLeft size={16} />
           돌아가기
         </button>
-        <span style={{ fontSize: 13, fontWeight: 600, color: t.navTitle, letterSpacing: "0.02em" }}>MetaBook 소개</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: t.navTitle, letterSpacing: "0.02em" }}>OGQ 소개</span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             onClick={() => setIsDark(!isDark)}
@@ -568,7 +568,7 @@ export default function AboutPage() {
             지금 바로<br />시작해보세요
           </h2>
           <p style={{ fontSize: 15, color: t.subtext, marginBottom: 40, lineHeight: 1.7 }}>
-            QR 코드를 스캔하거나, 도서 목록에서 책을 선택하면<br />MetaBook의 세계가 펼쳐집니다.
+            QR 코드를 스캔하거나, 도서 목록에서 책을 선택하면<br />OGQ의 세계가 펼쳐집니다.
           </p>
           <button
             onClick={() => router.push("/library")}
