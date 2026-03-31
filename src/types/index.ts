@@ -61,7 +61,7 @@ export interface Agent {
   id: string;
   bookId: string;
   name: string;
-  role: "protagonist" | "author" | "supporting" | "world_guide" | "tutor";
+  role: "protagonist" | "author" | "supporting" | "world_guide" | "tutor" | "antagonist";
   avatar: string;
   personality: string[];
   speechStyle: string;
