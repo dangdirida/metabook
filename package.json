@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@fal-ai/client": "^1.9.4",
     "@google/genai": "^1.46.0",
     "@tanstack/react-query": "^5.90.21",

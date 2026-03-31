@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, User, Heart } from "lucide-react";
+import { LogOut, User, Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -35,8 +35,15 @@ export default function UserMenu() {
   return (
     <div className="flex items-center gap-2">
       <Link
+        href="/chat"
+        className="p-2 rounded-xl hover:bg-[var(--color-mono-050)] transition-colors"
+        title="채팅"
+      >
+        <MessageCircle className="w-5 h-5 text-[var(--color-mono-600)]" />
+      </Link>
+      <Link
         href="/favorites"
-        className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"
+        className="p-2 rounded-xl hover:bg-[var(--color-mono-050)] transition-colors"
         title="찜한 도서"
       >
         <Heart className="w-5 h-5 text-[var(--color-mono-500)]" />
