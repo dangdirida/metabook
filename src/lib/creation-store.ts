@@ -2,7 +2,7 @@ export interface CreationItem {
   id: string;
   bookId: string;
   bookTitle: string;
-  type: "shortbook" | "shortmovie" | "goods";
+  type: "shortbook" | "shortmovie" | "goods" | "music";
   goodsType?: "bookmark" | "sticker" | "illustration";
   title: string;
   thumbnail: string;
@@ -10,6 +10,11 @@ export interface CreationItem {
   createdAt: string;
   hearts: number;
   hearted?: boolean;
+  musicPrompt?: string;
+  musicStyle?: string;
+  musicDuration?: number;
+  audioUrl?: string;
+  audioPreviewUrl?: string;
 }
 
 const STORAGE_KEY = "metabook_creations";

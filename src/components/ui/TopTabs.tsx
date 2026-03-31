@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus, ShoppingBag, Library } from "lucide-react";
+import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus, ShoppingBag, Library, Music } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
 import { getGoodsByBookId } from "@/lib/mock-goods";
 import { mockBooks, getBookById } from "@/lib/mock-data";
@@ -12,6 +12,7 @@ import Link from "next/link";
 const TYPE_CONFIG: Record<string, { label: string; gradient: string; accentColor: string; icon: React.ElementType }> = {
   shortbook: { label: "숏북", gradient: "from-emerald-400 via-teal-500 to-cyan-600", accentColor: "text-emerald-500", icon: BookOpen },
   shortmovie: { label: "숏뮤비", gradient: "from-violet-500 via-purple-500 to-indigo-600", accentColor: "text-violet-500", icon: Film },
+  music: { label: "음악", gradient: "from-blue-500 via-indigo-500 to-violet-600", accentColor: "text-blue-500", icon: Music },
   goods: { label: "굿즈", gradient: "from-orange-400 via-rose-400 to-pink-500", accentColor: "text-orange-500", icon: Gift },
 };
 
@@ -49,7 +50,7 @@ export default function TopTabs() {
     return t;
   }, [hasGoods, hasSeries]);
 
-  const handleCreate = (type: "shortbook" | "shortmovie" | "goods") => {
+  const handleCreate = (type: "shortbook" | "shortmovie" | "goods" | "music") => {
     router.push(`/creation/${type}?bookId=${bookId}`);
   };
 
@@ -87,7 +88,7 @@ export default function TopTabs() {
         {activeTab === "gallery" && (
           <>
             <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-[var(--color-mono-080)] dark:border-mono-800">
-              {(["shortbook","shortmovie","goods"] as const).map((type) => {
+              {(["shortbook","shortmovie","music","goods"] as const).map((type) => {
                 const cfg=TYPE_CONFIG[type]; const Icon=cfg.icon;
                 return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold border border-[var(--color-mono-100)] bg-white text-[var(--color-mono-700)] hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)] hover:text-[var(--color-primary-600)] dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-all shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
               })}
@@ -110,6 +111,9 @@ export default function TopTabs() {
                     />
                   ))}
                   {storeCreations.map((item) => {
+                    if (item.type === "music") {
+                      return <MusicCard key={item.id} item={item} onHeart={() => handleHeart(item.id)} />;
+                    }
                     const cfg = TYPE_CONFIG[item.type];
                     const Icon = cfg?.icon;
                     if (!cfg) return null;
@@ -254,6 +258,68 @@ function MockCreationCard({
         <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5">
           <Heart className="w-2.5 h-2.5 text-white" />
           <span className="text-[8px] text-white font-medium">{creation.likes}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MusicCard({ item, onHeart }: { item: CreationItem; onHeart: () => void }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!item.audioUrl && !item.audioPreviewUrl) return;
+    if (isPlaying) {
+      audioRef.current?.pause();
+    } else {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(item.audioPreviewUrl || item.audioUrl);
+        audioRef.current.onended = () => setIsPlaying(false);
+      }
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <div className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
+      <div className="aspect-[3/4] relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600">
+        <div className="absolute inset-0 flex items-center justify-center gap-0.5 opacity-30">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className={`w-1 rounded-full bg-white transition-all ${isPlaying ? "animate-pulse" : ""}`}
+              style={{ height: `${20 + Math.sin(i * 0.8) * 15 + 5}px`, animationDelay: `${i * 0.1}s`, animationDuration: `${0.6 + i * 0.1}s` }} />
+          ))}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <button onClick={togglePlay}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+              item.audioUrl || item.audioPreviewUrl ? "bg-white/90 hover:bg-white hover:scale-110" : "bg-white/30 cursor-not-allowed"
+            }`}>
+            {isPlaying ? (
+              <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+            ) : (
+              <svg className="w-5 h-5 text-indigo-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            )}
+          </button>
+        </div>
+        {!item.audioUrl && !item.audioPreviewUrl && (
+          <div className="absolute top-1.5 right-1.5 bg-amber-400/90 text-amber-900 text-[7px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-sm">준비중</div>
+        )}
+        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">음악</span>
+        <button onClick={(e) => { e.stopPropagation(); onHeart(); }}
+          className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Heart className={`w-2.5 h-2.5 ${item.hearted ? "fill-red-400 text-red-400" : "text-white"}`} />
+          <span className="text-[8px] text-white font-medium">{item.hearts}</span>
+        </button>
+        {item.musicDuration && (
+          <div className="absolute bottom-1.5 left-1.5 text-[8px] text-white/80 font-medium">
+            {Math.floor(item.musicDuration / 60)}:{String(item.musicDuration % 60).padStart(2, "0")}
+          </div>
+        )}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-4">
+          <p className="text-[9px] text-white/90 font-semibold line-clamp-1">{item.title}</p>
         </div>
       </div>
     </div>
