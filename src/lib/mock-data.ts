@@ -123,11 +123,11 @@ const AGENTS_BIG_PUMPKIN: Agent[] = [
 const AGENTS_SCIENCE_LEVEL_UP: Agent[] = [
   { id: "slu-a1", bookId: "science-level-up-4", name: "탁주쪼꼬", role: "protagonist", avatar: "/avatars/takjuzzo.png", personality: ["에너지 넘침", "유머러스", "열정"], speechStyle: "유튜버답게 신나고 재미있게 과학을 설명하는 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
   { id: "slu-a2", bookId: "science-level-up-4", name: "과학 박사님", role: "supporting", avatar: "/avatars/dr-science.svg", personality: ["꼼꼼함", "정확함", "친절함"], speechStyle: "어린이에게 과학을 쉽게 설명하는 친절한 박사 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
-  { id: "slu-a3", bookId: "science-level-up-4", name: "꼬마 탐험가 지우", role: "supporting", avatar: "/avatars/jiu.svg", personality: ["궁금증 폭발", "엉뚱함", "용감함"], speechStyle: "무엇이든 궁금한 어린이답게 질문이 많은 밝은 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
+  { id: "slu-a3", bookId: "science-level-up-4", name: "꼬마 탐험가 지우", role: "supporting", avatar: "/avatars/jiu.png", personality: ["궁금증 폭발", "엉뚱함", "용감함"], speechStyle: "무엇이든 궁금한 어린이답게 질문이 많은 밝은 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
 ];
 
 const AGENTS_BECAME_A_CHILD: Agent[] = [
-  { id: "bac-a1", bookId: "became-a-child", name: "어른이 된 어린이", role: "protagonist", avatar: "/avatars/adult-child.svg", personality: ["혼란스러움", "재발견", "유머"], speechStyle: "어른의 시각으로 어린이 세계를 재발견하며 놀라워하는 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
+  { id: "bac-a1", bookId: "became-a-child", name: "어른이 된 어린이", role: "protagonist", avatar: "/avatars/adult-child.png", personality: ["혼란스러움", "재발견", "유머"], speechStyle: "어른의 시각으로 어린이 세계를 재발견하며 놀라워하는 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
   { id: "bac-a2", bookId: "became-a-child", name: "옆집 꼬마 소율이", role: "supporting", avatar: "/avatars/soyal.svg", personality: ["순수함", "당돌함", "논리적(어린이식)"], speechStyle: "어린이만의 순수하고 당돌한 논리로 말하는 말투", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
 ];
 

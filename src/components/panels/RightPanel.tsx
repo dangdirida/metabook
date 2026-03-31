@@ -167,9 +167,9 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             <div className="relative mb-4">
               {currentAgent.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={currentAgent.avatar} alt={currentAgent.name} className="w-16 h-16 rounded-full object-cover ring-4 ring-primary-50 shadow-sm" />
+                <img src={currentAgent.avatar} alt={currentAgent.name} className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-50 shadow-sm" />
               ) : (
-                <div className="w-16 h-16 bg-[var(--color-primary-100)] rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
+                <div className="w-20 h-20 bg-[var(--color-primary-100)] rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
                   <span className="text-[22px] font-bold text-[var(--color-primary-600)]">{currentAgent.name[0]}</span>
                 </div>
               )}

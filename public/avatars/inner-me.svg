@@ -1,5 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <circle cx="100" cy="100" r="100" fill="#D4C4E8"/>
-  <text x="100" y="115" text-anchor="middle" font-family="Pretendard, sans-serif"
-    font-size="72" font-weight="700" fill="#5A3C8B">나</text>
+  <defs>
+    <clipPath id="circle"><circle cx="100" cy="100" r="100"/></clipPath>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="#E8D9F2"/>
+  <text x="100" y="122" text-anchor="middle"
+    font-family="Pretendard, Apple SD Gothic Neo, sans-serif"
+    font-size="80" font-weight="700" fill="#4E2A6B">나</text>
 </svg>
