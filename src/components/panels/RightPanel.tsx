@@ -173,7 +173,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             {/* AI 첫 말풍선 */}
             <div className="bg-[var(--color-primary-030)] border border-[var(--color-primary-080)] rounded-2xl rounded-tl-sm px-4 py-3 mx-4 text-center">
               <p className="text-[14px] text-[var(--color-mono-800)] leading-relaxed">안녕하세요! 저는 <span className="font-semibold text-[var(--color-primary-600)]">{currentAgent.name}</span>이에요.</p>
-              <p className="text-[14px] text-[var(--color-mono-500)] mt-1">책에 대해 궁금한 것, 무엇이든 물어보세요 📚</p>
+              <p className="text-[14px] text-[var(--color-mono-500)] mt-1">책에 대해 궁금한 것, 무엇이든 물어보세요</p>
             </div>
             {/* 퀵 리플라이 */}
             <div className="flex flex-wrap justify-center gap-1.5 mt-3 px-2">

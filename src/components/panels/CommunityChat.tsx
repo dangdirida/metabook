@@ -55,7 +55,7 @@ const MOCK_MESSAGES: CommunityMessage[] = [
     id: "m3",
     userId: "user3",
     userName: "과학소녀",
-    content: "3장이 특히 인상 깊었어요. 여러 번 다시 읽었습니다 😊",
+    content: "3장이 특히 인상 깊었어요. 여러 번 다시 읽었습니다",
     type: "text",
     isPinned: false,
     createdAt: "2024-01-15T11:00:00Z",
@@ -91,7 +91,7 @@ const MOCK_MESSAGES: CommunityMessage[] = [
     id: "m7",
     userId: "user6",
     userName: "창작마스터",
-    content: "이 책으로 웹툰 숏툰 만들어봤는데 반응이 좋아서 뿌듯해요 ✨",
+    content: "이 책으로 웹툰 숏툰 만들어봤는데 반응이 좋아서 뿌듯해요",
     type: "text",
     isPinned: false,
     createdAt: "2024-01-15T13:00:00Z",
@@ -165,7 +165,7 @@ export default function CommunityChat() {
     return groups;
   };
 
-  const emojis = ["😀", "😂", "😍", "❤️", "🥳", "👍", "✨", "🤔", "😢", "😡", "🎉", "📚"];
+  const emojis = [":)", "XD", "<3", "!!", "^^", "+1", "*", "?", "T_T", ">:(", "~", "#"];
 
   return (
     <div className="flex flex-col h-full relative">
@@ -286,7 +286,7 @@ export default function CommunityChat() {
           <button
             className="p-2 text-mono-400 hover:text-mono-600 transition-colors"
             title="이미지 첨부 (준비 중)"
-            onClick={() => setToast("이미지 첨부 기능은 준비 중이에요 🛠️")}
+            onClick={() => setToast("이미지 첨부 기능은 준비 중이에요")}
           >
             <ImageIcon className="w-5 h-5" />
           </button>
@@ -321,7 +321,7 @@ export default function CommunityChat() {
                   url.searchParams.set("tab", "community");
                   navigator.clipboard.writeText(url.toString());
                   setShowInvite(false);
-                  setToast("링크가 복사되었어요! 📋");
+                  setToast("링크가 복사되었어요!");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 bg-mono-50 rounded-xl hover:bg-mono-100 transition-colors"
               >

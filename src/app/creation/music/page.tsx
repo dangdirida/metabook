@@ -2,21 +2,21 @@
 
 import { useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Music, RefreshCw, Check } from "lucide-react";
+import { ArrowLeft, Music, RefreshCw, Check, Film, Waves, Guitar, Zap, Wind, Disc3, Mic, Coffee, Star, Leaf } from "lucide-react";
 import { addCreation } from "@/lib/creation-store";
 import { getBookById } from "@/lib/mock-data";
 
 const GENRES = [
-  { id: "cinematic", label: "시네마틱", emoji: "🎬", color: "from-slate-600 to-slate-800" },
-  { id: "ambient", label: "앰비언트", emoji: "🌊", color: "from-blue-400 to-cyan-600" },
-  { id: "acoustic", label: "어쿠스틱", emoji: "🎸", color: "from-amber-500 to-orange-600" },
-  { id: "electronic", label: "일렉트로닉", emoji: "⚡", color: "from-violet-500 to-purple-700" },
-  { id: "jazz", label: "재즈", emoji: "🎷", color: "from-yellow-500 to-amber-700" },
-  { id: "classical", label: "클래식", emoji: "🎻", color: "from-rose-400 to-pink-600" },
-  { id: "hiphop", label: "힙합", emoji: "🎤", color: "from-gray-700 to-gray-900" },
-  { id: "lofi", label: "Lo-Fi", emoji: "☕", color: "from-orange-300 to-amber-500" },
-  { id: "pop", label: "팝", emoji: "🌟", color: "from-pink-400 to-rose-500" },
-  { id: "folk", label: "포크", emoji: "🌿", color: "from-green-500 to-emerald-700" },
+  { id: "cinematic", label: "시네마틱", icon: Film, color: "from-slate-600 to-slate-800" },
+  { id: "ambient", label: "앰비언트", icon: Waves, color: "from-blue-400 to-cyan-600" },
+  { id: "acoustic", label: "어쿠스틱", icon: Guitar, color: "from-amber-500 to-orange-600" },
+  { id: "electronic", label: "일렉트로닉", icon: Zap, color: "from-violet-500 to-purple-700" },
+  { id: "jazz", label: "재즈", icon: Wind, color: "from-yellow-500 to-amber-700" },
+  { id: "classical", label: "클래식", icon: Disc3, color: "from-rose-400 to-pink-600" },
+  { id: "hiphop", label: "힙합", icon: Mic, color: "from-gray-700 to-gray-900" },
+  { id: "lofi", label: "Lo-Fi", icon: Coffee, color: "from-orange-300 to-amber-500" },
+  { id: "pop", label: "팝", icon: Star, color: "from-pink-400 to-rose-500" },
+  { id: "folk", label: "포크", icon: Leaf, color: "from-green-500 to-emerald-700" },
 ];
 
 const MOODS = ["설레는", "슬픈", "따뜻한", "신나는", "고요한", "몽환적", "긴장감", "희망찬", "그리운", "평화로운"];
@@ -172,7 +172,7 @@ function MusicCreationContent() {
             </div>
             {!generatedMusic.audioUrl && (
               <div className="mt-4 bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-[12px] text-white/80">🎵 Suno API 연동 후 실제 음악이 재생됩니다</p>
+                <p className="text-[12px] text-white/80">Suno API 연동 후 실제 음악이 재생됩니다</p>
               </div>
             )}
             <p className="text-[12px] text-white/60 text-center mt-3">
@@ -249,7 +249,7 @@ function MusicCreationContent() {
                     ? "ring-2 ring-[var(--color-primary-400)] bg-[var(--color-primary-030)]"
                     : "border border-[var(--color-mono-100)] hover:border-[var(--color-primary-200)] hover:bg-[var(--color-primary-030)]"
                 }`}>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${genre.color} flex items-center justify-center text-xl`}>{genre.emoji}</div>
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${genre.color} flex items-center justify-center`}><genre.icon className="w-5 h-5 text-white" /></div>
                 <span className="text-[11px] font-medium text-[var(--color-mono-700)]">{genre.label}</span>
               </button>
             ))}
@@ -322,7 +322,7 @@ function MusicCreationContent() {
               <p className="text-[13px] font-semibold text-indigo-800 mb-1">Suno AI로 음악을 생성해요</p>
               <p className="text-[12px] text-indigo-600 leading-relaxed">
                 전문 AI 음악 생성 엔진 Suno를 이용해 책의 감성에 딱 맞는 오리지널 음악을 만들어드려요.
-                현재 API 준비 중이에요 — 곧 실제 음악이 생성됩니다! 🎵
+                현재 API 준비 중이에요 — 곧 실제 음악이 생성됩니다!
               </p>
             </div>
           </div>

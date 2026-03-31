@@ -248,15 +248,15 @@ function CommunityVisual() {
             <stop offset="1" stopColor="#e11d48" />
           </linearGradient>
         </defs>
-        <text x="174" y="191" textAnchor="middle" fontSize="9" fill="white" fontFamily="system-ui">작가님 천재인듯 🔥</text>
+        <text x="174" y="191" textAnchor="middle" fontSize="9" fill="white" fontFamily="system-ui">작가님 천재인듯</text>
         <text x="238" y="205" fontSize="8" fill="rgba(255,255,255,0.35)" fontFamily="system-ui">나 · 오후 2:35</text>
         {/* 이모지 반응 바 */}
         <rect x="82" y="216" width="176" height="24" rx="12" fill="#1f2937" />
-        <text x="98" y="232" fontSize="10" fontFamily="system-ui">🔥</text>
+        <text x="98" y="232" fontSize="10" fontFamily="system-ui" fill="rgba(239,68,68,0.8)">F</text>
         <text x="110" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">12</text>
-        <text x="126" y="232" fontSize="10" fontFamily="system-ui">😮</text>
+        <text x="126" y="232" fontSize="10" fontFamily="system-ui" fill="rgba(251,191,36,0.8)">!</text>
         <text x="138" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">8</text>
-        <text x="154" y="232" fontSize="10" fontFamily="system-ui">❤️</text>
+        <text x="154" y="232" fontSize="10" fontFamily="system-ui" fill="rgba(244,63,94,0.8)">H</text>
         <text x="166" y="232" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="system-ui">24</text>
         <text x="190" y="232" fontSize="9" fill="rgba(244,63,94,0.7)" fontFamily="system-ui">+ 반응</text>
         {/* 하단 입력 */}
@@ -294,7 +294,7 @@ function CreationVisual() {
         <rect x="34" y="68" width="56" height="3.5" rx="1.75" fill="rgba(255,255,255,0.3)" />
         <rect x="34" y="78" width="64" height="3.5" rx="1.75" fill="rgba(255,255,255,0.25)" />
         <rect x="34" y="88" width="48" height="3.5" rx="1.75" fill="rgba(255,255,255,0.2)" />
-        <text x="44" y="138" fontSize="20" textAnchor="middle" fontFamily="system-ui">📖</text>
+        <text x="44" y="138" fontSize="14" textAnchor="middle" fontWeight="700" fill="white" fontFamily="system-ui">B</text>
         <rect x="34" y="154" width="80" height="10" rx="5" fill="rgba(255,255,255,0.2)" />
         <text x="74" y="163" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">숯북</text>
         <text x="34" y="182" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">다른 시점으로</text>
@@ -304,7 +304,7 @@ function CreationVisual() {
         <rect x="130" y="50" width="80" height="45" rx="6" fill="rgba(0,0,0,0.3)" />
         <circle cx="170" cy="72" r="14" fill="rgba(255,255,255,0.15)" />
         <path d="M165 65 L165 79 L179 72 Z" fill="white" />
-        <text x="170" y="118" fontSize="20" textAnchor="middle" fontFamily="system-ui">🎬</text>
+        <text x="170" y="118" fontSize="14" textAnchor="middle" fontWeight="700" fill="white" fontFamily="system-ui">V</text>
         <rect x="130" y="134" width="80" height="10" rx="5" fill="rgba(255,255,255,0.2)" />
         <text x="170" y="143" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">숯뮤비</text>
         <text x="130" y="160" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">AI 영상으로</text>
@@ -320,11 +320,11 @@ function CreationVisual() {
         <text x="226" y="182" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="system-ui">체감을 굿즈로</text>
         {/* 하단 "AI와 함께" 레이블 */}
         <rect x="110" y="218" width="120" height="26" rx="13" fill="#1a1a2e" stroke="rgba(245,158,11,0.4)" strokeWidth="1" />
-        <text x="170" y="234" textAnchor="middle" fontSize="9" fontWeight="600" fill="rgba(245,158,11,0.9)" fontFamily="system-ui">✨ AI와 함기 만들기</text>
+        <text x="170" y="234" textAnchor="middle" fontSize="9" fontWeight="600" fill="rgba(245,158,11,0.9)" fontFamily="system-ui">AI와 함께 만들기</text>
         {/* 별 효과 */}
-        <text x="52" y="34" fontSize="14" fontFamily="system-ui" opacity="0.6">✨</text>
-        <text x="270" y="40" fontSize="10" fontFamily="system-ui" opacity="0.5">✨</text>
-        <text x="155" y="280" fontSize="12" fontFamily="system-ui" opacity="0.4">✨</text>
+        <circle cx="52" cy="30" r="2" fill="rgba(255,255,255,0.4)" />
+        <circle cx="270" cy="36" r="1.5" fill="rgba(255,255,255,0.3)" />
+        <circle cx="155" cy="276" r="2" fill="rgba(255,255,255,0.25)" />
       </svg>
     </div>
   );
