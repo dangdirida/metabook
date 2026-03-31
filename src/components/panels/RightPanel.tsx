@@ -1,9 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle } from "lucide-react";
+import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink } from "lucide-react";
 import { usePanelStore } from "@/store/panelStore";
 import { mockBooks } from "@/lib/mock-data";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import CommunityChat from "./CommunityChat";
 
 interface ChatMessage {
@@ -75,6 +75,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setSelectedAgent } = usePanelStore();
+  const router = useRouter();
   const currentAgent = agents.find((a) => a.id === currentAgentId);
 
   useEffect(() => {
@@ -138,19 +139,28 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
   return (
     <div className="flex flex-col h-full">
       {/* Agent 선택 버튼 */}
-      <div className="flex gap-2 p-3 border-b border-[var(--color-mono-080)] overflow-x-auto flex-shrink-0">
-        {agents.map((agent) => (
-          <button key={agent.id} onClick={() => { setCurrentAgentId(agent.id); setSelectedAgent(agent.id); }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-all ${
-              currentAgentId === agent.id
-                ? "border border-[var(--color-primary-400)] bg-[var(--color-primary-030)] text-[var(--color-primary-700)]"
-                : "border border-[var(--color-mono-100)] bg-white text-mono-600 hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)]"
-            }`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-            {agent.name}
-          </button>
-        ))}
+      <div className="flex items-center border-b border-[var(--color-mono-080)] flex-shrink-0">
+        <div className="flex gap-2 p-3 overflow-x-auto flex-1">
+          {agents.map((agent) => (
+            <button key={agent.id} onClick={() => { setCurrentAgentId(agent.id); setSelectedAgent(agent.id); }}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-all ${
+                currentAgentId === agent.id
+                  ? "border border-[var(--color-primary-400)] bg-[var(--color-primary-030)] text-[var(--color-primary-700)]"
+                  : "border border-[var(--color-mono-100)] bg-white text-mono-600 hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)]"
+              }`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+              {agent.name}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => router.push(`/chat?bookId=${bookId}&agentId=${currentAgentId}`)}
+          title="채팅 페이지에서 열기"
+          className="p-2.5 mr-2 flex-shrink-0 rounded-xl text-mono-400 hover:text-primary-500 hover:bg-primary-50 transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 메시지 영역 */}
