@@ -82,14 +82,20 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
     if (selectedAgentId && selectedAgentId !== currentAgentId) setCurrentAgentId(selectedAgentId);
   }, [selectedAgentId, currentAgentId]);
 
+  const prevAgentIdRef = useRef<string>("");
+
   useEffect(() => {
     const saved = localStorage.getItem(`chat_${bookId}_${currentAgentId}`);
     setMessages(saved ? JSON.parse(saved) : []);
+    prevAgentIdRef.current = currentAgentId;
   }, [bookId, currentAgentId]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (messages.length > 0) localStorage.setItem(`chat_${bookId}_${currentAgentId}`, JSON.stringify(messages));
-  }, [messages, bookId, currentAgentId]);
+    if (messages.length === 0) return;
+    if (prevAgentIdRef.current !== currentAgentId) return;
+    localStorage.setItem(`chat_${bookId}_${currentAgentId}`, JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
