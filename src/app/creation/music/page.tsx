@@ -2,21 +2,21 @@
 
 import { useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Music, RefreshCw, Check, Film, Waves, Guitar, Zap, Wind, Disc3, Mic, Coffee, Star, Leaf } from "lucide-react";
+import { ArrowLeft, Music, RefreshCw, Check, Film, Wind, Guitar, Zap, Music2, Disc3, Mic2, Coffee, Star, Leaf } from "lucide-react";
 import { addCreation } from "@/lib/creation-store";
 import { getBookById } from "@/lib/mock-data";
 
 const GENRES = [
-  { id: "cinematic", label: "시네마틱", icon: Film, color: "from-slate-600 to-slate-800" },
-  { id: "ambient", label: "앰비언트", icon: Waves, color: "from-blue-400 to-cyan-600" },
-  { id: "acoustic", label: "어쿠스틱", icon: Guitar, color: "from-amber-500 to-orange-600" },
-  { id: "electronic", label: "일렉트로닉", icon: Zap, color: "from-violet-500 to-purple-700" },
-  { id: "jazz", label: "재즈", icon: Wind, color: "from-yellow-500 to-amber-700" },
-  { id: "classical", label: "클래식", icon: Disc3, color: "from-rose-400 to-pink-600" },
-  { id: "hiphop", label: "힙합", icon: Mic, color: "from-gray-700 to-gray-900" },
-  { id: "lofi", label: "Lo-Fi", icon: Coffee, color: "from-orange-300 to-amber-500" },
-  { id: "pop", label: "팝", icon: Star, color: "from-pink-400 to-rose-500" },
-  { id: "folk", label: "포크", icon: Leaf, color: "from-green-500 to-emerald-700" },
+  { id: "cinematic", label: "시네마틱", icon: Film },
+  { id: "ambient", label: "앰비언트", icon: Wind },
+  { id: "acoustic", label: "어쿠스틱", icon: Guitar },
+  { id: "electronic", label: "일렉트로닉", icon: Zap },
+  { id: "jazz", label: "재즈", icon: Music2 },
+  { id: "classical", label: "클래식", icon: Disc3 },
+  { id: "hiphop", label: "힙합", icon: Mic2 },
+  { id: "lofi", label: "Lo-Fi", icon: Coffee },
+  { id: "pop", label: "팝", icon: Star },
+  { id: "folk", label: "포크", icon: Leaf },
 ];
 
 const MOODS = ["설레는", "슬픈", "따뜻한", "신나는", "고요한", "몽환적", "긴장감", "희망찬", "그리운", "평화로운"];
@@ -241,18 +241,28 @@ function MusicCreationContent() {
         {/* 장르 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <h2 className="text-[14px] font-bold text-[var(--color-mono-900)] mb-4">장르 선택</h2>
-          <div className="grid grid-cols-5 gap-2">
-            {GENRES.map((genre) => (
-              <button key={genre.id} onClick={() => setSelectedGenre(genre.id)}
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
-                  selectedGenre === genre.id
-                    ? "ring-2 ring-[var(--color-primary-400)] bg-[var(--color-primary-030)]"
-                    : "border border-[var(--color-mono-100)] hover:border-[var(--color-primary-200)] hover:bg-[var(--color-primary-030)]"
-                }`}>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${genre.color} flex items-center justify-center`}><genre.icon className="w-5 h-5 text-white" /></div>
-                <span className="text-[11px] font-medium text-[var(--color-mono-700)]">{genre.label}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-5 gap-3">
+            {GENRES.map((genre) => {
+              const Icon = genre.icon;
+              const isSelected = selectedGenre === genre.id;
+              return (
+                <button key={genre.id} onClick={() => setSelectedGenre(genre.id)}
+                  className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all ${
+                    isSelected
+                      ? "border-[var(--color-primary-500)] bg-[var(--color-primary-030)]"
+                      : "border-[var(--color-mono-080)] bg-white hover:border-[var(--color-primary-200)] hover:bg-[var(--color-primary-010)]"
+                  }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                    isSelected ? "bg-[var(--color-primary-500)]" : "bg-[var(--color-mono-050)]"
+                  }`}>
+                    <Icon className={`w-5 h-5 ${isSelected ? "text-white" : "text-[var(--color-mono-500)]"}`} />
+                  </div>
+                  <span className={`text-[12px] font-medium ${
+                    isSelected ? "text-[var(--color-primary-600)]" : "text-[var(--color-mono-600)]"
+                  }`}>{genre.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
