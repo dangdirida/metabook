@@ -18,6 +18,8 @@ import {
   ExternalLink,
   ChevronLeft,
   BookOpen,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -54,6 +56,7 @@ export default function ChatPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [showProfile, setShowProfile] = useState(true);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>(() => {
     if (typeof window === "undefined") return [];
     try { return JSON.parse(localStorage.getItem("chat_bookmarks") || "[]"); }
@@ -271,13 +274,15 @@ export default function ChatPage() {
             onBack={() => setMobileView("list")}
             bookmarks={bookmarks}
             toggleBookmark={toggleBookmark}
+            showProfile={showProfile}
+            setShowProfile={setShowProfile}
           />
         )}
       </div>
 
       {/* 오른쪽: 인물 프로필 패널 */}
       {currentRoom && (
-        <aside className="hidden md:flex w-72 flex-shrink-0 border-l border-[var(--color-mono-080)] flex-col bg-white overflow-y-auto">
+        <aside className={`hidden md:flex flex-shrink-0 flex-col bg-white overflow-y-auto transition-all duration-300 ${showProfile ? "w-72 border-l border-[var(--color-mono-080)]" : "w-0 overflow-hidden"}`}>
           {/* 아바타 + 이름 */}
           <div className="flex flex-col items-center pt-8 pb-6 px-4 border-b border-[var(--color-mono-080)]">
             {currentAgents[0]?.agent.avatar ? (
@@ -412,6 +417,8 @@ function ChatRoomView({
   onBack,
   bookmarks,
   toggleBookmark,
+  showProfile,
+  setShowProfile,
 }: {
   room: ChatRoom;
   setRooms: React.Dispatch<React.SetStateAction<Record<string, ChatRoom>>>;
@@ -419,6 +426,8 @@ function ChatRoomView({
   onBack: () => void;
   bookmarks: BookmarkItem[];
   toggleBookmark: (roomId: string, messageId: string, content: string, agentName: string) => void;
+  showProfile: boolean;
+  setShowProfile: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -516,6 +525,10 @@ function ChatRoomView({
         </Link>
         <button onClick={onInvite} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium border border-[var(--color-mono-100)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)] transition-colors">
           <UserPlus className="w-3.5 h-3.5" />인물 초대
+        </button>
+        <button onClick={() => setShowProfile((prev) => !prev)} title={showProfile ? "프로필 닫기" : "프로필 열기"}
+          className={`hidden md:flex p-2 rounded-lg transition-colors ${showProfile ? "text-[var(--color-primary-500)] bg-[var(--color-primary-030)]" : "text-[var(--color-mono-400)] hover:text-[var(--color-primary-500)] hover:bg-[var(--color-primary-030)]"}`}>
+          {showProfile ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
         </button>
       </div>
 
