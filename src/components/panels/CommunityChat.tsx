@@ -112,7 +112,6 @@ export default function CommunityChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 토스트 메시지 자동 소멸
   useEffect(() => {
     if (toast) {
       const t = setTimeout(() => setToast(null), 2000);
@@ -178,21 +177,20 @@ export default function CommunityChat() {
       )}
 
       {/* 상단: 접속 인원 */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-mono-200 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-mono-080)] flex-shrink-0">
         <div className="flex items-center gap-2">
-          {/* 실시간 접속 인디케이터 */}
           <div className="relative flex items-center">
             <span className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping opacity-75" />
             <span className="w-2 h-2 bg-green-500 rounded-full" />
           </div>
           <Users className="w-4 h-4 text-mono-500 ml-1" />
-          <span className="text-sm text-mono-600">
-            <span className="font-semibold text-primary-500">{onlineCount}명</span> 접속 중
+          <span className="text-[12px] text-[var(--color-mono-400)]">
+            <span className="font-semibold text-[var(--color-primary-500)]">{onlineCount}명</span> 접속 중
           </span>
         </div>
         <button
           onClick={() => setShowInvite(true)}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors font-medium"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[12px] font-medium bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-600)] transition-colors"
         >
           <UserPlus className="w-3.5 h-3.5" />
           초대
@@ -201,9 +199,9 @@ export default function CommunityChat() {
 
       {/* 공지 고정 메시지 */}
       {pinnedMessages.map((msg) => (
-        <div key={msg.id} className="flex items-start gap-2 px-4 py-2 bg-amber-50 border-b border-amber-100">
-          <Pin className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-mono-700">{msg.content}</p>
+        <div key={msg.id} className="flex items-start gap-2 px-4 py-2 bg-[var(--color-primary-030)] border-b border-[var(--color-primary-080)]">
+          <Pin className="w-3.5 h-3.5 text-[var(--color-primary-600)] mt-0.5 flex-shrink-0" />
+          <p className="text-[12px] text-[var(--color-primary-700)]">{msg.content}</p>
         </div>
       ))}
 
@@ -212,7 +210,7 @@ export default function CommunityChat() {
         {groupByDate(chatMessages).map((group) => (
           <div key={group.date}>
             <div className="flex items-center justify-center my-3">
-              <span className="text-[10px] text-mono-400 bg-mono-100 px-3 py-1 rounded-full">
+              <span className="text-[10px] text-[var(--color-mono-400)] bg-[var(--color-mono-050)] px-3 py-1 rounded-full">
                 {group.date}
               </span>
             </div>
@@ -226,23 +224,23 @@ export default function CommunityChat() {
                 }}
               >
                 {msg.userId !== "me" && (
-                  <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-bold text-primary-600">{msg.userName[0]}</span>
+                  <div className="w-8 h-8 bg-[var(--color-secondary-100)] rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[12px] font-bold text-[var(--color-secondary-600)]">{msg.userName[0]}</span>
                   </div>
                 )}
                 <div className={msg.userId === "me" ? "text-right" : ""}>
                   {msg.userId !== "me" && (
-                    <p className="text-xs font-medium text-mono-700 mb-0.5 ml-1">{msg.userName}</p>
+                    <p className="text-[12px] font-semibold text-[var(--color-mono-700)] mb-0.5 ml-1">{msg.userName}</p>
                   )}
                   <div
-                    className={`inline-block px-3 py-2 rounded-xl text-sm max-w-[240px] text-left ${
-                      msg.userId === "me" ? "bg-primary-500 text-white" : "bg-mono-50 text-mono-900"
+                    className={`inline-block px-3 py-2 rounded-xl text-[13px] leading-relaxed max-w-[240px] text-left ${
+                      msg.userId === "me" ? "bg-[var(--color-primary-500)] text-white" : "bg-[var(--color-mono-050)] text-[var(--color-mono-700)]"
                     }`}
                   >
                     {msg.content}
                   </div>
                   <div className={`flex items-center gap-1 mt-0.5 ${msg.userId === "me" ? "justify-end" : ""}`}>
-                    <span className="text-[10px] text-mono-400">{formatDate(msg.createdAt)}</span>
+                    <span className="text-[10px] text-[var(--color-mono-300)]">{formatDate(msg.createdAt)}</span>
                     {msg.userId !== "me" && (
                       <button
                         onClick={() => setShowReport(msg.id)}
@@ -262,7 +260,7 @@ export default function CommunityChat() {
 
       {/* 이모지 피커 */}
       {showEmoji && (
-        <div className="px-4 py-2 border-t border-mono-200 flex flex-wrap gap-2">
+        <div className="px-4 py-2 border-t border-[var(--color-mono-080)] flex flex-wrap gap-2">
           {emojis.map((emoji) => (
             <button
               key={emoji}
@@ -276,7 +274,7 @@ export default function CommunityChat() {
       )}
 
       {/* 입력창 */}
-      <div className="p-3 border-t border-mono-200 flex-shrink-0">
+      <div className="border-t border-[var(--color-mono-080)] bg-white px-3 py-3 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowEmoji(!showEmoji)}
@@ -298,12 +296,12 @@ export default function CommunityChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="메시지 입력... (Enter로 전송)"
-            className="flex-1 px-4 py-2.5 bg-mono-50 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="flex-1 text-[14px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] bg-[var(--color-mono-050)] border border-mono-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim()}
-            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-40 transition-colors"
+            className="w-9 h-9 rounded-xl bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white flex items-center justify-center disabled:opacity-40 transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>

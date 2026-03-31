@@ -54,27 +54,27 @@ export default function TopTabs() {
   };
 
   return (
-    <div className="bg-white dark:bg-mono-900 border-b border-mono-200 dark:border-mono-800 flex flex-col flex-shrink-0">
-      <button onClick={() => setGalleryOpen(!galleryOpen)} className="flex items-center justify-between px-4 py-2.5 w-full hover:bg-gray-50 dark:hover:bg-mono-800 transition-colors">
+    <div className="bg-white dark:bg-mono-900 border-b border-[var(--color-mono-080)] dark:border-mono-800 flex flex-col flex-shrink-0">
+      <button onClick={() => setGalleryOpen(!galleryOpen)} className="flex items-center justify-between px-4 py-2.5 w-full hover:bg-[var(--color-mono-030)] dark:hover:bg-mono-800 transition-colors">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-primary-500" strokeWidth={1.5} />
-          <span className="text-sm font-semibold text-gray-800 dark:text-mono-200">창작 갤러리</span>
-          {totalCount > 0 && <span className="text-[10px] font-semibold bg-primary-500 text-white px-1.5 py-0.5 rounded-full">{totalCount}</span>}
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary-500)]" strokeWidth={1.5} />
+          <span className="text-[13px] font-semibold text-[var(--color-mono-800)] dark:text-mono-200">창작 갤러리</span>
+          {totalCount > 0 && <span className="bg-[var(--color-primary-500)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{totalCount}</span>}
         </div>
-        <ChevronUp className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`} strokeWidth={1.5} />
+        <ChevronUp className={`w-4 h-4 text-[var(--color-mono-400)] transition-transform duration-300 ${galleryOpen ? "" : "rotate-180"}`} strokeWidth={1.5} />
       </button>
       <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: galleryOpen ? OPEN_HEIGHT : 0 }}>
         {/* 탭 (조건부) */}
         {tabs.length > 1 && (
-          <div className="flex border-b border-mono-100 dark:border-mono-800 px-4">
+          <div className="flex border-b border-[var(--color-mono-080)] dark:border-mono-800 px-4">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-3 py-2 text-xs font-medium transition-colors ${
+                className={`px-3 py-2 text-[12px] font-medium transition-colors ${
                   activeTab === tab.key
-                    ? "text-primary-500 border-b-2 border-primary-500"
-                    : "text-mono-400 hover:text-mono-600"
+                    ? "text-[var(--color-primary-500)] border-b-2 border-[var(--color-primary-500)]"
+                    : "text-[var(--color-mono-400)] hover:text-[var(--color-mono-600)]"
                 }`}
               >
                 {tab.label}
@@ -86,19 +86,19 @@ export default function TopTabs() {
         {/* 갤러리 탭 */}
         {activeTab === "gallery" && (
           <>
-            <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-mono-100 dark:border-mono-800">
+            <div className="flex flex-wrap gap-2 justify-start px-4 py-2.5 border-b border-[var(--color-mono-080)] dark:border-mono-800">
               {(["shortbook","shortmovie","goods"] as const).map((type) => {
                 const cfg=TYPE_CONFIG[type]; const Icon=cfg.icon;
-                return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-mono-200 text-mono-700 hover:bg-mono-50 hover:border-mono-300 dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-colors shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
+                return (<button key={type} onClick={()=>handleCreate(type)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold border border-[var(--color-mono-100)] bg-white text-[var(--color-mono-700)] hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)] hover:text-[var(--color-primary-600)] dark:bg-[#1e2a1e] dark:border-[#2a3a2a] dark:text-[#c8d5c8] dark:hover:bg-[#2a332a] transition-all shadow-sm"><Icon className={`w-3.5 h-3.5 ${cfg.accentColor}`} strokeWidth={1.5} />{cfg.label}만들기</button>);
               })}
             </div>
             <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
               {storeCreations.length === 0 && mockCreations.length === 0 ? (
                 <div className="text-center py-6">
-                  <div className="w-14 h-14 bg-mono-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
-                  <p className="text-mono-700 font-semibold text-sm">첫 창작물을 만들어보세요!</p>
-                  <p className="text-xs text-mono-400 mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 만들 수 있어요 ✨</p>
-                  <button onClick={()=>handleCreate("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
+                  <div className="w-14 h-14 bg-[var(--color-mono-050)] rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
+                  <p className="text-[var(--color-mono-700)] font-semibold text-sm">첫 창작물을 만들어보세요!</p>
+                  <p className="text-xs text-[var(--color-mono-400)] mt-1 leading-relaxed">AI로 숏북, 뮤비, 굿즈를 만들 수 있어요 ✨</p>
+                  <button onClick={()=>handleCreate("shortbook")} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-600)] transition-colors"><Plus className="w-3.5 h-3.5" strokeWidth={2} />지금 만들기</button>
                 </div>
               ) : (
                 <div className="grid grid-cols-5 gap-2">

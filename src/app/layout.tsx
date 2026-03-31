@@ -37,7 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className="antialiased">
+      <head>
+        <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet" />
+      </head>
+      <body className="antialiased font-sans">
         <AuthProvider>
           <QueryProvider>{children}</QueryProvider>
         </AuthProvider>

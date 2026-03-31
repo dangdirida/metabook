@@ -146,7 +146,7 @@ export default function CenterPanel() {
       characters.includes(part) ? (
         <span
           key={i}
-          className="text-primary-600 cursor-pointer hover:text-primary-700 hover:underline transition-colors font-medium"
+          className="text-[var(--color-primary-600)] font-medium cursor-pointer hover:text-[var(--color-primary-700)] hover:underline transition-colors"
           onClick={(e) => handleCharacterClick(part, e)}
           title={`${part} 정보 보기`}
         >
@@ -175,7 +175,7 @@ export default function CenterPanel() {
 
   return (
     <main
-      className={`flex-1 flex flex-col overflow-hidden relative ${isDark ? "bg-mono-900 text-mono-200" : "bg-white text-mono-900"}`}
+      className={`flex-1 flex flex-col overflow-hidden relative ${isDark ? "bg-mono-900 text-mono-200" : "bg-white text-[var(--color-mono-900)]"}`}
       onClick={() => { setPopover(null); setShowHint(false); }}
     >
       {showHint && (
@@ -186,36 +186,38 @@ export default function CenterPanel() {
         </div>
       )}
 
-      <div className={`flex items-center justify-between px-4 py-2.5 border-b flex-shrink-0 ${isDark ? "border-mono-800" : "border-mono-200"}`}>
+      {/* 상단 챕터 바 */}
+      <div className={`flex items-center justify-between px-4 py-2.5 border-b flex-shrink-0 ${isDark ? "border-mono-800 bg-mono-900" : "border-[var(--color-mono-080)] bg-white"}`}>
         <div className="flex-1 mr-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${isDark ? "bg-mono-800 text-mono-400" : "bg-mono-100 text-mono-500"}`}>
+            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${isDark ? "bg-mono-800 text-mono-400" : "bg-[var(--color-mono-050)] text-[var(--color-mono-500)]"}`}>
               {chapter.number} / {totalChapters}
             </span>
-            <span className={`text-sm font-semibold truncate ${isDark ? "text-mono-200" : "text-mono-800"}`}>
+            <span className={`text-[14px] font-semibold truncate ${isDark ? "text-mono-200" : "text-[var(--color-mono-800)]"}`}>
               {chapter.title}
             </span>
           </div>
-          <div className={`h-1 rounded-full ${isDark ? "bg-mono-800" : "bg-mono-100"}`}>
-            <div className="h-full bg-primary-500 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+          <div className={`h-1 rounded-full ${isDark ? "bg-mono-800" : "bg-[var(--color-mono-080)]"}`}>
+            <div className="h-full bg-[var(--color-primary-500)] rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
         <div className="flex items-center gap-0.5">
-          <div className={`flex items-center gap-0.5 px-2 py-1 rounded-lg mr-1 ${isDark ? "bg-mono-800" : "bg-mono-50"}`} title="글씨 크기">
-            <Type className={`w-3 h-3 mr-0.5 ${isDark ? "text-mono-500" : "text-mono-400"}`} />
-            <button onClick={() => setFontSize(Math.max(12, fontSize - 2))} className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${isDark ? "hover:bg-mono-700 text-mono-300" : "hover:bg-mono-200 text-mono-600"}`} title="글씨 크기 줄이기"><Minus className="w-3.5 h-3.5" /></button>
-            <span className={`text-xs w-7 text-center font-medium tabular-nums ${isDark ? "text-mono-300" : "text-mono-700"}`}>{fontSize}</span>
-            <button onClick={() => setFontSize(Math.min(24, fontSize + 2))} className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${isDark ? "hover:bg-mono-700 text-mono-300" : "hover:bg-mono-200 text-mono-600"}`} title="글씨 크기 키우기"><Plus className="w-3.5 h-3.5" /></button>
+          <div className={`flex items-center gap-0.5 px-2 py-1 rounded-lg mr-1 ${isDark ? "bg-mono-800" : "bg-[var(--color-mono-050)]"}`} title="글씨 크기">
+            <Type className={`w-3 h-3 mr-0.5 ${isDark ? "text-mono-500" : "text-[var(--color-mono-400)]"}`} />
+            <button onClick={() => setFontSize(Math.max(12, fontSize - 2))} className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDark ? "hover:bg-mono-700 text-mono-300" : "hover:bg-[var(--color-mono-050)] text-[var(--color-mono-600)]"}`} title="글씨 크기 줄이기"><Minus className="w-3.5 h-3.5" /></button>
+            <span className={`text-[13px] w-7 text-center font-medium tabular-nums ${isDark ? "text-mono-300" : "text-[var(--color-mono-700)]"}`}>{fontSize}</span>
+            <button onClick={() => setFontSize(Math.min(24, fontSize + 2))} className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDark ? "hover:bg-mono-700 text-mono-300" : "hover:bg-[var(--color-mono-050)] text-[var(--color-mono-600)]"}`} title="글씨 크기 키우기"><Plus className="w-3.5 h-3.5" /></button>
           </div>
-          <button onClick={() => setIsDark(!isDark)} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800 text-yellow-400" : "hover:bg-mono-100 text-mono-500"}`} title={isDark ? "라이트 모드" : "다크 모드"}>{isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
-          <button onClick={() => { if (!book) return; if (liked) { removeFavorite(book.id); } else { addFavorite({ bookId: book.id, title: book.title, coverImage: book.coverImage, addedAt: new Date().toISOString() }); } setLiked(!liked); }} className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800" : "hover:bg-mono-100"}`} title={liked ? "찜 해제" : "찜하기"}><Heart className={`w-4 h-4 transition-colors ${liked ? "fill-red-500 text-red-500" : "text-mono-400"}`} /></button>
+          <button onClick={() => setIsDark(!isDark)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800 text-yellow-400" : "hover:bg-[var(--color-mono-050)] text-mono-500"}`} title={isDark ? "라이트 모드" : "다크 모드"}>{isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
+          <button onClick={() => { if (!book) return; if (liked) { removeFavorite(book.id); } else { addFavorite({ bookId: book.id, title: book.title, coverImage: book.coverImage, addedAt: new Date().toISOString() }); } setLiked(!liked); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-mono-800" : "hover:bg-[var(--color-mono-050)]"}`} title={liked ? "찜 해제" : "찜하기"}><Heart className={`w-4 h-4 transition-colors ${liked ? "fill-red-500 text-red-500" : "text-mono-400"}`} /></button>
         </div>
       </div>
 
+      {/* 본문 영역 */}
       <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="max-w-2xl mx-auto px-6 py-8">
-          <h2 className={`text-2xl font-bold mb-8 ${isDark ? "text-mono-100" : "text-mono-900"}`}>제{chapter.number}장. {chapter.title}</h2>
-          <div style={{ fontSize: `${fontSize}px`, lineHeight: 1.95 }} className="whitespace-pre-wrap">
+          <h2 className={`text-[22px] font-bold mb-8 ${isDark ? "text-mono-100" : "text-[var(--color-mono-990)]"}`}>제{chapter.number}장. {chapter.title}</h2>
+          <div style={{ fontSize: `${fontSize}px`, lineHeight: 1.95 }} className={`whitespace-pre-wrap ${isDark ? "" : "text-[var(--color-mono-800)]"}`}>
             {chapter.content.split("\n\n").map((paragraph, i) => (
               <div key={i}>
                 <p className="mb-7">{renderContent(paragraph)}</p>
@@ -227,10 +229,11 @@ export default function CenterPanel() {
         </div>
       </div>
 
-      <div className={`flex items-center justify-between px-4 py-3 border-t flex-shrink-0 ${isDark ? "border-mono-800" : "border-mono-200"}`}>
-        <button onClick={() => goToChapter(-1)} disabled={currentChapter === 0} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${currentChapter === 0 ? "opacity-20 cursor-not-allowed" : isDark ? "hover:bg-mono-800" : "hover:bg-mono-100"}`}><ChevronLeft className="w-4 h-4" />이전</button>
-        <span className={`text-xs font-medium ${isDark ? "text-mono-500" : "text-mono-400"}`}>{Math.round(progress)}% 읽음</span>
-        <button onClick={() => goToChapter(1)} disabled={currentChapter === totalChapters - 1} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${currentChapter === totalChapters - 1 ? "opacity-20 cursor-not-allowed" : isDark ? "hover:bg-mono-800" : "hover:bg-mono-100"}`}>다음<ChevronRight className="w-4 h-4" /></button>
+      {/* 하단 이전/다음 버튼 */}
+      <div className={`flex items-center justify-between px-4 py-3 border-t flex-shrink-0 ${isDark ? "border-mono-800 bg-mono-900" : "border-[var(--color-mono-080)] bg-white"}`}>
+        <button onClick={() => goToChapter(-1)} disabled={currentChapter === 0} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors ${currentChapter === 0 ? "opacity-30 cursor-not-allowed" : isDark ? "hover:bg-mono-800 text-mono-300" : "text-[var(--color-mono-700)] hover:bg-[var(--color-mono-050)]"}`}><ChevronLeft className="w-4 h-4" />이전</button>
+        <span className={`text-[12px] font-medium ${isDark ? "text-mono-500" : "text-[var(--color-mono-400)]"}`}>{Math.round(progress)}% 읽음</span>
+        <button onClick={() => goToChapter(1)} disabled={currentChapter === totalChapters - 1} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors ${currentChapter === totalChapters - 1 ? "opacity-30 cursor-not-allowed" : isDark ? "hover:bg-mono-800 text-mono-300" : "text-[var(--color-mono-700)] hover:bg-[var(--color-mono-050)]"}`}>다음<ChevronRight className="w-4 h-4" /></button>
       </div>
 
       {contextMenu && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-1 flex gap-0.5" style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px`, transform: "translate(-50%, -100%)" }}>{contextActions.map((action) => (<button key={action.label} onClick={action.action} className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg hover:bg-mono-50 transition-colors" title={action.label}><action.icon className="w-4 h-4 text-mono-600" /><span className="text-[10px] text-mono-500">{action.label}</span></button>))}</div>)}

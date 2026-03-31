@@ -26,12 +26,12 @@ export default function RightPanel() {
   }, [setActiveTab]);
 
   return (
-    <aside className="w-full md:w-[380px] border-l border-mono-200 flex-shrink-0 bg-white flex flex-col h-full">
-      <div className="flex border-b border-mono-200 flex-shrink-0">
+    <aside className="w-full md:w-[380px] border-l border-[var(--color-mono-080)] flex-shrink-0 bg-white flex flex-col h-full">
+      <div className="flex border-b border-[var(--color-mono-080)] flex-shrink-0">
         {(["ai", "community"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === tab ? "text-primary-500 border-b-2 border-primary-500" : "text-mono-500 hover:text-mono-700"
+            className={`flex-1 py-3 text-[13px] font-medium transition-colors ${
+              activeTab === tab ? "text-[var(--color-primary-500)] border-b-2 border-[var(--color-primary-500)]" : "text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)]"
             }`}>
             {tab === "ai" ? "채팅" : "커뮤니티"}
           </button>
@@ -54,12 +54,12 @@ const PERSONALITY_COLORS: Record<string, string> = {
   "직관적": "bg-cyan-50 text-cyan-600 border-cyan-100",
   "솔직함": "bg-orange-50 text-orange-600 border-orange-100",
 };
-const TAG_DEFAULT = "bg-mono-50 text-mono-600 border-mono-100";
+const TAG_DEFAULT = "bg-[var(--color-mono-050)] text-[var(--color-mono-600)]";
 
 function PersonalityTag({ label }: { label: string }) {
   const colorClass = PERSONALITY_COLORS[label] ?? TAG_DEFAULT;
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${colorClass}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border ${colorClass}`}>
       {label}
     </span>
   );
@@ -137,44 +137,51 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex gap-2 p-3 border-b border-mono-200 overflow-x-auto flex-shrink-0">
+      {/* Agent 선택 버튼 */}
+      <div className="flex gap-2 p-3 border-b border-[var(--color-mono-080)] overflow-x-auto flex-shrink-0">
         {agents.map((agent) => (
           <button key={agent.id} onClick={() => { setCurrentAgentId(agent.id); setSelectedAgent(agent.id); }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm whitespace-nowrap transition-colors ${
-              currentAgentId === agent.id ? "bg-primary-50 text-primary-600 border border-primary-200" : "bg-mono-50 text-mono-600 hover:bg-mono-100"
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-all ${
+              currentAgentId === agent.id
+                ? "border border-[var(--color-primary-400)] bg-[var(--color-primary-030)] text-[var(--color-primary-700)]"
+                : "border border-[var(--color-mono-100)] bg-white text-mono-600 hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)]"
             }`}>
-            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-bold text-primary-600">{agent.name[0]}</span>
+            <div className="w-7 h-7 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
+              <span className="text-[12px] font-bold text-[var(--color-primary-600)]">{agent.name[0]}</span>
             </div>
             {agent.name}
           </button>
         ))}
       </div>
 
+      {/* 메시지 영역 */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        {/* Agent 소개 카드 */}
         {messages.length === 0 && currentAgent && (
           <div className="flex flex-col items-center pt-6 pb-4">
             <div className="relative mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
-                <span className="text-3xl font-bold text-primary-600">{currentAgent.name[0]}</span>
+              <div className="w-16 h-16 bg-[var(--color-primary-100)] rounded-full flex items-center justify-center ring-4 ring-primary-50 shadow-sm">
+                <span className="text-[22px] font-bold text-[var(--color-primary-600)]">{currentAgent.name[0]}</span>
               </div>
-              <span className="absolute bottom-0 right-0 w-5 h-5 bg-primary-500 rounded-full border-2 border-white flex items-center justify-center">
+              <span className="absolute bottom-0 right-0 w-5 h-5 bg-[var(--color-primary-500)] rounded-full border-2 border-white flex items-center justify-center">
                 <MessageCircle className="w-2.5 h-2.5 text-white" />
               </span>
             </div>
-            <p className="font-bold text-mono-900 text-base mb-1">{currentAgent.name}</p>
-            <p className="text-xs text-mono-400 mb-3">{currentAgent.speechStyle}</p>
+            <p className="text-[16px] font-bold text-[var(--color-mono-990)] mb-1">{currentAgent.name}</p>
+            <p className="text-[12px] text-[var(--color-mono-500)] mb-3">{currentAgent.speechStyle}</p>
             <div className="flex flex-wrap justify-center gap-1.5 mb-4 px-4">
               {currentAgent.personality.map((trait) => (<PersonalityTag key={trait} label={trait} />))}
             </div>
-            <div className="bg-mono-50 border border-mono-100 rounded-2xl rounded-tl-md px-4 py-3 mx-4 text-center">
-              <p className="text-sm text-mono-700 leading-relaxed">안녕하세요! 저는 <span className="font-semibold text-primary-600">{currentAgent.name}</span>이에요.</p>
-              <p className="text-sm text-mono-500 mt-1">책에 대해 궁금한 것, 무엇이든 물어보세요 📚</p>
+            {/* AI 첫 말풍선 */}
+            <div className="bg-[var(--color-primary-030)] border border-[var(--color-primary-080)] rounded-2xl rounded-tl-sm px-4 py-3 mx-4 text-center">
+              <p className="text-[14px] text-[var(--color-mono-800)] leading-relaxed">안녕하세요! 저는 <span className="font-semibold text-[var(--color-primary-600)]">{currentAgent.name}</span>이에요.</p>
+              <p className="text-[14px] text-[var(--color-mono-500)] mt-1">책에 대해 궁금한 것, 무엇이든 물어보세요 📚</p>
             </div>
+            {/* 퀵 리플라이 */}
             <div className="flex flex-wrap justify-center gap-1.5 mt-3 px-2">
               {["어떤 내용을 다루나요?", "주요 등장인물은?", "핵심 메시지가 뭐갈까요?"].map((q) => (
                 <button key={q} onClick={() => setInput(q)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-primary-200 text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors">
+                  className="px-3 py-1.5 rounded-full text-[12px] font-medium border border-[var(--color-primary-200)] text-[var(--color-primary-600)] hover:bg-[var(--color-primary-030)] transition-colors">
                   {q}
                 </button>
               ))}
@@ -184,17 +191,20 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
 
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] ${msg.role === "user" ? "order-1" : ""}`}>
+            <div className={`max-w-[85%] ${msg.role === "user" ? "order-1" : ""}`}>
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-primary-600">{currentAgent?.name[0]}</span>
+                  <div className="w-5 h-5 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-[var(--color-primary-600)]">{currentAgent?.name[0]}</span>
                   </div>
-                  <span className="text-xs text-mono-500">{currentAgent?.name}</span>
+                  <span className="text-xs text-[var(--color-mono-500)]">{currentAgent?.name}</span>
                 </div>
               )}
-              <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                msg.role === "user" ? "bg-primary-500 text-white rounded-tr-md" : "bg-mono-50 text-mono-900 rounded-tl-md"
+              {/* AI / 사용자 말풍선 */}
+              <div className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed ${
+                msg.role === "user"
+                  ? "bg-[var(--color-primary-500)] text-white rounded-tr-sm ml-auto"
+                  : "bg-[var(--color-primary-030)] text-[var(--color-mono-800)] rounded-tl-sm"
               }`}>
                 {msg.content || (
                   <span className="inline-flex gap-1">
@@ -222,7 +232,8 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-3 border-t border-mono-200 flex-shrink-0">
+      {/* 채팅 입력 영역 */}
+      <div className="border-t border-[var(--color-mono-080)] bg-white px-3 py-3 flex-shrink-0">
         <div className="flex items-end gap-2">
           <button className="p-2 text-mono-400 hover:text-mono-600 transition-colors" title="대화 스냅샷 저장">
             <Camera className="w-5 h-5" />
@@ -232,13 +243,13 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             placeholder={currentAgent ? `${currentAgent.name}에게 메시지...` : "Agent를 선택하세요"}
             disabled={!currentAgent}
             rows={1}
-            className="flex-1 px-4 py-2.5 bg-mono-50 border border-mono-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 resize-none max-h-32 overflow-y-auto" />
+            className="flex-1 resize-none text-[14px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] bg-[var(--color-mono-050)] border border-mono-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 max-h-32 overflow-y-auto" />
           <button onClick={sendMessage} disabled={!input.trim() || isStreaming || !currentAgent}
-            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors disabled:opacity-40">
+            className="w-9 h-9 rounded-xl bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white flex items-center justify-center transition-colors disabled:opacity-40">
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[10px] text-mono-400 text-center mt-1.5">Enter로 전송 · Shift+Enter로 줄바꿈</p>
+        <p className="text-[10px] text-[var(--color-mono-400)] text-center mt-1.5">Enter로 전송 · Shift+Enter로 줄바꿈</p>
       </div>
     </div>
   );
