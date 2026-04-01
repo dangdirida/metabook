@@ -180,7 +180,7 @@ function LibraryContent() {
   const isFiltering = search.trim() !== "" || category !== "전체";
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window === "undefined") return false;
-    return !localStorage.getItem("metabook_onboarding_done");
+    return !sessionStorage.getItem("metabook_onboarding_closed");
   });
 
   const kimyoungsaBooks = useMemo(
@@ -242,12 +242,15 @@ function LibraryContent() {
     <div className="min-h-screen bg-[var(--color-mono-010)]">
       {/* 헤더 */}
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 relative">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl md:text-2xl font-bold text-[var(--color-mono-990)]">
-              OGQ
-            </h1>
-            <UserMenu />
+            <h1 className="text-xl md:text-2xl font-bold text-[var(--color-mono-990)] flex-shrink-0">OGQ</h1>
+            <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+              {[{ href: "/creations", label: "창작물" }, { href: "/bgm", label: "브금" }, { href: "/chat", label: "채팅" }].map((item) => (
+                <Link key={item.href} href={item.href} className="px-4 py-2 rounded-xl text-[14px] font-medium text-[var(--color-mono-600)] hover:text-[var(--color-mono-990)] hover:bg-[var(--color-mono-050)] transition-colors">{item.label}</Link>
+              ))}
+            </nav>
+            <div className="flex-shrink-0"><UserMenu /></div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-mono-400)]" />
@@ -333,7 +336,7 @@ function LibraryContent() {
         {showOnboarding && !isFiltering && (
           <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 mt-6">
             <div className="relative bg-[var(--color-primary-030)] border border-[var(--color-primary-100)] rounded-2xl px-6 py-5">
-              <button onClick={() => { localStorage.setItem("metabook_onboarding_done", "1"); setShowOnboarding(false); }} className="absolute top-4 right-4 p-1 rounded-lg text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)] hover:bg-[var(--color-primary-050)] transition-colors"><X className="w-4 h-4" /></button>
+              <button onClick={() => { sessionStorage.setItem("metabook_onboarding_closed", "1"); setShowOnboarding(false); }} className="absolute top-4 right-4 p-1 rounded-lg text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)] hover:bg-[var(--color-primary-050)] transition-colors"><X className="w-4 h-4" /></button>
               <p className="text-[13px] font-semibold text-[var(--color-primary-700)] mb-4">OGQ 이렇게 시작해보세요</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[{ step: "01", Icon: BookOpen, title: "책 읽기", desc: "책을 선택해서 본문을 읽어보세요. 인물 이름을 클릭하면 더 많은 정보를 볼 수 있어요." },

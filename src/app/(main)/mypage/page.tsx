@@ -21,10 +21,17 @@ export default function MyPage() {
   const myCreations = typeof window !== "undefined" ? getCreations() : [];
   const [notes, setNotes] = useState<Note[]>([]);
   const [favorites, setFavorites] = useState<{ bookId: string; title: string; coverImage: string }[]>([]);
+  const [chatCount, setChatCount] = useState(0);
 
   useEffect(() => {
     setNotes(getNotes());
     setFavorites(getFavorites());
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith("chat_")) { try { total += JSON.parse(localStorage.getItem(k) || "[]").length; } catch { /* */ } }
+    }
+    setChatCount(total);
   }, []);
 
   const user = session?.user;
@@ -33,14 +40,7 @@ export default function MyPage() {
   const initial = nickname.charAt(0).toUpperCase();
   const recentBooks = mockBooks.slice(0, 5);
 
-  const aiChatCount = typeof window !== "undefined" ? (() => {
-    let total = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith("chat_")) { try { total += JSON.parse(localStorage.getItem(k) || "[]").length; } catch { /* */ } }
-    }
-    return total;
-  })() : 0;
+  const aiChatCount = chatCount;
 
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
