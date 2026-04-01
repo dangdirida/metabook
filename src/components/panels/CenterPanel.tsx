@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   ChevronLeft,
@@ -18,12 +18,15 @@ import {
   Type,
   Music,
   MessageCircle,
+  X,
 } from "lucide-react";
 import { getChaptersByBookId } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
 import { isFavorite, addFavorite, removeFavorite } from "@/lib/favorites-store";
 import { addNote } from "@/lib/notes-store";
+import { addHighlight, getHighlights, removeHighlight } from "@/lib/highlight-store";
+import type { Highlight } from "@/lib/highlight-store";
 import BgmModal from "@/components/ui/BgmModal";
 import BgmMiniPlayer from "@/components/ui/BgmMiniPlayer";
 
@@ -46,6 +49,9 @@ export default function CenterPanel() {
   const [showBgmModal, setShowBgmModal] = useState(false);
   const [showNoteToast, setShowNoteToast] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [highlightPickerPos, setHighlightPickerPos] = useState<{ x: number; y: number } | null>(null);
+  const [pendingText, setPendingText] = useState("");
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null);
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const worldUrlMap = useMemo(() => {
@@ -65,6 +71,7 @@ export default function CenterPanel() {
     if (savedFontSize) setFontSize(Number(savedFontSize));
     if (savedDark === "true") setIsDark(true);
     if (bookId) setLiked(isFavorite(bookId as string));
+    setHighlights(getHighlights(bookId as string));
     const savedProgress = localStorage.getItem(`metabook_progress_${bookId}`);
     if (savedProgress) { try { const { chapterIndex } = JSON.parse(savedProgress); if (chapterIndex > 0) setCurrentChapter(chapterIndex); } catch { /* ignore */ } }
     const hintShown = localStorage.getItem("metabook_hint_shown");
@@ -151,29 +158,59 @@ export default function CenterPanel() {
     }
   };
 
-  const renderContent = (text: string) => {
+  const renderContent = (text: string): React.ReactNode => {
     const characters = chapter.characters;
-    if (!characters.length) return text;
-    const regex = new RegExp(`(${characters.join("|")})`, "g");
-    const parts = text.split(regex);
-    return parts.map((part, i) =>
-      characters.includes(part) ? (
-        <span
-          key={i}
-          className="text-[var(--color-primary-600)] font-medium cursor-pointer hover:text-[var(--color-primary-700)] hover:underline transition-colors"
-          onClick={(e) => handleCharacterClick(part, e)}
-          title={`${part} 정보 보기`}
-        >
-          {part}
-        </span>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+    const chapterHighlights = highlights.filter((h) => h.chapterNumber === chapter.number);
+    const colorMap: Record<string, string> = { yellow: "#FEF08A", green: "#BBF7D0", pink: "#FBCFE8", blue: "#BFDBFE" };
+
+    // Split text by highlights
+    const splitByHL = (str: string): { text: string; hl?: Highlight }[] => {
+      if (!chapterHighlights.length) return [{ text: str }];
+      let segs: { text: string; hl?: Highlight }[] = [{ text: str }];
+      for (const h of chapterHighlights) {
+        const next: { text: string; hl?: Highlight }[] = [];
+        for (const seg of segs) {
+          if (seg.hl) { next.push(seg); continue; }
+          const idx = seg.text.indexOf(h.text);
+          if (idx === -1) { next.push(seg); continue; }
+          if (idx > 0) next.push({ text: seg.text.slice(0, idx) });
+          next.push({ text: h.text, hl: h });
+          const after = seg.text.slice(idx + h.text.length);
+          if (after) next.push({ text: after });
+        }
+        segs = next;
+      }
+      return segs;
+    };
+
+    const renderCharacters = (str: string, keyPrefix: string): React.ReactNode => {
+      if (!characters.length) return str;
+      const regex = new RegExp(`(${characters.map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
+      const parts = str.split(regex);
+      return parts.map((part, pi) =>
+        characters.includes(part) ? (
+          <span key={`${keyPrefix}-c${pi}`} className="text-[var(--color-primary-600)] font-medium cursor-pointer hover:text-[var(--color-primary-700)] hover:underline transition-colors"
+            onClick={(e) => handleCharacterClick(part, e)} title={`${part} 정보 보기`}>{part}</span>
+        ) : <span key={`${keyPrefix}-c${pi}`}>{part}</span>
+      );
+    };
+
+    const segs = splitByHL(text);
+    return segs.map((seg, si) => {
+      if (seg.hl) {
+        return (
+          <mark key={`hl-${seg.hl.id}-${si}`} style={{ backgroundColor: colorMap[seg.hl.color] || "#FEF08A", borderRadius: "3px", padding: "1px 2px", cursor: "pointer" }}
+            title="클릭하면 삭제" onClick={(e) => { e.stopPropagation(); removeHighlight(seg.hl!.id); setHighlights(getHighlights(bookId as string)); }}>
+            {renderCharacters(seg.text, `hl${si}`)}
+          </mark>
+        );
+      }
+      return <span key={`s${si}`}>{renderCharacters(seg.text, `s${si}`)}</span>;
+    });
   };
 
   const contextActions = [
-    { icon: Highlighter, label: "하이라이트", action: () => setContextMenu(null) },
+    { icon: Highlighter, label: "하이라이트", action: () => { if (!contextMenu) return; setPendingText(contextMenu.text); setHighlightPickerPos({ x: contextMenu.x, y: contextMenu.y }); setContextMenu(null); } },
     { icon: StickyNote, label: "메모", action: () => { if (contextMenu) { addNote({ bookId: bookId as string, bookTitle: book?.title || "", chapterTitle: chapter.title, text: contextMenu.text, memo: "" }); setContextMenu(null); setShowNoteToast(true); setTimeout(() => setShowNoteToast(false), 2000); } } },
     {
       icon: Palette,
@@ -190,7 +227,7 @@ export default function CenterPanel() {
   return (
     <main
       className={`flex-1 flex flex-col overflow-hidden relative ${isDark ? "bg-[#1c1917] text-[#e7e5e4]" : "bg-white text-[var(--color-mono-900)]"}`}
-      onClick={() => { setPopover(null); setShowHint(false); }}
+      onClick={() => { setPopover(null); setShowHint(false); setHighlightPickerPos(null); setPendingText(""); }}
     >
       {showHint && (
         <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
@@ -252,6 +289,18 @@ export default function CenterPanel() {
       </div>
 
       {contextMenu && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-1 flex gap-0.5" style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px`, transform: "translate(-50%, -100%)" }}>{contextActions.map((action) => (<button key={action.label} onClick={action.action} className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg hover:bg-mono-50 transition-colors" title={action.label}><action.icon className="w-4 h-4 text-mono-600" /><span className="text-[10px] text-mono-500">{action.label}</span></button>))}</div>)}
+      {highlightPickerPos && (
+        <div className="fixed z-[60] bg-white rounded-2xl shadow-2xl border border-[var(--color-mono-080)] px-3 py-2.5 flex items-center gap-2"
+          style={{ left: highlightPickerPos.x, top: highlightPickerPos.y, transform: "translate(-50%, -120%)" }}
+          onClick={(e) => e.stopPropagation()}>
+          <span className="text-[11px] text-[var(--color-mono-500)] mr-0.5 whitespace-nowrap">색상</span>
+          {[{ id: "yellow" as const, bg: "#FEF08A" }, { id: "green" as const, bg: "#BBF7D0" }, { id: "pink" as const, bg: "#FBCFE8" }, { id: "blue" as const, bg: "#BFDBFE" }].map((c) => (
+            <button key={c.id} style={{ backgroundColor: c.bg }} className="w-7 h-7 rounded-full border-2 border-white shadow hover:scale-125 transition-transform"
+              onClick={() => { if (!pendingText) return; const h = addHighlight({ bookId: bookId as string, chapterNumber: chapter.number, text: pendingText, color: c.id }); setHighlights((prev) => [...prev, h]); setHighlightPickerPos(null); setPendingText(""); }} />
+          ))}
+          <button onClick={() => { setHighlightPickerPos(null); setPendingText(""); }} className="ml-1 p-1 rounded-lg text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)] hover:bg-[var(--color-mono-050)]"><X className="w-3.5 h-3.5" /></button>
+        </div>
+      )}
       {popover && (<div className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-[var(--color-mono-080)] w-64 overflow-hidden" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}>
         <div className="flex items-center gap-3 p-4 border-b border-[var(--color-mono-080)]">
           {(() => { const ag = book?.agents?.find(a => a.name === popover.name); return <img src={ag?.avatar || "/avatars/default-profile.svg"} alt={popover.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-[var(--color-primary-100)]" onError={(ev) => { (ev.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />; })()}
