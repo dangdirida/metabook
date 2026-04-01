@@ -22,6 +22,7 @@ import { getChaptersByBookId } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
 import { usePanelStore } from "@/store/panelStore";
 import { isFavorite, addFavorite, removeFavorite } from "@/lib/favorites-store";
+import { addNote } from "@/lib/notes-store";
 import BgmModal from "@/components/ui/BgmModal";
 import BgmMiniPlayer from "@/components/ui/BgmMiniPlayer";
 
@@ -42,6 +43,7 @@ export default function CenterPanel() {
   const [progress, setProgress] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [showBgmModal, setShowBgmModal] = useState(false);
+  const [showNoteToast, setShowNoteToast] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null);
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const worldUrlMap = useMemo(() => {
@@ -61,6 +63,8 @@ export default function CenterPanel() {
     if (savedFontSize) setFontSize(Number(savedFontSize));
     if (savedDark === "true") setIsDark(true);
     if (bookId) setLiked(isFavorite(bookId as string));
+    const savedProgress = localStorage.getItem(`metabook_progress_${bookId}`);
+    if (savedProgress) { try { const { chapterIndex } = JSON.parse(savedProgress); if (chapterIndex > 0) setCurrentChapter(chapterIndex); } catch { /* ignore */ } }
     const hintShown = localStorage.getItem("metabook_hint_shown");
     if (!hintShown) {
       setShowHint(true);
@@ -87,7 +91,9 @@ export default function CenterPanel() {
     if (!el) return;
     const handleScroll = () => {
       const scrollHeight = el.scrollHeight - el.clientHeight;
-      setProgress(scrollHeight > 0 ? (el.scrollTop / scrollHeight) * 100 : 0);
+      const p = scrollHeight > 0 ? (el.scrollTop / scrollHeight) * 100 : 0;
+      setProgress(p);
+      localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: currentChapter, progress: p, updatedAt: new Date().toISOString() }));
     };
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
@@ -104,6 +110,7 @@ export default function CenterPanel() {
     const next = currentChapter + dir;
     if (next >= 0 && next < totalChapters) {
       setCurrentChapter(next);
+      localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: next, progress: 0, updatedAt: new Date().toISOString() }));
       setTimeout(() => { if (contentRef.current) contentRef.current.scrollTop = 0; }, 0);
     }
   };
@@ -163,7 +170,7 @@ export default function CenterPanel() {
 
   const contextActions = [
     { icon: Highlighter, label: "하이라이트", action: () => setContextMenu(null) },
-    { icon: StickyNote, label: "메모", action: () => setContextMenu(null) },
+    { icon: StickyNote, label: "메모", action: () => { if (contextMenu) { addNote({ bookId: bookId as string, bookTitle: book?.title || "", chapterTitle: chapter.title, text: contextMenu.text, memo: "" }); setContextMenu(null); setShowNoteToast(true); setTimeout(() => setShowNoteToast(false), 2000); } } },
     {
       icon: Palette,
       label: "2차 창작",
@@ -245,6 +252,7 @@ export default function CenterPanel() {
       {showWorldModal && (<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center"><Globe className="w-12 h-12 text-primary-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-mono-900 mb-2">책 속 세계로 들어갈까요?</h3><p className="text-sm text-mono-500 mb-6">삽화 속 공간을 3D로 탐험할 수 있어요.</p><div className="flex gap-3"><button onClick={() => setShowWorldModal(null)} className="flex-1 py-3 rounded-xl border border-mono-200 text-mono-700 font-medium hover:bg-mono-50">취소</button><button onClick={() => { if (showWorldModal?.worldUrl) { window.open(showWorldModal.worldUrl, "_blank", "noopener,noreferrer"); } setShowWorldModal(null); }} className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600">들어가기</button></div></div></div>)}
       <BgmMiniPlayer />
       {showBgmModal && <BgmModal bookId={bookId as string} onClose={() => setShowBgmModal(false)} />}
+      {showNoteToast && (<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-mono-900)] text-white text-[13px] font-medium px-5 py-3 rounded-xl shadow-lg flex items-center gap-2"><StickyNote className="w-4 h-4 text-[var(--color-primary-400)]" />노트에 저장됐어요</div>)}
     </main>
   );
 }

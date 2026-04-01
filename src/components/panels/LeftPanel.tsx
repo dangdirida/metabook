@@ -94,6 +94,7 @@ function BookItem({ book, isActive, isExpanded, onSelect, onToggleExpand, onShow
           <div className="min-w-0">
             <p className="text-[14px] font-medium text-[var(--color-mono-900)] truncate">{book.title}</p>
             <p className="text-[12px] text-[var(--color-mono-400)] truncate">{book.author}</p>
+            {(() => { try { const s = localStorage.getItem(`metabook_progress_${book.id}`); const p = s ? JSON.parse(s).progress : 0; return p > 0 ? (<div className="mt-1.5 h-1 rounded-full bg-[var(--color-mono-080)] overflow-hidden"><div className="h-full bg-[var(--color-primary-400)] rounded-full transition-all" style={{ width: `${p}%` }} /></div>) : null; } catch { return null; } })()}
           </div>
         </div>
         <button onClick={onToggleExpand} className="p-1 hover:bg-mono-100 rounded transition-colors">

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, User, Heart, MessageCircle, Music } from "lucide-react";
+import { LogOut, User, Heart, MessageCircle, Music, Palette } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -34,6 +34,13 @@ export default function UserMenu() {
 
   return (
     <div className="flex items-center gap-2">
+      <Link
+        href="/creations"
+        className="p-2 rounded-xl hover:bg-[var(--color-mono-050)] transition-colors"
+        title="창작물 탐색"
+      >
+        <Palette className="w-5 h-5 text-[var(--color-mono-600)]" />
+      </Link>
       <Link
         href="/bgm"
         className="p-2 rounded-xl hover:bg-[var(--color-mono-050)] transition-colors"
