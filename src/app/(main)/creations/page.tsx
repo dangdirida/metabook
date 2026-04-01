@@ -4,7 +4,8 @@ import Link from "next/link";
 import { mockCreations, loversCreations } from "@/lib/mock-creations";
 import { getCreations } from "@/lib/creation-store";
 import { mockBooks } from "@/lib/mock-data";
-import { Heart, Search, Filter } from "lucide-react";
+import { Heart, Search, Filter, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Creation } from "@/types";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
@@ -28,6 +29,7 @@ const TYPE_GRADIENTS: Record<string, string> = {
 const ALL_TYPES = Object.keys(TYPE_META);
 
 export default function CreationsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
@@ -61,7 +63,10 @@ export default function CreationsPage() {
       <div className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-[18px] font-bold text-[var(--color-mono-990)]">창작물 탐색</h1>
+            <div className="flex items-center gap-2">
+              <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors md:hidden"><ArrowLeft className="w-4 h-4 text-[var(--color-mono-600)]" /></button>
+              <h1 className="text-[18px] font-bold text-[var(--color-mono-990)]">창작물 탐색</h1>
+            </div>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "latest" | "popular")}
               className="text-[12px] px-3 py-1.5 border border-[var(--color-mono-100)] rounded-lg bg-white text-[var(--color-mono-600)] outline-none">
               <option value="latest">최신순</option><option value="popular">인기순</option>

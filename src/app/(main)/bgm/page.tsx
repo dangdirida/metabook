@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Music, Play, Pause, Lock, ExternalLink, Search } from "lucide-react";
+import { Music, Play, Pause, Lock, ExternalLink, Search, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { mockBooks } from "@/lib/mock-data";
 import { getCreationsByBookId } from "@/lib/mock-creations";
 import { useBgmStore } from "@/store/bgmStore";
@@ -9,6 +10,7 @@ import BgmMiniPlayer from "@/components/ui/BgmMiniPlayer";
 import type { Creation } from "@/types";
 
 export default function BgmPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { currentTrack, isPlaying, setTrack, togglePlay } = useBgmStore();
 
@@ -42,6 +44,9 @@ export default function BgmPage() {
       <div className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
+            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors md:hidden">
+              <ArrowLeft className="w-4 h-4 text-[var(--color-mono-600)]" />
+            </button>
             <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-030)] flex items-center justify-center">
               <Music className="w-5 h-5 text-[var(--color-primary-500)]" />
             </div>

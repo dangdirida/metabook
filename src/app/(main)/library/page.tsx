@@ -153,21 +153,18 @@ function PublisherSlider({
 
 // --- 갤러리 카드 (img 태그 직접 사용) ---
 function GalleryCard({ title, coverImage }: { title: string; coverImage: string }) {
+  const matchBook = mockBooks.find((b) => b.title === title || b.coverImage === coverImage);
+  const Wrapper = matchBook ? ({ children }: { children: React.ReactNode }) => <Link href={`/library/${matchBook.id}`}>{children}</Link> : ({ children }: { children: React.ReactNode }) => <>{children}</>;
   return (
-    <div className="group">
-      <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={coverImage}
-          alt={title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
+    <Wrapper>
+      <div className="group cursor-pointer">
+        <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={coverImage} alt={title} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+        <h3 className="mt-2 font-semibold text-[var(--color-mono-990)] truncate text-sm">{title}</h3>
       </div>
-      <h3 className="mt-2 font-semibold text-[var(--color-mono-990)] truncate text-sm">
-        {title}
-      </h3>
-    </div>
+    </Wrapper>
   );
 }
 
