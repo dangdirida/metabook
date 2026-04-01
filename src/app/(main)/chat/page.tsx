@@ -68,11 +68,11 @@ function ChatPageInner() {
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [showProfile, setShowProfile] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<"chats" | "explore">("chats");
-  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try { return JSON.parse(localStorage.getItem("chat_bookmarks") || "[]"); }
-    catch { return []; }
-  });
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  useEffect(() => {
+    try { setBookmarks(JSON.parse(localStorage.getItem("chat_bookmarks") || "[]")); }
+    catch { setBookmarks([]); }
+  }, []);
 
   useEffect(() => {
     const bookIdParam = searchParams.get("bookId");

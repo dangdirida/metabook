@@ -178,10 +178,10 @@ function LibraryContent() {
   const [category, setCategory] = useState("전체");
 
   const isFiltering = search.trim() !== "" || category !== "전체";
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !sessionStorage.getItem("metabook_onboarding_closed");
-  });
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    setShowOnboarding(!sessionStorage.getItem("metabook_onboarding_closed"));
+  }, []);
 
   const kimyoungsaBooks = useMemo(
     () => mockBooks.filter((b) => b.publisher === "김영사"),

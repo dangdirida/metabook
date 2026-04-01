@@ -18,12 +18,13 @@ const TYPE_GRADIENTS: Record<string, string> = {
 
 export default function MyPage() {
   const { data: session } = useSession();
-  const myCreations = typeof window !== "undefined" ? getCreations() : [];
+  const [myCreations, setMyCreations] = useState<CreationItem[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [favorites, setFavorites] = useState<{ bookId: string; title: string; coverImage: string }[]>([]);
   const [chatCount, setChatCount] = useState(0);
 
   useEffect(() => {
+    setMyCreations(getCreations());
     setNotes(getNotes());
     setFavorites(getFavorites());
     let total = 0;

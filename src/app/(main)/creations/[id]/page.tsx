@@ -51,8 +51,14 @@ export default function CreationDetailPage() {
   const router = useRouter();
 
   const mockItem = getCreationById(id as string);
-  const storeItems = typeof window !== "undefined" ? getCreations() : [];
-  const storeItem = storeItems.find((c) => c.id === id);
+  const [storeItem, setStoreItem] = useState(() => {
+    // safe: getCreations returns [] on server
+    return null as ReturnType<typeof getCreations>[number] | null;
+  });
+  useEffect(() => {
+    const items = getCreations();
+    setStoreItem(items.find((c) => c.id === id) || null);
+  }, [id]);
 
   const creation: NormalizedCreation | null = mockItem
     ? normalizeFromMock(mockItem)

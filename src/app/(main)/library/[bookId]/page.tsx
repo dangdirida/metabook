@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Users, Palette } from "lucide-react";
 import LeftPanel from "@/components/panels/LeftPanel";
@@ -16,10 +16,10 @@ export default function BookDetailPage() {
   const { activePanel } = usePanelStore();
   const book = getBookById(bookId as string);
 
-  const [showIntro, setShowIntro] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !localStorage.getItem(`metabook_started_${bookId}`);
-  });
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => {
+    setShowIntro(!localStorage.getItem(`metabook_started_${bookId}`));
+  }, [bookId]);
 
   if (showIntro && book) {
     return (

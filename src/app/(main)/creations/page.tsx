@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { mockCreations, loversCreations } from "@/lib/mock-creations";
 import { getCreations } from "@/lib/creation-store";
@@ -32,7 +32,8 @@ export default function CreationsPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
 
-  const storeItems = typeof window !== "undefined" ? getCreations() : [];
+  const [storeItems, setStoreItems] = useState<ReturnType<typeof getCreations>>([]);
+  useEffect(() => { setStoreItems(getCreations()); }, []);
   const allCreations: Creation[] = [
     ...mockCreations, ...loversCreations,
     ...storeItems.map((c) => ({
