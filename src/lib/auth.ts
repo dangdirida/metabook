@@ -1,6 +1,6 @@
 import { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { upsertUser } from "./firestore";
+import { upsertUserAdmin } from "./firestore-admin";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -19,7 +19,7 @@ export const authOptions: AuthOptions = {
     async signIn({ user }) {
       if (user.id && user.email && user.name) {
         try {
-          await upsertUser({ id: user.id, email: user.email, name: user.name, image: user.image ?? "" });
+          await upsertUserAdmin({ id: user.id, email: user.email, name: user.name, image: user.image ?? "" });
         } catch (e) { console.error("upsertUser failed", e); }
       }
       return true;
