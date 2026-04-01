@@ -12,6 +12,7 @@ import { addCreation } from "@/lib/creation-store";
 
 type GoodsType = "bookmark" | "sticker" | "illustration" | "phone-case" | "cushion" | "tumbler" | "photocard";
 type Step = "select" | "editor" | "mockup" | "done";
+type ResizeHandle = "nw" | "n" | "ne" | "w" | "e" | "sw" | "s" | "se";
 
 const PRESET_COLORS = ["#32d29d", "#7e5ae2", "#1384d7", "#e21235", "#f5a623", "#262d2e"];
 const FONTS = ["Pretendard", "Noto Serif KR", "Noto Sans KR"];
@@ -139,6 +140,57 @@ function GoodsContent() {
   const generateIllustration = () => { if (!sceneDesc.trim()) return; setIsLoadingImage(true); const sm: Record<string, string> = { watercolor: "watercolor painting style", "pen-sketch": "pen and ink sketch style", anime: "anime illustration style", realistic: "photorealistic digital painting" }; setGeneratedImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(`${sceneDesc}, ${sm[illustStyle]}, high quality`)}?width=768&height=768&nologo=true`); };
   const downloadImage = () => { if (!generatedImageUrl) return; const a = document.createElement("a"); a.download = `${goodsType}_${bookTitle}.png`; a.href = generatedImageUrl; a.target = "_blank"; a.click(); };
   const saveImage = () => { addCreation({ bookId, bookTitle, type: "goods", title: goodsType === "sticker" ? `스티커: ${keyword.slice(0, 20)}` : `일러스트: ${sceneDesc.slice(0, 20)}`, thumbnail: generatedImageUrl, content: generatedImageUrl }); router.push(`/library/${bookId}`); };
+
+  const handleResizeMouseDown = (e: React.MouseEvent, handle: ResizeHandle) => {
+    e.stopPropagation(); e.preventDefault();
+    const startX = e.clientX; const startY = e.clientY;
+    const sp = { ...designPos }; const ss = { ...designSize }; const MIN = 60;
+    const onMove = (me: MouseEvent) => {
+      const dx = me.clientX - startX; const dy = me.clientY - startY;
+      let nx = sp.x, ny = sp.y, nw = ss.width, nh = ss.height;
+      if (handle.includes("e")) nw = Math.max(MIN, ss.width + dx);
+      if (handle.includes("w")) { const d = Math.min(dx, ss.width - MIN); nx = sp.x + d; nw = ss.width - d; }
+      if (handle.includes("s")) nh = Math.max(MIN, ss.height + dy);
+      if (handle.includes("n")) { const d = Math.min(dy, ss.height - MIN); ny = sp.y + d; nh = ss.height - d; }
+      nx = Math.max(0, Math.min(nx, productMeta.canvasWidth - MIN));
+      ny = Math.max(0, Math.min(ny, productMeta.canvasHeight - MIN));
+      setDesignPos({ x: nx, y: ny }); setDesignSize({ width: nw, height: nh });
+    };
+    const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+    document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+  };
+
+  const handleResizeTouchStart = (e: React.TouchEvent, handle: ResizeHandle) => {
+    e.stopPropagation();
+    const t = e.touches[0]; const startX = t.clientX; const startY = t.clientY;
+    const sp = { ...designPos }; const ss = { ...designSize }; const MIN = 60;
+    const onMove = (te: TouchEvent) => {
+      const tt = te.touches[0]; const dx = tt.clientX - startX; const dy = tt.clientY - startY;
+      let nx = sp.x, ny = sp.y, nw = ss.width, nh = ss.height;
+      if (handle.includes("e")) nw = Math.max(MIN, ss.width + dx);
+      if (handle.includes("w")) { const d = Math.min(dx, ss.width - MIN); nx = sp.x + d; nw = ss.width - d; }
+      if (handle.includes("s")) nh = Math.max(MIN, ss.height + dy);
+      if (handle.includes("n")) { const d = Math.min(dy, ss.height - MIN); ny = sp.y + d; nh = ss.height - d; }
+      nx = Math.max(0, Math.min(nx, productMeta.canvasWidth - MIN));
+      ny = Math.max(0, Math.min(ny, productMeta.canvasHeight - MIN));
+      setDesignPos({ x: nx, y: ny }); setDesignSize({ width: nw, height: nh });
+    };
+    const onEnd = () => { document.removeEventListener("touchmove", onMove); document.removeEventListener("touchend", onEnd); };
+    document.addEventListener("touchmove", onMove, { passive: false }); document.addEventListener("touchend", onEnd);
+  };
+
+  const CURSOR_MAP: Record<ResizeHandle, string> = { nw: "nw-resize", n: "n-resize", ne: "ne-resize", w: "w-resize", e: "e-resize", sw: "sw-resize", s: "s-resize", se: "se-resize" };
+  const HANDLE_POS = (h: ResizeHandle): React.CSSProperties => {
+    const base: React.CSSProperties = { position: "absolute", width: 10, height: 10, backgroundColor: "white", border: "2px solid var(--color-primary-500)", borderRadius: 2, zIndex: 10, cursor: CURSOR_MAP[h] };
+    if (h === "nw") return { ...base, top: -5, left: -5 };
+    if (h === "n") return { ...base, top: -5, left: "50%", transform: "translateX(-50%)" };
+    if (h === "ne") return { ...base, top: -5, right: -5 };
+    if (h === "w") return { ...base, top: "50%", left: -5, transform: "translateY(-50%)" };
+    if (h === "e") return { ...base, top: "50%", right: -5, transform: "translateY(-50%)" };
+    if (h === "sw") return { ...base, bottom: -5, left: -5 };
+    if (h === "s") return { ...base, bottom: -5, left: "50%", transform: "translateX(-50%)" };
+    return { ...base, bottom: -5, right: -5 };
+  };
 
   const handleCompleteMockup = async () => {
     const canvas = document.createElement("canvas");
@@ -301,17 +353,24 @@ function GoodsContent() {
               <p className="text-[13px] font-semibold text-[var(--color-mono-700)] mb-3">디자인 위치를 조정해보세요</p>
               <div className="relative inline-block select-none bg-[var(--color-mono-050)] rounded-2xl overflow-hidden" ref={mockupRef}
                 style={{ width: productMeta.canvasWidth, height: productMeta.canvasHeight }}>
-                <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)] overflow-hidden"
+                <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
                   style={{ left: designPos.x, top: designPos.y, width: designSize.width, height: designSize.height }}
-                  onMouseDown={(e) => { setIsDragging(true); setDragStart({ x: e.clientX - designPos.x, y: e.clientY - designPos.y }); }}
-                  onTouchStart={(e) => { const t = e.touches[0]; setIsDragging(true); setDragStart({ x: t.clientX - designPos.x, y: t.clientY - designPos.y }); }}>
-                  {designMode === "photo" && uploadedPhoto ? (
-                    <img src={uploadedPhoto} alt="디자인" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[12px] text-[var(--color-mono-500)]" style={{ backgroundColor: color }}>
-                      <span className="text-white text-center px-2">{quote || "디자인 미리보기"}</span>
-                    </div>
-                  )}
+                  onMouseDown={(e) => { if ((e.target as HTMLElement).dataset.handle) return; setIsDragging(true); setDragStart({ x: e.clientX - designPos.x, y: e.clientY - designPos.y }); }}
+                  onTouchStart={(e) => { if ((e.target as HTMLElement).dataset.handle) return; const t = e.touches[0]; setIsDragging(true); setDragStart({ x: t.clientX - designPos.x, y: t.clientY - designPos.y }); }}>
+                  <div className="w-full h-full overflow-hidden">
+                    {designMode === "photo" && uploadedPhoto ? (
+                      <img src={uploadedPhoto} alt="디자인" className="w-full h-full object-cover pointer-events-none" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[12px] text-[var(--color-mono-500)]" style={{ backgroundColor: color }}>
+                        <span className="text-white text-center px-2">{quote || "디자인 미리보기"}</span>
+                      </div>
+                    )}
+                  </div>
+                  {(["nw","n","ne","w","e","sw","s","se"] as ResizeHandle[]).map((h) => (
+                    <div key={h} data-handle={h} style={HANDLE_POS(h)}
+                      onMouseDown={(e) => handleResizeMouseDown(e, h)}
+                      onTouchStart={(e) => handleResizeTouchStart(e, h)} />
+                  ))}
                 </div>
               </div>
               <p className="text-[11px] text-[var(--color-mono-400)] mt-2 text-center">점선 영역을 드래그해서 위치를 조정하세요</p>
