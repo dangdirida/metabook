@@ -17,6 +17,7 @@ import {
   Heart,
   Type,
   Music,
+  MessageCircle,
 } from "lucide-react";
 import { getChaptersByBookId } from "@/lib/mock-content";
 import { getBookById } from "@/lib/mock-data";
@@ -44,6 +45,7 @@ export default function CenterPanel() {
   const [showHint, setShowHint] = useState(false);
   const [showBgmModal, setShowBgmModal] = useState(false);
   const [showNoteToast, setShowNoteToast] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null);
   const [showWorldModal, setShowWorldModal] = useState<{ imageId: string; worldUrl: string } | null>(null);
   const worldUrlMap = useMemo(() => {
@@ -79,7 +81,7 @@ export default function CenterPanel() {
     localStorage.setItem("metabook_dark", String(isDark));
     if (isDark) {
       document.documentElement.classList.add("dark-mode");
-      document.body.style.background = "#1a1f1c";
+      document.body.style.background = "#1c1917";
     } else {
       document.documentElement.classList.remove("dark-mode");
       document.body.style.background = "";
@@ -106,13 +108,15 @@ export default function CenterPanel() {
   };
 
   const goToChapter = (dir: number) => {
-    saveScrollPosition();
     const next = currentChapter + dir;
-    if (next >= 0 && next < totalChapters) {
+    if (next < 0 || next >= totalChapters) return;
+    setIsTransitioning(true);
+    saveScrollPosition();
+    setTimeout(() => {
       setCurrentChapter(next);
       localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: next, progress: 0, updatedAt: new Date().toISOString() }));
-      setTimeout(() => { if (contentRef.current) contentRef.current.scrollTop = 0; }, 0);
-    }
+      setTimeout(() => { if (contentRef.current) contentRef.current.scrollTop = 0; setIsTransitioning(false); }, 50);
+    }, 200);
   };
 
   const handleTextSelection = useCallback(() => {
@@ -185,7 +189,7 @@ export default function CenterPanel() {
 
   return (
     <main
-      className={`flex-1 flex flex-col overflow-hidden relative ${isDark ? "bg-mono-900 text-mono-200" : "bg-white text-[var(--color-mono-900)]"}`}
+      className={`flex-1 flex flex-col overflow-hidden relative ${isDark ? "bg-[#1c1917] text-[#e7e5e4]" : "bg-white text-[var(--color-mono-900)]"}`}
       onClick={() => { setPopover(null); setShowHint(false); }}
     >
       {showHint && (
@@ -225,7 +229,7 @@ export default function CenterPanel() {
       </div>
 
       {/* 본문 영역 */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar">
+      <div ref={contentRef} className={`flex-1 overflow-y-auto custom-scrollbar transition-opacity duration-200 ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
         <div className="max-w-2xl mx-auto px-6 py-8">
           <h2 className={`text-[22px] font-bold mb-8 ${isDark ? "text-mono-100" : "text-[var(--color-mono-990)]"}`}>제{chapter.number}장. {chapter.title}</h2>
           <div style={{ fontSize: `${fontSize}px`, lineHeight: 1.95 }} className={`whitespace-pre-wrap ${isDark ? "" : "text-[var(--color-mono-800)]"}`}>
@@ -248,7 +252,14 @@ export default function CenterPanel() {
       </div>
 
       {contextMenu && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-1 flex gap-0.5" style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px`, transform: "translate(-50%, -100%)" }}>{contextActions.map((action) => (<button key={action.label} onClick={action.action} className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg hover:bg-mono-50 transition-colors" title={action.label}><action.icon className="w-4 h-4 text-mono-600" /><span className="text-[10px] text-mono-500">{action.label}</span></button>))}</div>)}
-      {popover && (<div className="fixed z-50 bg-white rounded-xl shadow-xl border border-mono-200 p-4 w-60" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}><div className="flex items-center gap-3 mb-2">{(() => { const a = book?.agents?.find(ag => ag.name === popover.name); return <img src={a?.avatar || "/avatars/default-profile.svg"} alt={popover.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary-200" onError={(ev) => { (ev.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />; })()}<div><p className="font-semibold text-mono-900 text-sm">{popover.name}</p><p className="text-xs text-mono-500">{popover.role}</p></div></div><p className="text-xs text-mono-400">등장: {popover.chapters}</p><p className="text-[11px] text-primary-500 mt-2 font-medium">→ 오른쪽 채팅에서 대화해보세요</p></div>)}
+      {popover && (<div className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-[var(--color-mono-080)] w-64 overflow-hidden" style={{ left: `${popover.x}px`, top: `${popover.y}px`, transform: "translateX(-50%)" }}>
+        <div className="flex items-center gap-3 p-4 border-b border-[var(--color-mono-080)]">
+          {(() => { const ag = book?.agents?.find(a => a.name === popover.name); return <img src={ag?.avatar || "/avatars/default-profile.svg"} alt={popover.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-[var(--color-primary-100)]" onError={(ev) => { (ev.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />; })()}
+          <div className="min-w-0"><p className="text-[15px] font-bold text-[var(--color-mono-990)] truncate">{popover.name}</p><p className="text-[11px] text-[var(--color-mono-400)] truncate">{popover.role}</p></div>
+        </div>
+        {(() => { const ag = book?.agents?.find(a => a.name === popover.name); return ag?.personality?.length ? (<div className="px-4 py-2.5 border-b border-[var(--color-mono-080)]"><div className="flex flex-wrap gap-1">{ag.personality.map(t => <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-primary-030)] text-[var(--color-primary-700)]">{t}</span>)}</div></div>) : null; })()}
+        <div className="p-3"><button onClick={() => { const ag = book?.agents?.find(a => a.name === popover.name); if (ag) { setSelectedAgent(ag.id); setActiveTab("ai"); } setPopover(null); }} className="w-full py-2.5 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)] transition-colors flex items-center justify-center gap-2"><MessageCircle className="w-4 h-4" />채팅하기</button></div>
+      </div>)}
       {showWorldModal && (<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center"><Globe className="w-12 h-12 text-primary-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-mono-900 mb-2">책 속 세계로 들어갈까요?</h3><p className="text-sm text-mono-500 mb-6">삽화 속 공간을 3D로 탐험할 수 있어요.</p><div className="flex gap-3"><button onClick={() => setShowWorldModal(null)} className="flex-1 py-3 rounded-xl border border-mono-200 text-mono-700 font-medium hover:bg-mono-50">취소</button><button onClick={() => { if (showWorldModal?.worldUrl) { window.open(showWorldModal.worldUrl, "_blank", "noopener,noreferrer"); } setShowWorldModal(null); }} className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600">들어가기</button></div></div></div>)}
       <BgmMiniPlayer />
       {showBgmModal && <BgmModal bookId={bookId as string} onClose={() => setShowBgmModal(false)} />}

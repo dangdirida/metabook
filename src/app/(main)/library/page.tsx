@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Sparkles, X, BookOpen, MessageCircle, Palette } from "lucide-react";
 import Link from "next/link";
 import BookCard from "@/components/ui/BookCard";
 import UserMenu from "@/components/ui/UserMenu";
@@ -178,6 +178,10 @@ function LibraryContent() {
   const [category, setCategory] = useState("전체");
 
   const isFiltering = search.trim() !== "" || category !== "전체";
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem("metabook_onboarding_done");
+  });
 
   const kimyoungsaBooks = useMemo(
     () => mockBooks.filter((b) => b.publisher === "김영사"),
@@ -320,6 +324,27 @@ function LibraryContent() {
                   <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   자세히 보기 <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 온보딩 가이드 */}
+        {showOnboarding && !isFiltering && (
+          <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 mt-6">
+            <div className="relative bg-[var(--color-primary-030)] border border-[var(--color-primary-100)] rounded-2xl px-6 py-5">
+              <button onClick={() => { localStorage.setItem("metabook_onboarding_done", "1"); setShowOnboarding(false); }} className="absolute top-4 right-4 p-1 rounded-lg text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)] hover:bg-[var(--color-primary-050)] transition-colors"><X className="w-4 h-4" /></button>
+              <p className="text-[13px] font-semibold text-[var(--color-primary-700)] mb-4">OGQ 이렇게 시작해보세요</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[{ step: "01", Icon: BookOpen, title: "책 읽기", desc: "책을 선택해서 본문을 읽어보세요. 인물 이름을 클릭하면 더 많은 정보를 볼 수 있어요." },
+                  { step: "02", Icon: MessageCircle, title: "인물과 채팅", desc: "책 속 등장인물과 직접 대화해보세요. 궁금한 것, 책 내용 무엇이든 물어볼 수 있어요." },
+                  { step: "03", Icon: Palette, title: "2차 창작", desc: "책에서 영감받은 스티커, 음악, 숏북을 직접 만들고 공유해보세요." }
+                ].map((item) => (
+                  <div key={item.step} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--color-primary-500)] flex items-center justify-center flex-shrink-0 mt-0.5"><item.Icon className="w-4 h-4 text-white" /></div>
+                    <div><p className="text-[12px] font-bold text-[var(--color-primary-700)] mb-0.5">STEP {item.step} · {item.title}</p><p className="text-[12px] text-[var(--color-mono-600)] leading-relaxed">{item.desc}</p></div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

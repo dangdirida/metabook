@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, GitBranch, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen, GitBranch, ChevronRight, Loader2, Share2 } from "lucide-react";
 import { mockBooks } from "@/lib/mock-data";
 import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
@@ -474,12 +474,16 @@ function ShortBookContent() {
                   {generatedText || "생성 중..."}
                 </div>
                 {isDone && (
-                  <button
-                    onClick={handleSave}
-                    className="w-full py-3.5 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold text-base hover:bg-[var(--color-primary-600)] transition-colors"
-                  >
-                    창작 갤러리에 저장
-                  </button>
+                  <div className="flex gap-3">
+                    <button onClick={() => { const text = `"${book?.title}" 책으로 숏북을 만들었어요!`; const url = window.location.origin; if (navigator.share) { navigator.share({ title: "OGQ 숏북", text, url }); } else { navigator.clipboard.writeText(`${text}\n${url}`); } }}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--color-mono-050)] text-[var(--color-mono-700)] rounded-xl font-medium hover:bg-[var(--color-mono-080)] transition-colors">
+                      <Share2 className="w-4 h-4" />공유
+                    </button>
+                    <button onClick={handleSave}
+                      className="flex-1 py-3.5 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors">
+                      갤러리에 저장
+                    </button>
+                  </div>
                 )}
               </div>
             )}

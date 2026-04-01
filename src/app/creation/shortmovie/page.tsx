@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Film, Loader2, Download } from "lucide-react";
+import { ArrowLeft, Film, Loader2, Download, Share2 } from "lucide-react";
 import { mockBooks } from "@/lib/mock-data";
 import { getChaptersByBookId } from "@/lib/mock-content";
 import { addCreation } from "@/lib/creation-store";
@@ -262,10 +262,12 @@ function ShortMovieContent() {
                   >
                     <Download className="w-4 h-4" /> 다운로드
                   </a>
-                  <button
-                    onClick={handleSave}
-                    className="flex-1 py-3.5 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors"
-                  >
+                  <button onClick={() => { const text = `숏뮤비를 만들었어요!`; const url = window.location.origin; if (navigator.share) { navigator.share({ title: "OGQ 숏뮤비", text, url }); } else { navigator.clipboard.writeText(`${text}\n${url}`); } }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--color-mono-050)] text-[var(--color-mono-700)] rounded-xl font-medium hover:bg-[var(--color-mono-080)] transition-colors">
+                    <Share2 className="w-4 h-4" />공유
+                  </button>
+                  <button onClick={handleSave}
+                    className="flex-1 py-3.5 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors">
                     갤러리에 저장
                   </button>
                 </div>
