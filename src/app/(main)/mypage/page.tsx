@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote } from "lucide-react";
+import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote, Camera } from "lucide-react";
 import { getCreations, type CreationItem } from "@/lib/creation-store";
 import { getNotes, deleteNote, type Note } from "@/lib/notes-store";
 import { getFavorites } from "@/lib/favorites-store";
@@ -22,10 +22,13 @@ export default function MyPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [favorites, setFavorites] = useState<{ bookId: string; title: string; coverImage: string }[]>([]);
   const [chatCount, setChatCount] = useState(0);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
     setMyCreations(getCreations());
     setNotes(getNotes());
+    const savedImg = localStorage.getItem("metabook_profile_image");
+    if (savedImg) setProfileImage(savedImg);
     setFavorites(getFavorites());
     let total = 0;
     for (let i = 0; i < localStorage.length; i++) {
@@ -57,7 +60,18 @@ export default function MyPage() {
           <aside className="lg:sticky lg:top-24 lg:self-start space-y-4">
             <div className="bg-white rounded-2xl border border-[var(--color-mono-080)] p-6">
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center text-3xl font-bold text-[var(--color-primary-600)]">{initial}</div>
+                <label className="relative cursor-pointer group/avatar block mx-auto w-20 h-20">
+                  <div className="w-20 h-20 rounded-full overflow-hidden">
+                    {profileImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-[var(--color-primary-100)] flex items-center justify-center text-3xl font-bold text-[var(--color-primary-600)]">{initial}</div>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"><Camera className="w-6 h-6 text-white" /></div>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const d = ev.target?.result as string; setProfileImage(d); localStorage.setItem("metabook_profile_image", d); }; r.readAsDataURL(f); }} />
+                </label>
                 <h2 className="text-xl font-bold text-[var(--color-mono-990)] mt-3">{nickname}</h2>
                 <p className="text-sm text-[var(--color-mono-500)]">{email}</p>
               </div>

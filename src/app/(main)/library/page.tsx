@@ -188,6 +188,12 @@ function LibraryContent() {
     () => mockBooks.filter((b) => b.publisher === "주니어김영사"),
     []
   );
+  const [showSearchDrop, setShowSearchDrop] = useState(false);
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.toLowerCase();
+    return mockBooks.filter((b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || b.agents.some((a) => a.name.toLowerCase().includes(q))).slice(0, 5);
+  }, [search]);
 
   // 갤러리 무한 순환 스크롤
   const [displayedGallery, setDisplayedGallery] = useState(
@@ -255,9 +261,25 @@ function LibraryContent() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setShowSearchDrop(true)}
+              onBlur={() => setTimeout(() => setShowSearchDrop(false), 200)}
               placeholder="제목, 저자, 캐릭터 검색..."
               className="w-full pl-10 pr-4 py-3 bg-[var(--color-mono-010)] border border-[var(--color-mono-080)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
             />
+            {showSearchDrop && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-[var(--color-mono-080)] overflow-hidden z-50">
+                {searchResults.map((b) => (
+                  <Link key={b.id} href={`/library/${b.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] transition-colors border-b border-[var(--color-mono-050)] last:border-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={b.coverImage} alt={b.title} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-[var(--color-mono-900)] truncate">{b.title}</p>
+                      <p className="text-[11px] text-[var(--color-mono-400)] truncate">{b.author} · {b.agents.map((a) => a.name).join(", ")}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </header>

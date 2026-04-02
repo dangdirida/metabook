@@ -103,11 +103,16 @@ const config: Config = {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'scroll-left': 'scroll-left 30s linear infinite',
         'scroll-right': 'scroll-right 35s linear infinite',
         'scroll-left-slow': 'scroll-left-slow 45s linear infinite',
+        'fade-in-up': 'fadeInUp 0.4s ease-out',
       },
       fontFamily: {
         sans: [

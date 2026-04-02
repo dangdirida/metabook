@@ -24,7 +24,7 @@ export default function BookDetailPage() {
   if (showIntro && book) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[var(--color-mono-030)] p-8">
-        <div className="max-w-lg w-full">
+        <div className="max-w-lg w-full animate-fade-in-up">
           <div className="flex gap-6 mb-8">
             {book.coverImage && (
               // eslint-disable-next-line @next/next/no-img-element

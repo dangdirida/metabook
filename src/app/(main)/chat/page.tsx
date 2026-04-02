@@ -21,6 +21,7 @@ import {
   BookOpen,
   PanelRightClose,
   PanelRightOpen,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -219,7 +220,7 @@ function ChatPageInner() {
                     const timeStr = lastMsg ? fmtTime(lastMsg.timestamp) : "";
                     return (
                       <div key={room.id} onClick={() => { setCurrentRoomId(room.id); setMobileView("chat"); }}
-                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--color-mono-050)] ${isCurrent ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
+                        className={`relative group/item flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--color-mono-050)] ${isCurrent ? "bg-[var(--color-primary-030)]" : "hover:bg-[var(--color-mono-030)]"}`}>
                         <div className="relative w-11 h-11 flex-shrink-0">
                           {isGroup ? (<>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -243,6 +244,10 @@ function ChatPageInner() {
                           </p>
                           <p className="text-[10px] text-[var(--color-mono-300)] truncate mt-0.5">{first?.book.title}{isGroup && ` · ${room.agents.length}명`}</p>
                         </div>
+                        <button onClick={(e) => { e.stopPropagation(); setRooms((prev) => { const n = { ...prev }; delete n[room.id]; return n; }); if (currentRoomId === room.id) setCurrentRoomId(null); }}
+                          className="absolute right-3 opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 rounded-lg text-[var(--color-mono-300)] hover:text-red-400 hover:bg-red-50" title="대화 삭제">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     );
                   })}

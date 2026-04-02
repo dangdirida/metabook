@@ -194,7 +194,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             {/* 퀵 리플라이 */}
             <div className="flex flex-wrap justify-center gap-1.5 mt-3 px-2">
               {["어떤 내용을 다루나요?", "주요 등장인물은?", "핵심 메시지가 뭐갈까요?"].map((q) => (
-                <button key={q} onClick={() => setInput(q)}
+                <button key={q} onClick={() => { setInput(q); setTimeout(() => { const btn = document.querySelector("[data-send-btn]") as HTMLButtonElement; btn?.click(); }, 50); }}
                   className="px-3 py-1.5 rounded-full text-[12px] font-medium border border-[var(--color-primary-200)] text-[var(--color-primary-600)] hover:bg-[var(--color-primary-030)] transition-colors">
                   {q}
                 </button>
@@ -258,7 +258,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
             disabled={!currentAgent}
             rows={1}
             className="flex-1 resize-none text-[14px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] bg-[var(--color-mono-050)] border border-mono-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 max-h-32 overflow-y-auto" />
-          <button onClick={sendMessage} disabled={!input.trim() || isStreaming || !currentAgent}
+          <button data-send-btn onClick={sendMessage} disabled={!input.trim() || isStreaming || !currentAgent}
             className="w-9 h-9 rounded-xl bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white flex items-center justify-center transition-colors disabled:opacity-40">
             <Send className="w-4 h-4" />
           </button>
