@@ -225,7 +225,20 @@ export const loversCreations: Creation[] = [
   },
 ];
 
-const allCreations = [...mockCreations, ...loversCreations];
+const otherBooksMusic: Creation[] = [
+  { id: "dkm-m1", bookId: "dont-know-myself", userId: "u20", userName: "피아노솔로", title: "마음의 지도", description: "자아 탐색의 여정을 피아노로", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", thumbnailUrl: "", tags: ["피아노", "힐링"], status: "approved", likes: 22, ogqLinked: false, createdAt: "2025-02-01" },
+  { id: "dkm-m2", bookId: "dont-know-myself", userId: "u21", userName: "어쿠스틱밴드", title: "내면의 목소리", description: "내면과의 대화를 어쿠스틱으로", type: "music", fileUrl: "", thumbnailUrl: "", tags: ["어쿠스틱"], status: "approved", likes: 15, ogqLinked: true, ogqUrl: "https://ogq.me", createdAt: "2025-02-05" },
+  { id: "wmm-m1", bookId: "what-moves-me", userId: "u22", userName: "명상음악가", title: "고요한 새벽", description: "선방의 새벽 고요함", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", thumbnailUrl: "", tags: ["명상", "앰비언트"], status: "approved", likes: 18, ogqLinked: false, createdAt: "2025-01-20" },
+  { id: "wmm-m2", bookId: "what-moves-me", userId: "u23", userName: "첼로앙상블", title: "깨달음의 순간", description: "깊은 사유를 첼로로", type: "music", fileUrl: "", thumbnailUrl: "", tags: ["첼로", "클래식"], status: "approved", likes: 12, ogqLinked: true, ogqUrl: "https://ogq.me", createdAt: "2025-01-25" },
+  { id: "dp-m1", bookId: "difficult-people", userId: "u24", userName: "Lo-Fi스튜디오", title: "집중의 시간", description: "업무 집중용 Lo-Fi", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", thumbnailUrl: "", tags: ["Lo-Fi", "집중"], status: "approved", likes: 31, ogqLinked: false, createdAt: "2025-02-10" },
+  { id: "dp-m2", bookId: "difficult-people", userId: "u25", userName: "재즈트리오", title: "협업의 리듬", description: "함께 일하는 리듬감", type: "music", fileUrl: "", thumbnailUrl: "", tags: ["재즈"], status: "approved", likes: 9, ogqLinked: true, ogqUrl: "https://ogq.me", createdAt: "2025-02-15" },
+  { id: "dh-m1", bookId: "dragon-hero-3", userId: "u26", userName: "오케스트라K", title: "불꽃의 전설", description: "드래곤과의 모험 OST", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", thumbnailUrl: "", tags: ["오케스트라", "판타지"], status: "approved", likes: 27, ogqLinked: false, createdAt: "2025-01-30" },
+  { id: "dh-m2", bookId: "dragon-hero-3", userId: "u27", userName: "심포니앙상블", title: "용사의 여정", description: "카이의 성장 테마", type: "music", fileUrl: "", thumbnailUrl: "", tags: ["심포니", "모험"], status: "approved", likes: 16, ogqLinked: true, ogqUrl: "https://ogq.me", createdAt: "2025-02-02" },
+  { id: "bph-m1", bookId: "big-pumpkin-house", userId: "u28", userName: "동화음악단", title: "따뜻한 오후", description: "호박집의 평화로운 오후", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3", thumbnailUrl: "", tags: ["동화", "따뜻한"], status: "approved", likes: 20, ogqLinked: false, createdAt: "2025-01-18" },
+  { id: "slu-m1", bookId: "science-level-up-4", userId: "u29", userName: "일렉트로팝", title: "신나는 실험실", description: "과학 실험처럼 신나는 비트", type: "music", fileUrl: "", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", thumbnailUrl: "", tags: ["일렉트로닉", "신남"], status: "approved", likes: 24, ogqLinked: false, createdAt: "2025-02-08" },
+];
+
+const allCreations = [...mockCreations, ...loversCreations, ...otherBooksMusic];
 
 export function getCreationsByBookId(bookId: string): Creation[] {
   return allCreations.filter((c) => c.bookId === bookId);

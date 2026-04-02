@@ -86,7 +86,8 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
 
   useEffect(() => {
     const saved = localStorage.getItem(`chat_${bookId}_${currentAgentId}`);
-    setMessages(saved ? JSON.parse(saved) : []);
+    const parsed: ChatMessage[] = saved ? JSON.parse(saved) : [];
+    setMessages(parsed.filter((m) => !(m.role === "assistant" && !m.content.trim())));
     prevAgentIdRef.current = currentAgentId;
   }, [bookId, currentAgentId]);
 
