@@ -108,9 +108,13 @@ export default function BgmPage() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center py-16 text-center">
-            <Music className="w-16 h-16 text-[var(--color-mono-200)] mb-4" />
-            <p className="text-[14px] text-[var(--color-mono-500)]">검색 결과가 없어요</p>
+          <div className="flex flex-col items-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--color-primary-030)] flex items-center justify-center mb-4">
+              <Music className="w-8 h-8 text-[var(--color-primary-300)]" />
+            </div>
+            <p className="text-[15px] font-bold text-[var(--color-mono-700)] mb-2">검색 결과가 없어요</p>
+            <p className="text-[13px] text-[var(--color-mono-400)] mb-6">다른 키워드로 검색해보거나 직접 브금을 만들어보세요</p>
+            <button onClick={() => router.push("/creation/music")} className="px-5 py-2.5 rounded-2xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)] transition-colors">브금 만들기</button>
           </div>
         )}
       </div>

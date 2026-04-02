@@ -6,6 +6,7 @@ import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote, Camer
 import { getCreations, type CreationItem } from "@/lib/creation-store";
 import { getNotes, deleteNote, type Note } from "@/lib/notes-store";
 import { getFavorites } from "@/lib/favorites-store";
+import type { Highlight } from "@/lib/highlight-store";
 import { mockBooks } from "@/lib/mock-data";
 import Link from "next/link";
 import UserMenu from "@/components/ui/UserMenu";
@@ -23,6 +24,7 @@ export default function MyPage() {
   const [favorites, setFavorites] = useState<{ bookId: string; title: string; coverImage: string }[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
 
   useEffect(() => {
     setMyCreations(getCreations());
@@ -36,6 +38,7 @@ export default function MyPage() {
       if (k?.startsWith("chat_")) { try { total += JSON.parse(localStorage.getItem(k) || "[]").length; } catch { /* */ } }
     }
     setChatCount(total);
+    try { setHighlights(JSON.parse(localStorage.getItem("metabook_highlights") || "[]")); } catch { setHighlights([]); }
   }, []);
 
   const user = session?.user;
@@ -80,16 +83,14 @@ export default function MyPage() {
             {/* 통계 카드 */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "읽은 책", value: recentBooks.length, unit: "권", Icon: BookOpen, color: "text-[var(--color-primary-500)]", bg: "bg-[var(--color-primary-030)]" },
-                { label: "AI 대화", value: aiChatCount, unit: "회", Icon: MessageCircle, color: "text-[var(--color-secondary-500)]", bg: "bg-[var(--color-secondary-030)]" },
-                { label: "창작물", value: myCreations.length, unit: "개", Icon: Palette, color: "text-amber-500", bg: "bg-amber-50" },
+                { label: "읽은 책", value: recentBooks.length, unit: "권", Icon: BookOpen, gradient: "from-[var(--color-primary-030)] to-[var(--color-primary-050)]", iconColor: "text-[var(--color-primary-500)]", valueColor: "text-[var(--color-primary-600)]" },
+                { label: "AI 대화", value: aiChatCount, unit: "회", Icon: MessageCircle, gradient: "from-purple-50 to-purple-100", iconColor: "text-purple-500", valueColor: "text-purple-600" },
+                { label: "내 창작물", value: myCreations.length, unit: "개", Icon: Palette, gradient: "from-amber-50 to-amber-100", iconColor: "text-amber-500", valueColor: "text-amber-600" },
               ].map((stat) => (
-                <div key={stat.label} className="bg-white rounded-2xl p-3 border border-[var(--color-mono-080)] text-center">
-                  <div className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-1.5`}>
-                    <stat.Icon className={`w-4 h-4 ${stat.color}`} />
-                  </div>
-                  <p className="text-[18px] font-bold text-[var(--color-mono-990)]">{stat.value}<span className="text-[11px] font-normal text-[var(--color-mono-400)] ml-0.5">{stat.unit}</span></p>
-                  <p className="text-[10px] text-[var(--color-mono-500)]">{stat.label}</p>
+                <div key={stat.label} className={`rounded-2xl p-4 bg-gradient-to-br ${stat.gradient} border border-white/50 text-center`}>
+                  <div className="flex justify-center mb-2"><stat.Icon className={`w-6 h-6 ${stat.iconColor}`} /></div>
+                  <p className={`text-[26px] font-bold ${stat.valueColor} leading-none mb-1`}>{stat.value}<span className="text-[14px] font-normal ml-0.5">{stat.unit}</span></p>
+                  <p className="text-[11px] text-[var(--color-mono-500)]">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -223,6 +224,31 @@ export default function MyPage() {
                 </div>
               )}
             </section>
+
+            {/* 하이라이트 */}
+            {highlights.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[15px] font-bold text-[var(--color-mono-900)]">하이라이트</h3>
+                  <span className="text-[12px] text-[var(--color-mono-400)]">{highlights.length}개</span>
+                </div>
+                <div className="space-y-2">
+                  {highlights.slice(0, 5).map((h) => {
+                    const cm: Record<string, string> = { yellow: "#FEF08A", green: "#BBF7D0", pink: "#FBCFE8", blue: "#BFDBFE" };
+                    return (
+                      <div key={h.id} className="bg-white rounded-xl p-4 border border-[var(--color-mono-080)] flex gap-3">
+                        <div className="w-1 rounded-full flex-shrink-0 self-stretch" style={{ backgroundColor: cm[h.color] ?? "#FEF08A" }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-[var(--color-mono-400)] mb-1">{h.bookId}</p>
+                          <p className="text-[13px] text-[var(--color-mono-800)] leading-relaxed"><span style={{ backgroundColor: cm[h.color] ?? "#FEF08A", borderRadius: 4, padding: "1px 4px" }}>{h.text}</span></p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {highlights.length > 5 && <p className="text-[12px] text-[var(--color-primary-500)] text-center py-1">+{highlights.length - 5}개 더 있어요</p>}
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>

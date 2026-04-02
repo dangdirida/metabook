@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { mockCreations, loversCreations } from "@/lib/mock-creations";
 import { getCreations } from "@/lib/creation-store";
 import { mockBooks } from "@/lib/mock-data";
-import { Heart, Search, Filter, ArrowLeft } from "lucide-react";
+import { Heart, Search, Filter, ArrowLeft, Sticker, Music, Image as ImageIcon, Video, BookOpen, FileText, Film, Gift, Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Creation } from "@/types";
 
@@ -27,6 +27,10 @@ const TYPE_GRADIENTS: Record<string, string> = {
   goods: "from-rose-400 to-pink-500",
 };
 const ALL_TYPES = Object.keys(TYPE_META);
+const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  sticker: Sticker, music: Music, photo: ImageIcon, video: Video,
+  webtoon: FileText, novel: BookOpen, shortbook: BookOpen, shortmovie: Film, goods: Gift,
+};
 
 export default function CreationsPage() {
   const router = useRouter();
@@ -110,7 +114,7 @@ export default function CreationsPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={creation.thumbnailUrl} alt={creation.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center opacity-30"><div className="w-12 h-12 rounded-xl bg-white/30" /></div>
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-2">{(() => { const Icon = TYPE_ICONS[creation.type] || Package; return <Icon className="w-14 h-14 text-white/60" />; })()}</div>
                     )}
                     {meta && <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold ${meta.color}`}>{meta.label}</span>}
                   </div>

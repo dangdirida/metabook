@@ -318,12 +318,30 @@ function ChatPageInner() {
       {/* 가운데: 채팅 영역 */}
       <div className={`flex-1 flex flex-col min-w-0 ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
         {!currentRoom ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="w-20 h-20 bg-[var(--color-mono-050)] rounded-full flex items-center justify-center mb-4">
-              <MessageCircle className="w-10 h-10 text-[var(--color-mono-300)]" />
+          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--color-mono-030)]">
+            <div className="w-full max-w-md px-6">
+              <p className="text-[13px] font-semibold text-[var(--color-mono-500)] mb-4 text-center">오늘 대화해볼 인물</p>
+              <div className="space-y-3">
+                {booksWithAgents.slice(0, 3).flatMap((b) => b.agents.slice(0, 1)).map((agent) => {
+                  const book = booksWithAgents.find((b) => b.agents.some((a) => a.id === agent.id));
+                  if (!book) return null;
+                  return (
+                    <div key={agent.id} onClick={() => openChat(agent, book)}
+                      className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-[var(--color-mono-080)] cursor-pointer hover:border-[var(--color-primary-200)] hover:bg-[var(--color-primary-030)] hover:shadow-sm transition-all group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 bg-[var(--color-primary-030)]" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold text-[var(--color-mono-900)]">{agent.name}</p>
+                        <p className="text-[12px] text-[var(--color-mono-400)] truncate">{book.title}</p>
+                        <p className="text-[11px] text-[var(--color-mono-400)] truncate mt-0.5">{agent.speechStyle}</p>
+                      </div>
+                      <MessageCircle className="w-4 h-4 text-[var(--color-mono-300)] group-hover:text-[var(--color-primary-500)] transition-colors flex-shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={() => setSidebarTab("explore")} className="w-full mt-4 py-3 rounded-2xl text-[13px] font-semibold text-[var(--color-primary-600)] hover:bg-[var(--color-primary-030)] transition-colors border border-[var(--color-primary-200)]">더 많은 인물 보기</button>
             </div>
-            <p className="text-[16px] font-semibold text-[var(--color-mono-700)]">채팅할 인물을 선택해보세요</p>
-            <p className="text-[13px] text-[var(--color-mono-400)] mt-1">왼쪽에서 AI 캐릭터를 클릭하면 대화가 시작돼요</p>
           </div>
         ) : (
           <ChatRoomView
