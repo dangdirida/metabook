@@ -1,6 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink, ChevronDown } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePanelStore } from "@/store/panelStore";
 import { mockBooks } from "@/lib/mock-data";
@@ -76,13 +76,32 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { setSelectedAgent } = usePanelStore();
   const router = useRouter();
   const currentAgent = agents.find((a) => a.id === currentAgentId);
 
+  // [Fix 3] Per-agent input drafts
+  const inputDrafts = useRef<Map<string, string>>(new Map());
+
+  // [Fix 2] Per-agent scroll positions
+  const scrollPositions = useRef<Map<string, number>>(new Map());
+  const [showNewMsgBtn, setShowNewMsgBtn] = useState(false);
+
+  const isNearBottom = useCallback(() => {
+    const el = chatContainerRef.current;
+    if (!el) return true;
+    return el.scrollTop + el.clientHeight >= el.scrollHeight - 100;
+  }, []);
+
   useEffect(() => {
-    if (selectedAgentId && selectedAgentId !== currentAgentId) setCurrentAgentId(selectedAgentId);
-  }, [selectedAgentId, currentAgentId]);
+    if (selectedAgentId && selectedAgentId !== currentAgentId) {
+      // Save current scroll + draft before switching
+      if (chatContainerRef.current) scrollPositions.current.set(currentAgentId, chatContainerRef.current.scrollTop);
+      inputDrafts.current.set(currentAgentId, input);
+      setCurrentAgentId(selectedAgentId);
+    }
+  }, [selectedAgentId, currentAgentId, input]);
 
   const prevAgentIdRef = useRef<string>("");
 
@@ -91,6 +110,18 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
     const parsed: ChatMessage[] = saved ? JSON.parse(saved) : [];
     setMessages(parsed.filter((m) => !(m.role === "assistant" && !m.content.trim())));
     prevAgentIdRef.current = currentAgentId;
+
+    // [Fix 3] Restore draft
+    setInput(inputDrafts.current.get(currentAgentId) || "");
+
+    // [Fix 2] Restore scroll position after DOM update
+    requestAnimationFrame(() => {
+      const el = chatContainerRef.current;
+      if (!el) return;
+      const savedPos = scrollPositions.current.get(currentAgentId);
+      if (savedPos !== undefined) { el.scrollTop = savedPos; }
+      else { el.scrollTop = el.scrollHeight; }
+    });
   }, [bookId, currentAgentId]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,7 +131,15 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
     localStorage.setItem(`chat_${bookId}_${currentAgentId}`, JSON.stringify(messages));
   }, [messages]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // [Fix 2] Auto-scroll only if near bottom
+  useEffect(() => {
+    if (isNearBottom()) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setShowNewMsgBtn(false);
+    } else if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant") {
+      setShowNewMsgBtn(true);
+    }
+  }, [messages, isNearBottom]);
 
   const sendMessage = async () => {
     if (!input.trim() || isStreaming || !currentAgent) return;
@@ -151,7 +190,11 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
       <div className="flex items-center border-b border-[var(--color-mono-080)] flex-shrink-0">
         <div className="flex gap-2 p-3 overflow-x-auto flex-1">
           {agents.map((agent) => (
-            <button key={agent.id} onClick={() => { setCurrentAgentId(agent.id); setSelectedAgent(agent.id); }}
+            <button key={agent.id} onClick={() => {
+              if (chatContainerRef.current) scrollPositions.current.set(currentAgentId, chatContainerRef.current.scrollTop);
+              inputDrafts.current.set(currentAgentId, input);
+              setCurrentAgentId(agent.id); setSelectedAgent(agent.id);
+            }}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-all ${
                 currentAgentId === agent.id
                   ? "border border-[var(--color-primary-400)] bg-[var(--color-primary-030)] text-[var(--color-primary-700)]"
@@ -173,7 +216,8 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
       </div>
 
       {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 relative"
+        onScroll={() => { if (isNearBottom()) setShowNewMsgBtn(false); }}>
         {/* Agent 소개 카드 */}
         {messages.length === 0 && currentAgent && (
           <div className="flex flex-col items-center pt-6 pb-4">
@@ -218,10 +262,10 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
                 </div>
               )}
               {/* AI / 사용자 말풍선 */}
-              <div className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed ${
+              <div className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all ${
                 msg.role === "user"
                   ? "bg-[var(--color-primary-500)] text-white rounded-tr-sm ml-auto"
-                  : "bg-[var(--color-primary-030)] text-[var(--color-mono-800)] rounded-tl-sm"
+                  : `bg-[var(--color-primary-030)] text-[var(--color-mono-800)] rounded-tl-sm ${msg.feedback === "like" ? "border-l-2 border-[var(--color-primary-200)]" : ""}`
               }`}>
                 {msg.content || (
                   <span className="inline-flex gap-1">
@@ -234,12 +278,12 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
               {msg.role === "assistant" && msg.content && (
                 <div className="flex gap-1 mt-1 ml-1">
                   <button onClick={() => toggleFeedback(msg.id, "like")} title="도움이 됐어요"
-                    className={`p-1 rounded transition-colors ${msg.feedback === "like" ? "text-primary-500" : "text-mono-300 hover:text-mono-500"}`}>
-                    <ThumbsUp className="w-3.5 h-3.5" />
+                    className={`p-1.5 rounded-lg transition-all duration-150 active:scale-130 ${msg.feedback === "like" ? "text-[var(--color-primary-600)] bg-[var(--color-primary-030)]" : "text-mono-300 hover:text-mono-500 hover:bg-mono-50"}`}>
+                    <ThumbsUp className={`w-3.5 h-3.5 ${msg.feedback === "like" ? "fill-[var(--color-primary-600)]" : ""}`} />
                   </button>
                   <button onClick={() => toggleFeedback(msg.id, "dislike")} title="별로였어요"
-                    className={`p-1 rounded transition-colors ${msg.feedback === "dislike" ? "text-red-300" : "text-mono-300 hover:text-mono-500"}`}>
-                    <ThumbsDown className="w-3.5 h-3.5" />
+                    className={`p-1.5 rounded-lg transition-all duration-150 active:scale-130 ${msg.feedback === "dislike" ? "text-[#e21235] bg-red-50" : "text-mono-300 hover:text-mono-500 hover:bg-mono-50"}`}>
+                    <ThumbsDown className={`w-3.5 h-3.5 ${msg.feedback === "dislike" ? "fill-[#e21235]" : ""}`} />
                   </button>
                 </div>
               )}
@@ -247,6 +291,13 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
           </div>
         ))}
         <div ref={messagesEndRef} />
+        {/* [Fix 2] New message scroll button */}
+        {showNewMsgBtn && (
+          <button onClick={() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); setShowNewMsgBtn(false); }}
+            className="sticky bottom-2 left-1/2 -translate-x-1/2 ml-auto mr-auto flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--color-primary-500)] text-white text-[11px] font-medium shadow-lg hover:bg-[var(--color-primary-600)] transition-colors z-10">
+            <ChevronDown className="w-3 h-3" />새 메시지
+          </button>
+        )}
       </div>
 
       {/* 채팅 입력 영역 */}
