@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { usePanelStore } from "@/store/panelStore";
 import { mockBooks } from "@/lib/mock-data";
 import { useParams, useRouter } from "next/navigation";
@@ -67,6 +68,7 @@ function PersonalityTag({ label }: { label: string }) {
 
 function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
   const { bookId } = useParams();
+  const { data: session } = useSession();
   const book = mockBooks.find((b) => b.id === bookId);
   const agents = book?.agents || [];
   const [currentAgentId, setCurrentAgentId] = useState<string>(selectedAgentId || agents[0]?.id || "");
@@ -112,7 +114,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
     try {
       const response = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages.map((m) => ({ role: m.role, content: m.content })), agentName: currentAgent.name, bookTitle: book?.title || "", persona: `성격: ${currentAgent.personality.join(", ")}. 말투: ${currentAgent.speechStyle}` }),
+        body: JSON.stringify({ messages: newMessages.map((m) => ({ role: m.role, content: m.content })), agentName: currentAgent.name, bookTitle: book?.title || "", persona: `성격: ${currentAgent.personality.join(", ")}. 말투: ${currentAgent.speechStyle}`, userId: session?.user?.email || "anonymous", agentId: currentAgentId, bookId: bookId as string }),
       });
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();

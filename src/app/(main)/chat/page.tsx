@@ -524,7 +524,7 @@ function ChatRoomView({
       try {
         const response = await fetch("/api/chat", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: allMessages.map((m) => ({ role: m.role, content: m.content })), agentName: agent.name, bookTitle: book.title, persona: `성격: ${agent.personality.join(", ")}. 말투: ${agent.speechStyle}` }),
+          body: JSON.stringify({ messages: allMessages.map((m) => ({ role: m.role, content: m.content })), agentName: agent.name, bookTitle: book.title, persona: `성격: ${agent.personality.join(", ")}. 말투: ${agent.speechStyle}`, userId: "anonymous", agentId: agent.id, bookId: book.id }),
         });
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
