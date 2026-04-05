@@ -62,7 +62,8 @@ export default function CenterPanel() {
   const [popover, setPopover] = useState<{ x: number; y: number; name: string; role: string; chapters: string } | null>(null);
   const { setSelectedAgent, setActiveTab } = usePanelStore();
   const chapters = getChaptersByBookId(bookId as string);
-  const chapter = chapters[currentChapter];
+  const safeChapterIdx = Math.min(currentChapter, Math.max(0, chapters.length - 1));
+  const chapter = chapters[safeChapterIdx] || { id: "", number: 1, title: "", content: "", images: [], characters: [] };
   const totalChapters = chapters.length;
 
   useEffect(() => {

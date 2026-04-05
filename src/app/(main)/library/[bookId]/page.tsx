@@ -17,8 +17,10 @@ export default function BookDetailPage() {
   const book = getBookById(bookId as string);
 
   const [showIntro, setShowIntro] = useState(false);
+  const [savedProgress, setSavedProgress] = useState<number | null>(null);
   useEffect(() => {
     setShowIntro(!localStorage.getItem(`metabook_started_${bookId}`));
+    try { const p = JSON.parse(localStorage.getItem(`metabook_progress_${bookId}`) || "null"); if (p?.progress > 0) setSavedProgress(Math.round(p.progress)); } catch { /* */ }
   }, [bookId]);
 
   if (showIntro && book) {
@@ -58,11 +60,12 @@ export default function BookDetailPage() {
             className="w-full py-4 rounded-2xl bg-[var(--color-primary-500)] text-white text-[15px] font-bold hover:bg-[var(--color-primary-600)] transition-colors shadow-sm">
             읽기 시작하기
           </button>
-          {(() => { try { const p = JSON.parse(localStorage.getItem(`metabook_progress_${bookId}`) || "null"); return p ? (
+          {savedProgress !== null && savedProgress > 0 && (
             <button onClick={() => { localStorage.setItem(`metabook_started_${bookId}`, "1"); setShowIntro(false); }}
               className="w-full mt-2 py-3 rounded-2xl border border-[var(--color-mono-100)] text-[13px] font-medium text-[var(--color-mono-600)] hover:bg-[var(--color-mono-030)] transition-colors">
-              {Math.round(p.progress)}% 이어 읽기
-            </button>) : null; } catch { return null; } })()}
+              {savedProgress}% 이어 읽기
+            </button>
+          )}
         </div>
       </div>
     );
