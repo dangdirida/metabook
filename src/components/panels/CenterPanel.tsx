@@ -122,7 +122,14 @@ export default function CenterPanel() {
     setTimeout(() => {
       setCurrentChapter(next);
       localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: next, progress: 0, updatedAt: new Date().toISOString() }));
-      setTimeout(() => { if (contentRef.current) contentRef.current.scrollTop = 0; setIsTransitioning(false); }, 50);
+      setTimeout(() => {
+        if (contentRef.current) {
+          const nextChNum = chapters[next]?.number;
+          const savedPos = nextChNum ? localStorage.getItem(`metabook_scroll_ch${nextChNum}`) : null;
+          contentRef.current.scrollTop = savedPos ? Number(savedPos) : 0;
+        }
+        setIsTransitioning(false);
+      }, 50);
     }, 200);
   };
 

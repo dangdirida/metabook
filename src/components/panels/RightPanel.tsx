@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink, ChevronDown } from "lucide-react";
+import { Send, ThumbsUp, ThumbsDown, Camera, MessageCircle, ExternalLink, ChevronDown, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePanelStore } from "@/store/panelStore";
 import { mockBooks } from "@/lib/mock-data";
@@ -87,6 +87,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
   // [Fix 2] Per-agent scroll positions
   const scrollPositions = useRef<Map<string, number>>(new Map());
   const [showNewMsgBtn, setShowNewMsgBtn] = useState(false);
+  const wasNearBottomRef = useRef(true); // [Fix 2] Track if user was at bottom when streaming started
 
   const isNearBottom = useCallback(() => {
     const el = chatContainerRef.current;
@@ -131,18 +132,25 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
     localStorage.setItem(`chat_${bookId}_${currentAgentId}`, JSON.stringify(messages));
   }, [messages]);
 
-  // [Fix 2] Auto-scroll only if near bottom
+  // [Fix 2] Auto-scroll: only if user was near bottom when streaming started
   useEffect(() => {
-    if (isNearBottom()) {
+    if (isStreaming && !wasNearBottomRef.current) {
+      // User scrolled up — don't auto-scroll, show button instead
+      if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant") setShowNewMsgBtn(true);
+      return;
+    }
+    if (isNearBottom() || wasNearBottomRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       setShowNewMsgBtn(false);
     } else if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant") {
       setShowNewMsgBtn(true);
     }
-  }, [messages, isNearBottom]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim() || isStreaming || !currentAgent) return;
+    wasNearBottomRef.current = isNearBottom(); // [Fix 2] Capture before streaming
     const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: input.trim(), timestamp: new Date().toISOString() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -302,22 +310,31 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
 
       {/* 채팅 입력 영역 */}
       <div className="border-t border-[var(--color-mono-080)] bg-white px-3 py-3 flex-shrink-0">
+        {/* [Fix 1] 답변 중 표시 */}
+        {isStreaming && currentAgent && (
+          <p className="text-[11px] text-[var(--color-primary-500)] mb-1.5 ml-1 animate-pulse">
+            {currentAgent.name}{((currentAgent.name.charCodeAt(currentAgent.name.length - 1) - 0xAC00) % 28 > 0) ? "이" : "가"} 답변 중...
+          </p>
+        )}
         <div className="flex items-end gap-2">
           <button className="p-2 text-mono-400 hover:text-mono-600 transition-colors" title="대화 스냅샷 저장">
             <Camera className="w-5 h-5" />
           </button>
           <textarea value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!isStreaming) sendMessage(); } }}
             placeholder={currentAgent ? `${currentAgent.name}에게 메시지...` : "Agent를 선택하세요"}
             disabled={!currentAgent}
             rows={1}
             className="flex-1 resize-none text-[14px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] bg-[var(--color-mono-050)] border border-mono-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 max-h-32 overflow-y-auto" />
           <button data-send-btn onClick={sendMessage} disabled={!input.trim() || isStreaming || !currentAgent}
             className="w-9 h-9 rounded-xl bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white flex items-center justify-center transition-colors disabled:opacity-40">
-            <Send className="w-4 h-4" />
+            {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
-        <p className="text-[10px] text-[var(--color-mono-400)] text-center mt-1.5">Enter로 전송 · Shift+Enter로 줄바꿈</p>
+        {/* [Fix 4] Enter/Shift+Enter 힌트 — 타이핑 중에만, 데스크탑만 */}
+        <div className={`hidden md:block text-[10px] text-[var(--color-mono-400)] text-right mt-1.5 mr-1 transition-opacity duration-200 ${input.trim() ? "opacity-100" : "opacity-0"}`}>
+          Enter 전송 · Shift+Enter 줄바꿈
+        </div>
       </div>
     </div>
   );
