@@ -6,6 +6,7 @@ import {
   getRecentMessages,
   buildMemoryContext,
 } from "@/lib/chat-memory";
+import { adminDb } from "@/lib/firebase-admin";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -23,6 +24,35 @@ ${persona}
 한국어로 답변하세요.
 답변은 2-4문장으로 간결하게 해주세요.`;
 
+  // Firestore에서 인물 데이터 조회
+  let characterPrompt = "";
+  try {
+    const snapshot = await adminDb.collection("bookCharacters").doc(safeBookId).collection("characters").get();
+    const charDoc = snapshot.docs.find((doc) => {
+      const d = doc.data();
+      return d.name === agentName || agentName?.includes(d.name) || d.name?.includes(agentName);
+    });
+    if (charDoc) {
+      const c = charDoc.data();
+      characterPrompt = [
+        `[캐릭터 설정 - ${c.name}]`,
+        `역할: ${c.role}`,
+        `성격: ${Array.isArray(c.personality) ? c.personality.join(", ") : c.personality}`,
+        `말투: ${c.speechStyle}`,
+        `배경: ${c.background}`,
+        c.representativeQuotes?.length > 0 ? `대표 대사: ${c.representativeQuotes.join(" / ")}` : "",
+        "",
+        c.systemPrompt,
+        "",
+        "반드시 위 캐릭터로서만 대화하고, 캐릭터를 절대 벗어나지 말 것.",
+      ].filter(Boolean).join("\n");
+    }
+  } catch (e) {
+    console.error("[chat] character fetch error:", e);
+  }
+
+  const baseSystemPrompt = characterPrompt ? `${characterPrompt}\n\n---\n\n${systemPrompt}` : systemPrompt;
+
   // 메모리 조회 (병렬, 실패해도 채팅은 정상 동작)
   const lastUserContent = messages[messages.length - 1]?.content || "";
   const [relevantMemories, recentMessages] = await Promise.all([
@@ -32,8 +62,8 @@ ${persona}
   const memoryContext = buildMemoryContext(relevantMemories, recentMessages);
 
   const finalSystemPrompt = memoryContext
-    ? `${systemPrompt}\n\n${memoryContext}\n\n위의 대화 기록을 참고해서 자연스럽게 이어서 대화해줘. 이전에 나눈 이야기를 기억하고 있는 것처럼 자연스럽게 반응해.`
-    : systemPrompt;
+    ? `${baseSystemPrompt}\n\n${memoryContext}\n\n위의 대화 기록을 참고해서 자연스럽게 이어서 대화해줘. 이전에 나눈 이야기를 기억하고 있는 것처럼 자연스럽게 반응해.`
+    : baseSystemPrompt;
 
   const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
     role: m.role === "user" ? "user" : "model",
