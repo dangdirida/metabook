@@ -13,6 +13,14 @@ export async function analyzeAndSaveCharacters(
 
   const prompt = `소설 "${bookTitle}"의 본문을 분석해서 주요 등장인물을 JSON으로만 반환해줘.
 마크다운이나 설명 없이 순수 JSON만 반환.
+
+중요 규칙:
+- 동일 인물은 반드시 하나로 통합할 것. 예: 이정인이 서술자이면서 등장인물이어도 하나의 객체만 생성.
+- id는 반드시 소문자+언더스코어로 고유하게 생성. 같은 이름이면 무조건 같은 id.
+- 최종 characters 배열에 같은 이름의 인물이 2개 이상 있으면 안 됨.
+- 주요 등장인물만 추출. 단역이나 이름 없는 인물 제외.
+- 인물은 최대 6명까지만.
+
 {
   "characters": [
     {
@@ -23,7 +31,7 @@ export async function analyzeAndSaveCharacters(
       "speechStyle": "말투 설명. 구체적인 예시 포함.",
       "background": "인물 배경 2~3문장",
       "relationships": [{"name": "상대방", "relation": "관계"}],
-      "representativeQuotes": ["실제 본문 대사"],
+      "representativeQuotes": ["실제 본문 대사 1~2개. 없으면 빈 배열"],
       "systemPrompt": "당신은 소설 속 {이름}입니다. [구체적 말투 지시]. [절대 AI임을 밝히지 말 것]. [책 내용 모를 때 회피 방법]. [감정 표현 방식]을 5~7문장으로."
     }
   ]
@@ -37,31 +45,41 @@ ${truncated}`;
   text = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 
   const parsed = JSON.parse(text);
-  const characters = parsed.characters || [];
+  const rawCharacters = parsed.characters || [];
+
+  // 중복 제거 (id 또는 name 기준)
+  const uniqueCharacters = rawCharacters.filter(
+    (char: { id: string; name: string }, index: number, self: { id: string; name: string }[]) =>
+      index === self.findIndex((c) => c.id === char.id || c.name === char.name)
+  );
 
   const AVATAR_MAP: Record<string, string> = {
     jeong_in: "/avatars/jeong_in.jpg",
+    jeongin: "/avatars/jeong_in.jpg",
     mari: "/avatars/mari.jpg",
+    mary: "/avatars/mari.jpg",
     su_yeong: "/avatars/su_yeong.jpg",
+    kim_su_young: "/avatars/su_yeong.jpg",
+    sooyoung_kim: "/avatars/su_yeong.jpg",
   };
 
   const batch = adminDb.batch();
-  for (const c of characters) {
+  for (const c of uniqueCharacters) {
     const avatar = AVATAR_MAP[c.id] || "/avatars/default-profile.svg";
     const ref = adminDb.collection("bookCharacters").doc(bookId).collection("characters").doc(c.id);
     batch.set(ref, { ...c, avatar, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
   }
   await batch.commit();
-  console.log(`[book-setup] ${bookTitle}: ${characters.length}명 분석 완료`);
+  console.log(`[book-setup] ${bookTitle}: ${uniqueCharacters.length}명 분석 완료 (중복 제거 후)`);
 }
 
 function simpleHash(str: string): string {
   let hash = 0;
-  for (let i = 0; i < Math.min(str.length, 500); i++) {
+  for (let i = 0; i < Math.min(str.length, 1000); i++) {
     hash = ((hash << 5) - hash) + str.charCodeAt(i);
     hash |= 0;
   }
-  return hash.toString();
+  return Math.abs(hash).toString(36);
 }
 
 export async function ensureCharactersAnalyzed(
@@ -73,23 +91,22 @@ export async function ensureCharactersAnalyzed(
     const currentHash = simpleHash(fullText);
     const bookDoc = await adminDb.collection("bookCharacters").doc(bookId).get();
     const savedHash = bookDoc.data()?.contentHash;
+    const hasCharacters = bookDoc.exists && savedHash;
 
-    if (bookDoc.exists && savedHash === currentHash) {
+    if (hasCharacters && savedHash === currentHash) {
       return; // 본문 동일 → 기존 데이터 사용
     }
 
-    console.log(`[book-setup] 본문 변경 감지 (${bookId}) → 인물 재분석 시작`);
+    console.log(`[book-setup] ${bookId} 본문 변경 감지 → 인물 재분석 시작`);
 
-    // 기존 characters 삭제
-    if (bookDoc.exists) {
-      const chars = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
-      await Promise.all(chars.docs.map((d) => d.ref.delete()));
-    }
+    // 기존 characters 서브컬렉션 전체 삭제
+    const existingChars = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
+    await Promise.all(existingChars.docs.map((d) => d.ref.delete()));
 
     // 재분석 실행
     await analyzeAndSaveCharacters(bookId, bookTitle, fullText);
 
-    // 해시 저장
+    // 새 해시 저장
     await adminDb.collection("bookCharacters").doc(bookId).set(
       { contentHash: currentHash, updatedAt: FieldValue.serverTimestamp() },
       { merge: true }
