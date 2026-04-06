@@ -55,23 +55,45 @@ ${truncated}`;
   console.log(`[book-setup] ${bookTitle}: ${characters.length}명 분석 완료`);
 }
 
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < Math.min(str.length, 500); i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash.toString();
+}
+
 export async function ensureCharactersAnalyzed(
   bookId: string,
   bookTitle: string,
   fullText: string
 ): Promise<void> {
   try {
-    const snapshot = await adminDb
-      .collection("bookCharacters")
-      .doc(bookId)
-      .collection("characters")
-      .limit(1)
-      .get();
+    const currentHash = simpleHash(fullText);
+    const bookDoc = await adminDb.collection("bookCharacters").doc(bookId).get();
+    const savedHash = bookDoc.data()?.contentHash;
 
-    if (snapshot.empty) {
-      console.log(`[book-setup] ${bookId} 인물 데이터 없음 → 자동 분석 시작`);
-      await analyzeAndSaveCharacters(bookId, bookTitle, fullText);
+    if (bookDoc.exists && savedHash === currentHash) {
+      return; // 본문 동일 → 기존 데이터 사용
     }
+
+    console.log(`[book-setup] 본문 변경 감지 (${bookId}) → 인물 재분석 시작`);
+
+    // 기존 characters 삭제
+    if (bookDoc.exists) {
+      const chars = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
+      await Promise.all(chars.docs.map((d) => d.ref.delete()));
+    }
+
+    // 재분석 실행
+    await analyzeAndSaveCharacters(bookId, bookTitle, fullText);
+
+    // 해시 저장
+    await adminDb.collection("bookCharacters").doc(bookId).set(
+      { contentHash: currentHash, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
   } catch (e) {
     console.error("[book-setup] ensureCharactersAnalyzed error:", e);
   }
