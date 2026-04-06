@@ -325,10 +325,10 @@ function ChatPageInner() {
             <div className="w-full max-w-3xl mx-auto px-6 py-8">
               <p className="text-xs tracking-widest text-[var(--color-mono-400)] uppercase mb-6">인기 인물</p>
               {(() => {
-                const popular = booksWithAgents.flatMap((b) => b.agents.map((a) => ({ agent: a, book: b })));
-                const MC: Record<string, number> = { jeong_in: 1243, mari: 876, seong_ju: 654, su_yeong: 512 };
+                const MC: Record<string, number> = { jeong_in: 1243, mari: 876, seong_ju: 654, su_yeong: 512, "ll-a1": 1243, "pe-a1": 445, "dkm-a1": 398, "wmm-a1": 367, "dp-a1": 334, "bc-a1": 312, "wi-a1": 289, "dh-a1": 478, "bph-a1": 256, "slu-a1": 423, "bac-a1": 201, "yb-a1": 345 };
                 const fmt = (n: number) => mounted ? n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : String(n);
-                const sorted = popular.map((p) => ({ ...p, cc: MC[p.agent.id] || (200 + (p.agent.id.charCodeAt(0) * 7) % 300) })).sort((a, b) => b.cc - a.cc).slice(0, 5);
+                const popular = booksWithAgents.flatMap((b) => b.agents.slice(0, 1).map((a) => ({ agent: a, book: b, cc: MC[a.id] || 200 })));
+                const sorted = popular.sort((a, b) => b.cc - a.cc || a.agent.id.localeCompare(b.agent.id)).slice(0, 5);
                 const top = sorted[0]; const rest = sorted.slice(1);
                 return (
                   <>

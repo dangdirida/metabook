@@ -72,6 +72,19 @@ export default function LeftPanel() {
   );
 }
 
+function ProgressBarWidget({ bookId }: { bookId: string }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    try { const s = localStorage.getItem(`metabook_progress_${bookId}`); if (s) setProgress(JSON.parse(s).progress || 0); } catch { /* */ }
+  }, [bookId]);
+  if (progress <= 0) return null;
+  return (
+    <div className="mt-1.5 h-1 rounded-full bg-[var(--color-mono-080)] overflow-hidden">
+      <div className="h-full bg-[var(--color-primary-400)] rounded-full transition-all" style={{ width: `${progress}%` }} />
+    </div>
+  );
+}
+
 function BookItem({ book, isActive, isExpanded, onSelect, onToggleExpand, onShowQR }: {
   book: Book; isActive: boolean; isExpanded: boolean;
   onSelect: () => void; onToggleExpand: () => void; onShowQR: (imageId: string) => void;
@@ -94,7 +107,7 @@ function BookItem({ book, isActive, isExpanded, onSelect, onToggleExpand, onShow
           <div className="min-w-0">
             <p className="text-[14px] font-medium text-[var(--color-mono-900)] truncate">{book.title}</p>
             <p className="text-[12px] text-[var(--color-mono-400)] truncate">{book.author}</p>
-            <ProgressBar bookId={book.id} />
+            <ProgressBarWidget bookId={book.id} />
           </div>
         </div>
         <button onClick={onToggleExpand} className="p-1 hover:bg-mono-100 rounded transition-colors">
@@ -150,15 +163,3 @@ function SceneCard({ img, idx, onShowQR }: { img: { id: string; url?: string; al
   );
 }
 
-function ProgressBar({ bookId }: { bookId: string }) {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    try { const s = localStorage.getItem(`metabook_progress_${bookId}`); if (s) setProgress(JSON.parse(s).progress || 0); } catch { /* */ }
-  }, [bookId]);
-  if (progress <= 0) return null;
-  return (
-    <div className="mt-1.5 h-1 rounded-full bg-[var(--color-mono-080)] overflow-hidden">
-      <div className="h-full bg-[var(--color-primary-400)] rounded-full transition-all" style={{ width: `${progress}%` }} />
-    </div>
-  );
-}
