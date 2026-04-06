@@ -3,9 +3,12 @@ import Stripe from "stripe";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
 

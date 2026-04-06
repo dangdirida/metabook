@@ -3,8 +3,6 @@ import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 const PRODUCT_PRICES: Record<string, number> = {
   phonecase: 14900,
   tumbler: 19900,
@@ -20,7 +18,12 @@ const PRODUCT_NAMES: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const session = await getServerSession(authOptions);
     const { goodsId, productType, quantity = 1 } = await req.json();
 

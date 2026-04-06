@@ -52,7 +52,6 @@ export default function TopTabs() {
       .catch(() => setApiGoodsLoading(false));
   }, [bookId]);
 
-  const hasGoods = goods.length > 0 || apiGoods.length > 0;
   const hasSeries = seriesBooks.length >= 2;
 
   const tabs = useMemo(() => {
