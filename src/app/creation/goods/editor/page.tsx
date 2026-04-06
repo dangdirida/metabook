@@ -364,15 +364,9 @@ function EditorContent() {
           <div ref={canvasRef} className="relative select-none"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
             <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
-              {/* L1: 배경색 (multiply로 product.png 흰 영역에만 적용) */}
-              {bgColor !== "#FFFFFF" && bgColor !== "#ffffff" && (
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, mixBlendMode: "multiply", zIndex: 2 }} />
-              )}
-              {/* L2: 점선 안쪽 연한 색상 */}
-              {bgColor !== "#FFFFFF" && bgColor !== "#ffffff" && (
-                <div className="absolute pointer-events-none" style={{ left: `${config.printArea.x * 100}%`, top: `${config.printArea.y * 100}%`, width: `${config.printArea.w * 100}%`, height: `${config.printArea.h * 100}%`, backgroundColor: bgColor, opacity: 0.25, zIndex: 3 }} />
-              )}
-              {/* L3: 유저 이미지 */}
+              {/* L1: 배경색 (z-1, product.png가 위에서 케이스 외곽을 가림) */}
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, zIndex: 1 }} />
+              {/* L2: 유저 이미지 */}
               {userImage && (
                 <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
                   style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height, zIndex: 5 }}
@@ -383,10 +377,10 @@ function EditorContent() {
                   {HANDLES.map((h) => <div key={h} style={handlePos(h)} onMouseDown={(e) => handleResizeDown(h, e)} />)}
                 </div>
               )}
-              {/* L4: 제품 목업 (투명 PNG, 가장 위) */}
+              {/* L3: 제품 목업 (투명 PNG — 케이스 외곽이 투명이므로 배경색 가려줌) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 10 }} />
-              {/* L5: 점선 오버레이 */}
+              {/* L4: 점선 오버레이 */}
               {config.files.overlay && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={config.files.overlay} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 11, opacity: 0.6 }} />
