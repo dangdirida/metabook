@@ -53,7 +53,8 @@ export default function MyPage() {
     <div className="min-h-screen bg-[var(--color-mono-010)]">
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-          <Link href="/library" className="text-2xl font-bold text-[var(--color-mono-990)]">OGQ</Link>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <Link href="/library"><img src="/logo_ogq_green.png" alt="OGQ" className="h-7 w-auto" /></Link>
           <UserMenu />
         </div>
       </header>

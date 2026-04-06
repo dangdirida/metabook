@@ -247,7 +247,8 @@ function LibraryContent() {
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 relative">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl md:text-2xl font-bold text-[var(--color-mono-990)] flex-shrink-0">OGQ</h1>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <h1 className="flex-shrink-0"><img src="/logo_ogq_green.png" alt="OGQ" className="h-7 w-auto" /></h1>
             <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
               {[{ href: "/creations", label: "창작물" }, { href: "/bgm", label: "브금" }, { href: "/chat", label: "채팅" }].map((item) => (
                 <Link key={item.href} href={item.href} className="px-4 py-2 rounded-xl text-[14px] font-medium text-[var(--color-mono-600)] hover:text-[var(--color-mono-990)] hover:bg-[var(--color-mono-050)] transition-colors">{item.label}</Link>

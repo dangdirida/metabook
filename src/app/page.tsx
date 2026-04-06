@@ -73,8 +73,9 @@ export default function Home() {
 
       {/* 메인 콘텐츠 - 정중앙 */}
       <div className="relative z-10 flex flex-col items-center text-center px-6">
-        <h1 className="text-6xl sm:text-7xl font-bold text-white mb-4 drop-shadow-lg">
-          OGQ
+        <h1 className="mb-4 drop-shadow-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo_ogq_white.png" alt="OGQ" className="h-8 w-auto mx-auto" />
         </h1>
         <p className="text-lg sm:text-xl text-white/70 mb-16 max-w-md">
           책 속 세계가 살아 움직이는 인터랙티브 독서 플랫폼

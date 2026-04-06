@@ -87,13 +87,11 @@ function GoodsContent() {
   const productMeta = PRODUCT_META[goodsType] || { canvasWidth: 300, canvasHeight: 400 };
 
   const typeCards = [
-    { type: "bookmark" as GoodsType, label: "책갈피", icon: Bookmark, desc: "좋아하는 구절로 나만의 책갈피" },
-    { type: "sticker" as GoodsType, label: "스티커", icon: Sticker, desc: "AI로 캐릭터 스티커 생성" },
-    { type: "illustration" as GoodsType, label: "일러스트", icon: ImageIcon, desc: "장면을 AI 일러스트로" },
     { type: "phone-case" as GoodsType, label: "폰케이스", icon: Smartphone, desc: "나만의 폰케이스 디자인" },
     { type: "cushion" as GoodsType, label: "쿠션", icon: Square, desc: "포근한 나만의 쿠션" },
     { type: "tumbler" as GoodsType, label: "텀블러", icon: Coffee, desc: "매일 쓰는 나만의 텀블러" },
     { type: "photocard" as GoodsType, label: "포토카드", icon: CreditCard, desc: "책 속 인물 포토카드" },
+    { type: "bookmark" as GoodsType, label: "책갈피", icon: Bookmark, desc: "좋아하는 구절로 나만의 책갈피" },
   ];
 
   // 책갈피 캔버스

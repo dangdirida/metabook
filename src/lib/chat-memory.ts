@@ -1,14 +1,6 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import { db } from "@/lib/firebase";
-import {
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-  serverTimestamp,
-} from "firebase/firestore";
+import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 // ── 타입 ──────────────────────────────────────────────────
 export interface ChatMessage {
@@ -55,10 +47,10 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return data.embedding.values as number[];
 }
 
-// ── Firestore 경로 헬퍼 ────────────────────────────────────
+// ── Firestore 경로 헬퍼 (Admin SDK) ─────────────────────────
 function messagesCol(userId: string, bookId: string, agentId: string) {
   const docId = `${userId}__${bookId}__${agentId}`;
-  return collection(db, "chatMemory", docId, "messages");
+  return adminDb.collection("chatMemory").doc(docId).collection("messages");
 }
 
 // ── 1. 메시지 저장 (Pinecone + Firestore 병렬) ─────────────
@@ -74,13 +66,13 @@ export async function saveChatMessage(
 
   const [embedding] = await Promise.all([
     generateEmbedding(content),
-    addDoc(messagesCol(userId, bookId, agentId), {
+    messagesCol(userId, bookId, agentId).add({
       role,
       content,
       userId,
       bookId,
       agentId,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     }),
   ]);
 
@@ -126,12 +118,10 @@ export async function getRecentMessages(
   agentId: string,
   msgLimit = 10
 ): Promise<ChatMessage[]> {
-  const q = query(
-    messagesCol(userId, bookId, agentId),
-    orderBy("createdAt", "desc"),
-    limit(msgLimit)
-  );
-  const snap = await getDocs(q);
+  const snap = await messagesCol(userId, bookId, agentId)
+    .orderBy("createdAt", "desc")
+    .limit(msgLimit)
+    .get();
   return snap.docs
     .map((doc) => {
       const d = doc.data();
