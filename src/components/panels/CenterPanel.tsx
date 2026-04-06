@@ -252,7 +252,8 @@ export default function CenterPanel() {
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${isDark ? "bg-mono-800 text-mono-400" : "bg-[var(--color-mono-050)] text-[var(--color-mono-500)]"}`}>
               {chapter.number} / {totalChapters}
             </span>
-            <span className={`text-[14px] font-semibold truncate ${isDark ? "text-mono-200" : "text-[var(--color-mono-800)]"}`}>
+            {book?.section && <span className={`text-[12px] ${isDark ? "text-mono-500" : "text-[var(--color-mono-400)]"}`}>{book.section}</span>}
+            <span className={`text-[13px] font-medium truncate ${isDark ? "text-mono-300" : "text-[var(--color-mono-700)]"}`}>
               {chapter.title}
             </span>
           </div>
@@ -276,7 +277,10 @@ export default function CenterPanel() {
       {/* 본문 영역 */}
       <div ref={contentRef} className={`flex-1 overflow-y-auto custom-scrollbar transition-opacity duration-200 ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
         <div className="max-w-2xl mx-auto px-6 py-8">
-          <h2 className={`text-[22px] font-bold mb-8 ${isDark ? "text-mono-100" : "text-[var(--color-mono-990)]"}`}>제{chapter.number}장. {chapter.title}</h2>
+          <div className="mb-6">
+            {book?.section && <p className={`text-[13px] font-normal tracking-[0.2em] mb-1 ${isDark ? "text-mono-400" : "text-[var(--color-mono-500)]"}`}>{book.section}</p>}
+            <p className={`text-[16px] font-medium ${isDark ? "text-mono-300" : "text-[var(--color-mono-800)]"}`}>{chapter.title}</p>
+          </div>
           <div style={{ fontSize: `${fontSize}px`, lineHeight: 1.95 }} className={`whitespace-pre-wrap ${isDark ? "" : "text-[var(--color-mono-800)]"}`}>
             {chapter.content.split("\n\n").map((paragraph, i) => (
               <div key={i}>

@@ -30,6 +30,7 @@ export interface Book {
   seriesId?: string;
   seriesOrder?: number;
   worldUrl?: string;
+  section?: string;
   isActive: boolean;
   createdAt: string;
 }

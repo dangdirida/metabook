@@ -151,6 +151,7 @@ export const mockBooks: Book[] = [
     ageGroup: "성인",
     coverImage: "/covers/gy-1.png",
     description: "희망 없이 사람을 사랑하는 일이 가능할까 — 10년 만에 선보이는 백영옥 장편소설 완결판",
+    section: "정인",
     chapters: [],
     agents: AGENTS_LOVERS_LOVER,
     images: makeImages("lovers-lover"),
