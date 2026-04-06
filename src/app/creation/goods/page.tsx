@@ -10,7 +10,7 @@ import {
 import { mockBooks } from "@/lib/mock-data";
 import { addCreation } from "@/lib/creation-store";
 
-type GoodsType = "bookmark" | "sticker" | "illustration" | "phone-case" | "cushion" | "tumbler" | "photocard";
+type GoodsType = "bookmark" | "sticker" | "illustration" | "phone-case" | "tumbler" | "photocard";
 type Step = "select" | "editor" | "mockup" | "done";
 type ResizeHandle = "nw" | "n" | "ne" | "w" | "e" | "sw" | "s" | "se";
 
@@ -30,7 +30,6 @@ const ILLUST_STYLES = [
 
 const PRODUCT_META: Record<string, { canvasWidth: number; canvasHeight: number }> = {
   "phone-case": { canvasWidth: 300, canvasHeight: 520 },
-  cushion: { canvasWidth: 400, canvasHeight: 400 },
   tumbler: { canvasWidth: 280, canvasHeight: 480 },
   photocard: { canvasWidth: 260, canvasHeight: 360 },
 };
@@ -83,12 +82,11 @@ function GoodsContent() {
   // 완성
   const [finalImage, setFinalImage] = useState<string | null>(null);
 
-  const isNewProduct = ["phone-case", "cushion", "tumbler", "photocard"].includes(goodsType);
+  const isNewProduct = ["phone-case", "tumbler", "photocard"].includes(goodsType);
   const productMeta = PRODUCT_META[goodsType] || { canvasWidth: 300, canvasHeight: 400 };
 
   const typeCards = [
     { type: "phone-case" as GoodsType, label: "폰케이스", icon: Smartphone, desc: "나만의 폰케이스 디자인" },
-    { type: "cushion" as GoodsType, label: "쿠션", icon: Square, desc: "포근한 나만의 쿠션" },
     { type: "tumbler" as GoodsType, label: "텀블러", icon: Coffee, desc: "매일 쓰는 나만의 텀블러" },
     { type: "photocard" as GoodsType, label: "포토카드", icon: CreditCard, desc: "책 속 인물 포토카드" },
     { type: "bookmark" as GoodsType, label: "책갈피", icon: Bookmark, desc: "좋아하는 구절로 나만의 책갈피" },
@@ -244,7 +242,7 @@ function GoodsContent() {
             <h2 className="text-xl font-bold text-[var(--color-mono-990)]">어떤 굿즈를 만들까요?</h2>
             <div className="grid grid-cols-2 gap-3">
               {typeCards.map((card) => (
-                <button key={card.type} onClick={() => { if (["phone-case","cushion","tumbler","photocard"].includes(card.type)) { router.push(`/creation/goods/editor?product=${card.type === "phone-case" ? "phonecase" : card.type}&bookId=${bookId}`); return; } setGoodsType(card.type); setStep("editor"); setGeneratedImageUrl(""); setIsLoadingImage(false); setUploadedPhoto(null); setDesignMode("custom"); }}
+                <button key={card.type} onClick={() => { if (["phone-case","tumbler","photocard"].includes(card.type)) { router.push(`/creation/goods/editor?product=${card.type === "phone-case" ? "phonecase" : card.type}&bookId=${bookId}`); return; } setGoodsType(card.type); setStep("editor"); setGeneratedImageUrl(""); setIsLoadingImage(false); setUploadedPhoto(null); setDesignMode("custom"); }}
                   className="p-4 border-2 border-[var(--color-mono-080)] rounded-2xl hover:border-[var(--color-primary-300)] transition-colors text-left">
                   <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-050)] flex items-center justify-center mb-3"><card.icon className="w-5 h-5 text-[var(--color-primary-600)]" /></div>
                   <p className="font-bold text-[var(--color-mono-990)] text-[14px]">{card.label}</p>

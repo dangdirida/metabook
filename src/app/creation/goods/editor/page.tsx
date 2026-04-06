@@ -363,10 +363,17 @@ function EditorContent() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
           <div ref={canvasRef} className="relative select-none"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
-            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
-              {/* L1: 배경색 (z-1, product.png가 위에서 케이스 외곽을 가림) */}
-              <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, zIndex: 1 }} />
-              {/* L2: 유저 이미지 */}
+            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height, isolation: "isolate" }}>
+              {/* L1: base.png — 마스크 (흰=인쇄면, 회색=외곽) */}
+              {config.files.base && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={config.files.base} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 1 }} />
+              )}
+              {/* L2: 배경색 — multiply로 base.png 흰 영역에만 적용 */}
+              {bgColor.toLowerCase() !== "#ffffff" && (
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, mixBlendMode: "multiply", zIndex: 2 }} />
+              )}
+              {/* L3: 유저 이미지 */}
               {userImage && (
                 <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
                   style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height, zIndex: 5 }}
@@ -377,10 +384,10 @@ function EditorContent() {
                   {HANDLES.map((h) => <div key={h} style={handlePos(h)} onMouseDown={(e) => handleResizeDown(h, e)} />)}
                 </div>
               )}
-              {/* L3: 제품 목업 (투명 PNG — 케이스 외곽이 투명이므로 배경색 가려줌) */}
+              {/* L4: product.png — 제품 목업 (카메라홀, 테두리 등) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 10 }} />
-              {/* L4: 점선 오버레이 */}
+              {/* L5: overlay.png — 점선 */}
               {config.files.overlay && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={config.files.overlay} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 11, opacity: 0.6 }} />

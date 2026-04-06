@@ -24,16 +24,6 @@ export const MOCKUP_CONFIGS: Record<string, MockupConfig> = {
     printArea: { x: 0.08, y: 0.05, w: 0.84, h: 0.90 },
     canvasSize: { width: 500, height: 700 },
   },
-  cushion: {
-    id: "cushion",
-    name: "쿠션",
-    files: {
-      product: "/mockups/cusion/cushion.png",
-      thumbnail: "/mockups/cusion/cushion.png",
-    },
-    printArea: { x: 0.15, y: 0.15, w: 0.70, h: 0.70 },
-    canvasSize: { width: 600, height: 600 },
-  },
   tumbler: {
     id: "tumbler",
     name: "텀블러",
