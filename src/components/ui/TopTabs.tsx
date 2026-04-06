@@ -40,15 +40,27 @@ export default function TopTabs() {
     return mockBooks.filter((b) => b.seriesId === book.seriesId);
   }, [book]);
 
-  const hasGoods = goods.length > 0;
+  // API 굿즈 게시물
+  const [apiGoods, setApiGoods] = useState<{ id: string; title: string; price: number; thumbnailDataUrl: string }[]>([]);
+  const [apiGoodsLoading, setApiGoodsLoading] = useState(false);
+  useEffect(() => {
+    if (!bookId) return;
+    setApiGoodsLoading(true);
+    fetch(`/api/goods-creations?bookId=${bookId}`)
+      .then((r) => r.json())
+      .then((d) => { setApiGoods(d.items || []); setApiGoodsLoading(false); })
+      .catch(() => setApiGoodsLoading(false));
+  }, [bookId]);
+
+  const hasGoods = goods.length > 0 || apiGoods.length > 0;
   const hasSeries = seriesBooks.length >= 2;
 
   const tabs = useMemo(() => {
     const t: { key: TabKey; label: string }[] = [{ key: "gallery", label: "창작 갤러리" }];
-    if (hasGoods) t.push({ key: "goods", label: "굿즈" });
+    t.push({ key: "goods", label: "굿즈" }); // 항상 표시
     if (hasSeries) t.push({ key: "series", label: "시리즈" });
     return t;
-  }, [hasGoods, hasSeries]);
+  }, [hasSeries]);
 
   const handleCreate = (type: "shortbook" | "shortmovie" | "goods" | "music") => {
     router.push(`/creation/${type}?bookId=${bookId}`);
@@ -136,20 +148,51 @@ export default function TopTabs() {
 
         {/* 굿즈 탭 */}
         {activeTab === "goods" && (
-          <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 40 }}>
-            <div className="grid grid-cols-3 gap-2">
-              {goods.map((g) => (
-                <a key={g.id} href={g.externalUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-mono-100 overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
-                    <ShoppingBag className="w-6 h-6 text-orange-400" />
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[10px] font-medium text-mono-800 line-clamp-1">{g.name}</p>
-                    <p className="text-[10px] text-primary-500 font-semibold">{g.price.toLocaleString()}원</p>
-                  </div>
-                </a>
-              ))}
+          <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: OPEN_HEIGHT - 40 }}>
+            {/* 만들기 버튼 */}
+            <div className="px-3 pt-3 pb-2 border-b border-[var(--color-mono-050)]">
+              <button onClick={() => router.push(`/creation/goods?bookId=${bookId}`)}
+                className="w-full py-2.5 rounded-xl border-[1.5px] border-dashed border-emerald-400 bg-emerald-50 text-emerald-600 text-[13px] font-semibold hover:bg-emerald-100 transition-colors">
+                + 굿즈 만들기
+              </button>
             </div>
+            {apiGoodsLoading ? (
+              <div className="py-8 text-center text-[13px] text-[var(--color-mono-400)]">불러오는 중...</div>
+            ) : apiGoods.length === 0 && goods.length === 0 ? (
+              <div className="py-8 text-center">
+                <div className="text-[28px] mb-2">🎁</div>
+                <p className="text-[13px] text-[var(--color-mono-400)]">아직 게시된 굿즈가 없어요</p>
+                <p className="text-[11px] text-[var(--color-mono-300)] mt-1">첫 번째 굿즈를 만들어보세요!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 p-3">
+                {/* API 굿즈 */}
+                {apiGoods.map((g) => (
+                  <Link key={g.id} href={`/goods/${g.id}`} className="rounded-xl border border-[var(--color-mono-080)] overflow-hidden hover:shadow-md transition-shadow bg-white">
+                    <div className="aspect-square bg-white flex items-center justify-center p-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={g.thumbnailDataUrl} alt={g.title} className="w-full h-full object-contain" />
+                    </div>
+                    <div className="p-2 border-t border-[var(--color-mono-050)]">
+                      <p className="text-[10px] font-medium text-[var(--color-mono-800)] line-clamp-1">{g.title}</p>
+                      <p className="text-[10px] text-[var(--color-primary-500)] font-semibold">{g.price?.toLocaleString("ko-KR")}원</p>
+                    </div>
+                  </Link>
+                ))}
+                {/* 기존 mock 굿즈 */}
+                {goods.map((g) => (
+                  <a key={g.id} href={g.externalUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-mono-080)] overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+                      <ShoppingBag className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-[10px] font-medium text-[var(--color-mono-800)] line-clamp-1">{g.name}</p>
+                      <p className="text-[10px] text-[var(--color-primary-500)] font-semibold">{g.price.toLocaleString()}원</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -5,9 +5,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, CloudUpload, Image as ImageIcon, Paintbrush, AlertTriangle,
   RotateCcw, Undo2, Redo2, FlipHorizontal, FlipVertical, Trash2, Download,
-  Eye, Save, X, Check, Loader2,
+  Eye, X, Check, Loader2, Upload,
 } from "lucide-react";
 import { MOCKUP_CONFIGS, type MockupConfig } from "@/lib/mockup-config";
+import { mockBooks } from "@/lib/mock-data";
 
 interface UserImage {
   id: string;
@@ -27,14 +28,21 @@ interface EditorState {
   bgColor: string;
 }
 
-const COLORS = [
-  "#FFFFFF", "#000000", "#F44336", "#E91E63", "#9C27B0", "#673AB7",
-  "#3F51B5", "#2196F3", "#03A9F4", "#00BCD4", "#009688", "#4CAF50",
-  "#8BC34A", "#CDDC39", "#FFEB3B", "#FFC107", "#FF9800", "#FF5722",
-  "#795548", "#607D8B",
-];
-
 const STEPS = ["제품선택", "디자인", "목업배치", "완성"] as const;
+
+const BASE_COSTS: Record<string, number> = {
+  phonecase: 8900,
+  tumbler: 12900,
+  photocard: 1900,
+  bookmark: 2900,
+};
+
+const PRICE_PRESETS: Record<string, number[]> = {
+  phonecase: [14900, 19900, 24900, 29900],
+  tumbler: [19900, 24900, 29900, 34900],
+  photocard: [3900, 4900, 5900, 7900],
+  bookmark: [4900, 5900, 7900, 9900],
+};
 
 function EditorContent() {
   const searchParams = useSearchParams();
@@ -52,13 +60,52 @@ function EditorContent() {
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 0, h: 0, ix: 0, iy: 0 });
   const [fillStatus, setFillStatus] = useState<"empty" | "partial" | "full">("empty");
-  const [showPreview, setShowPreview] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [currentStep] = useState(1); // 0-indexed: 1 = 디자인
+  const [currentStep] = useState(1);
+
+  // 배경색 Canvas 합성 결과
+  const [bgLayerUrl, setBgLayerUrl] = useState<string | null>(null);
+
+  // Preview / Save
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [userPrice, setUserPrice] = useState<number>(PRICE_PRESETS[productType]?.[0] || 14900);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const exportCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // bgColor 변경 시마다 canvas로 배경색+base.png 마스크 합성
+  useEffect(() => {
+    if (bgColor.toLowerCase() === "#ffffff" || !config.files.base) {
+      setBgLayerUrl(null);
+      return;
+    }
+    const generateBgLayer = async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = config.canvasSize.width;
+      canvas.height = config.canvasSize.height;
+      const ctx = canvas.getContext("2d")!;
+
+      // 1. 배경색 칠하기
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 2. base.png로 destination-in → 케이스 형태만 남김
+      const base = new window.Image();
+      base.crossOrigin = "anonymous";
+      await new Promise<void>((r) => { base.onload = () => r(); base.src = config.files.base!; });
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(base, 0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "source-over";
+
+      setBgLayerUrl(canvas.toDataURL("image/png"));
+    };
+    generateBgLayer();
+  }, [bgColor, config]);
 
   // Undo/Redo
   const [history, setHistory] = useState<EditorState[]>([{ userImage: null, bgColor: "#FFFFFF" }]);
@@ -100,8 +147,8 @@ function EditorContent() {
       const img = new window.Image();
       img.onload = () => {
         const { width: cw, height: ch } = config.canvasSize;
-        const scale = Math.min(cw * 0.8 / img.width, ch * 0.8 / img.height);
-        const w = img.width * scale, h = img.height * scale;
+        const s = Math.min(cw * 0.8 / img.width, ch * 0.8 / img.height);
+        const w = img.width * s, h = img.height * s;
         const newImg: UserImage = { id: Date.now().toString(), src, x: (cw - w) / 2, y: (ch - h) / 2, width: w, height: h, scaleX: 1, scaleY: 1, naturalW: img.width, naturalH: img.height };
         setUserImage(newImg);
         pushHistory({ userImage: newImg, bgColor });
@@ -133,7 +180,6 @@ function EditorContent() {
         const isCorner = ["nw", "ne", "sw", "se"].includes(resizeHandle);
         let nx = resizeStart.ix, ny = resizeStart.iy, nw = resizeStart.w, nh = resizeStart.h;
         if (isCorner) {
-          // 비율 고정 리사이즈 — dx 기준
           nw = Math.max(MIN, resizeStart.w + (resizeHandle.includes("w") ? -dx : dx));
           nh = nw / aspect;
           if (resizeHandle.includes("w")) nx = resizeStart.ix + resizeStart.w - nw;
@@ -174,63 +220,119 @@ function EditorContent() {
     return () => window.removeEventListener("keydown", onKey);
   }, [userImage, bgColor, pushHistory]);
 
-  // Shared render function
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-
+  // Canvas 합성 (미리보기/저장용)
   const generateComposite = async (): Promise<string> => {
-    const canvas = exportCanvasRef.current || document.createElement("canvas");
+    const canvas = document.createElement("canvas");
     const { width: cw, height: ch } = config.canvasSize;
     canvas.width = cw; canvas.height = ch;
     const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, cw, ch);
+
+    // 흰색 배경 채우기 (투명 → 흰색)
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cw, ch);
 
     const loadImg = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
       const img = new window.Image(); img.crossOrigin = "anonymous";
       img.onload = () => res(img); img.onerror = rej; img.src = src;
     });
 
-    // 1. 배경색 전체 (product.png 흰 영역에 합성되도록)
-    if (bgColor !== "#FFFFFF" && bgColor !== "#ffffff") {
-      const pa = config.printArea;
+    // Step 1: 배경색 + base.png 마스크 (케이스 형태로 클리핑)
+    if (bgColor && config.files.base) {
       ctx.fillStyle = bgColor;
-      ctx.fillRect(cw * pa.x, ch * pa.y, cw * pa.w, ch * pa.h);
+      ctx.fillRect(0, 0, cw, ch);
+      const baseImg = await loadImg(config.files.base);
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(baseImg, 0, 0, cw, ch);
+      ctx.globalCompositeOperation = "source-over";
     }
 
-    // 2. 유저 이미지
+    // Step 2: 유저 이미지 합성 (base.png로 케이스 형태 클리핑)
     if (userImage) {
-      try {
-        const uimg = await loadImg(userImage.src);
-        ctx.save();
-        ctx.translate(userImage.x + userImage.width / 2, userImage.y + userImage.height / 2);
-        ctx.scale(userImage.scaleX, userImage.scaleY);
-        ctx.drawImage(uimg, -userImage.width / 2, -userImage.height / 2, userImage.width, userImage.height);
-        ctx.restore();
-      } catch { /* */ }
+      const tmpCanvas = document.createElement("canvas");
+      tmpCanvas.width = cw; tmpCanvas.height = ch;
+      const tmpCtx = tmpCanvas.getContext("2d")!;
+
+      const uimg = await loadImg(userImage.src);
+      tmpCtx.save();
+      tmpCtx.translate(userImage.x + userImage.width / 2, userImage.y + userImage.height / 2);
+      tmpCtx.scale(userImage.scaleX, userImage.scaleY);
+      tmpCtx.drawImage(uimg, -userImage.width / 2, -userImage.height / 2, userImage.width, userImage.height);
+      tmpCtx.restore();
+
+      // base.png로 케이스 형태만 남김
+      if (config.files.base) {
+        const baseImg = await loadImg(config.files.base);
+        tmpCtx.globalCompositeOperation = "destination-in";
+        tmpCtx.drawImage(baseImg, 0, 0, cw, ch);
+      }
+
+      ctx.drawImage(tmpCanvas, 0, 0);
     }
 
-    // 3. Product overlay (투명 PNG — 케이스 테두리가 위에 올라감)
-    try { const prod = await loadImg(config.files.product); ctx.drawImage(prod, 0, 0, cw, ch); } catch { /* */ }
+    // Step 3: product.png 합성 (케이스 외형 — 맨 위)
+    const productImg = await loadImg(config.files.product);
+    ctx.drawImage(productImg, 0, 0, cw, ch);
 
     return canvas.toDataURL("image/png");
   };
 
   const handlePreview = async () => {
-    setIsGenerating(true);
-    const url = await generateComposite();
-    setPreviewUrl(url);
-    setShowPreview(true);
-    setIsGenerating(false);
+    setIsGeneratingPreview(true);
+    try {
+      const dataUrl = await generateComposite();
+      setPreviewDataUrl(dataUrl);
+      setShowPreview(true);
+    } finally { setIsGeneratingPreview(false); }
   };
 
   const handleSave = async () => {
-    const url = await generateComposite();
-    const link = document.createElement("a");
-    link.download = `${config.name}_design.png`;
-    link.href = url;
-    link.click();
-    setToast("이미지가 저장됐어요!");
-    setTimeout(() => setToast(null), 3000);
+    setIsSaving(true);
+    try {
+      const dataUrl = await generateComposite();
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `OGQ-${config.name}-${Date.now()}.png`;
+      link.click();
+      setShowPreview(false);
+      setToast("이미지가 저장됐어요!");
+      setTimeout(() => setToast(null), 3000);
+    } finally { setIsSaving(false); }
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const dataUrl = await generateComposite();
+      const bookTitle = mockBooks.find((b) => b.id === bookId)?.title || "";
+
+      const res = await fetch("/api/goods-creations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          thumbnailDataUrl: dataUrl,
+          productType,
+          bookId,
+          bookTitle,
+          bgColor,
+          title: `${config.name} 굿즈`,
+          price: userPrice,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "게시 실패");
+      }
+
+      const { id } = await res.json();
+      setShowPreview(false);
+      router.push(`/goods/${id}`);
+    } catch (e) {
+      console.error("게시 실패:", e);
+      const msg = e instanceof Error ? e.message : "알 수 없는 오류";
+      setToast(`게시에 실패했습니다: ${msg}`);
+      setTimeout(() => setToast(null), 3000);
+    } finally { setIsPublishing(false); }
   };
 
   const scale = Math.min(1, (typeof window !== "undefined" ? Math.min(window.innerWidth * 0.5, 600) : 500) / config.canvasSize.width);
@@ -333,17 +435,14 @@ function EditorContent() {
         {selectedTool === "bgcolor" && (
           <div className="w-56 bg-white border-r border-[var(--color-mono-080)] p-3 flex-shrink-0 space-y-3">
             <p className="text-xs font-semibold text-[var(--color-mono-500)]">배경색</p>
-            {/* 컬러 피커 */}
             <input type="color" value={bgColor} onChange={(e) => { setBgColor(e.target.value); pushHistory({ userImage, bgColor: e.target.value }); }}
               className="w-full h-12 rounded-lg cursor-pointer border border-[var(--color-mono-100)]" />
-            {/* Hex 입력 */}
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-[var(--color-mono-400)]">HEX</span>
               <input type="text" value={bgColor} onChange={(e) => { const v = e.target.value; if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) setBgColor(v); }}
                 onBlur={() => pushHistory({ userImage, bgColor })}
                 className="flex-1 px-2 py-1 text-[12px] font-mono border border-[var(--color-mono-100)] rounded-lg text-center" />
             </div>
-            {/* 기본 팔레트 */}
             <div className="grid grid-cols-6 gap-1.5">
               {["#FFFFFF", "#000000", "#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#2196F3", "#9C27B0", "#795548", "#607D8B", "#E91E63", "#00BCD4"].map((c) => (
                 <button key={c} onClick={() => { setBgColor(c); pushHistory({ userImage, bgColor: c }); }}
@@ -351,7 +450,6 @@ function EditorContent() {
                   style={{ backgroundColor: c }} />
               ))}
             </div>
-            {/* 초기화 */}
             <button onClick={() => { setBgColor("#FFFFFF"); pushHistory({ userImage, bgColor: "#FFFFFF" }); }}
               className="w-full py-1.5 text-[11px] text-[var(--color-mono-500)] hover:text-[var(--color-mono-700)] border border-[var(--color-mono-100)] rounded-lg">
               배경색 제거
@@ -375,12 +473,13 @@ function EditorContent() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
           <div ref={canvasRef} className="relative select-none"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
-            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
-              {/* L1: 배경색 — printArea 영역에만 적용 */}
-              {bgColor.toLowerCase() !== "#ffffff" && (
-                <div className="absolute pointer-events-none" style={{ left: `${config.printArea.x * 100}%`, top: `${config.printArea.y * 100}%`, width: `${config.printArea.w * 100}%`, height: `${config.printArea.h * 100}%`, backgroundColor: bgColor, zIndex: 1 }} />
+            <div style={{ position: "relative", transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height, isolation: "isolate" }}>
+              {/* L1: 배경색+base.png 마스크 합성 결과 (Canvas dataURL) */}
+              {bgLayerUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={bgLayerUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, pointerEvents: "none" }} />
               )}
-              {/* L3: 유저 이미지 */}
+              {/* L2: 유저 이미지 */}
               {userImage && (
                 <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
                   style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height, zIndex: 5 }}
@@ -391,13 +490,13 @@ function EditorContent() {
                   {HANDLES.map((h) => <div key={h} style={handlePos(h)} onMouseDown={(e) => handleResizeDown(h, e)} />)}
                 </div>
               )}
-              {/* L4: product.png — 제품 목업 (카메라홀, 테두리 등) */}
+              {/* L3: product.png — 케이스 외형 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 10 }} />
-              {/* L5: overlay.png — 점선 */}
+              <img src={config.files.product} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 10, pointerEvents: "none" }} />
+              {/* L4: overlay.png — 점선 경계 */}
               {config.files.overlay && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={config.files.overlay} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 11, opacity: 0.6 }} />
+                <img src={config.files.overlay} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 11, pointerEvents: "none", opacity: 0.6 }} />
               )}
             </div>
           </div>
@@ -424,33 +523,126 @@ function EditorContent() {
             </button>
           )}
           <div className="flex-1" />
-          <button onClick={handlePreview} disabled={!userImage || isGenerating}
+          <button onClick={handlePreview} disabled={!userImage || isGeneratingPreview}
             className="flex items-center justify-center gap-2 py-3 rounded-xl border border-[var(--color-mono-200)] text-[13px] font-medium text-[var(--color-mono-700)] hover:bg-[var(--color-mono-050)] disabled:opacity-40 transition-colors">
-            <Eye className="w-4 h-4" />미리보기
+            {isGeneratingPreview ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}미리보기
           </button>
-          <button onClick={handleSave} disabled={!userImage}
+          <button onClick={handleSave} disabled={!userImage || isSaving}
             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)] disabled:opacity-40 transition-colors">
-            <Download className="w-4 h-4" />저장하기
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}저장하기
+          </button>
+          <button onClick={() => setShowPriceModal(true)} disabled={!userImage || isPublishing}
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-[var(--color-primary-500)] text-[var(--color-primary-600)] text-[13px] font-semibold hover:bg-[var(--color-primary-030)] disabled:opacity-40 transition-colors">
+            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}게시하기
           </button>
         </aside>
       </div>
 
-      {/* Preview modal */}
-      {showPreview && previewUrl && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowPreview(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[15px] font-semibold text-[var(--color-mono-900)]">미리보기</h3>
-              <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-[var(--color-mono-050)]"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="bg-[var(--color-mono-050)] rounded-xl overflow-hidden">
+      {/* 미리보기 모달 */}
+      {showPreview && previewDataUrl && (
+        <div onClick={() => setShowPreview(false)}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: "white", borderRadius: 20, padding: 28, maxWidth: 380, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, textAlign: "center", color: "#1a1a1a" }}>완성된 디자인</p>
+            {/* 체크무늬 배경으로 투명 영역 표시 */}
+            <div style={{
+              backgroundImage: "linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)",
+              backgroundSize: "20px 20px", backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+              borderRadius: 12, overflow: "hidden",
+            }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="미리보기" className="w-full object-contain" />
+              <img src={previewDataUrl} alt="미리보기" style={{ width: "100%", display: "block" }} />
             </div>
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setShowPreview(false)} className="flex-1 py-3 rounded-xl border border-[var(--color-mono-200)] text-[13px] font-medium text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]">닫기</button>
-              <button onClick={handleSave} className="flex-1 py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)]">
-                <Download className="w-4 h-4 inline mr-1" />저장하기
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button onClick={() => setShowPreview(false)}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 999, border: "1px solid #e0e0e0", background: "white", fontSize: 14, cursor: "pointer", color: "#666" }}>
+                계속 편집
+              </button>
+              <button onClick={handleSave} disabled={isSaving}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 999, background: "#22c55e", color: "white", border: "none", fontSize: 14, cursor: "pointer", fontWeight: 500, opacity: isSaving ? 0.5 : 1 }}>
+                저장하기
+              </button>
+              <button onClick={() => { setShowPreview(false); setShowPriceModal(true); }} disabled={isPublishing}
+                style={{ flex: 1, padding: "12px 0", borderRadius: 999, background: "var(--color-primary-500)", color: "white", border: "none", fontSize: 14, cursor: "pointer", fontWeight: 500, opacity: isPublishing ? 0.5 : 1 }}>
+                {isPublishing ? "게시 중..." : "게시하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 가격 설정 모달 */}
+      {showPriceModal && (
+        <div onClick={() => setShowPriceModal(false)}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: "white", borderRadius: 20, padding: 28, maxWidth: 400, width: "90%" }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6, color: "#111" }}>판매 가격 설정</h3>
+            <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 24 }}>구매자가 지불할 가격을 직접 설정하세요.</p>
+
+            {/* 상품 미리보기 */}
+            <div style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 16px", backgroundColor: "#f9fafb", borderRadius: 12, marginBottom: 24 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={config.files.product} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{config.name}</div>
+                <div style={{ fontSize: 12, color: "#6b7280" }}>기본 제조 원가: {(BASE_COSTS[productType] || 0).toLocaleString("ko-KR")}원</div>
+              </div>
+            </div>
+
+            {/* 가격 입력 */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 8 }}>판매 가격 (원)</label>
+              <div style={{ position: "relative" }}>
+                <input type="number" value={userPrice}
+                  onChange={(e) => setUserPrice(parseInt(e.target.value) || 0)}
+                  min={BASE_COSTS[productType] || 5000} max={999999} step={100}
+                  style={{ width: "100%", padding: "14px 50px 14px 16px", border: "1.5px solid #e5e7eb", borderRadius: 12, fontSize: 18, fontWeight: 700, color: "#111", outline: "none", boxSizing: "border-box" }} />
+                <span style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 16, color: "#6b7280" }}>원</span>
+              </div>
+              {userPrice < (BASE_COSTS[productType] || 5000) && (
+                <p style={{ fontSize: 12, color: "#ef4444", marginTop: 6 }}>최소 {(BASE_COSTS[productType] || 5000).toLocaleString("ko-KR")}원 이상으로 설정해주세요.</p>
+              )}
+            </div>
+
+            {/* 가격 프리셋 */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+              {(PRICE_PRESETS[productType] || []).map((preset) => (
+                <button key={preset} onClick={() => setUserPrice(preset)}
+                  style={{ padding: "6px 14px", borderRadius: 999, border: `1.5px solid ${userPrice === preset ? "#10b981" : "#e5e7eb"}`, background: userPrice === preset ? "#f0fdf4" : "white", color: userPrice === preset ? "#10b981" : "#6b7280", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
+                  {preset.toLocaleString("ko-KR")}원
+                </button>
+              ))}
+            </div>
+
+            {/* 수익 예상 */}
+            <div style={{ backgroundColor: "#f0fdf4", borderRadius: 12, padding: "14px 16px", marginBottom: 24 }}>
+              <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 600, marginBottom: 8 }}>예상 수익</div>
+              {[
+                ["판매가", `${userPrice.toLocaleString("ko-KR")}원`],
+                ["제조 원가", `- ${(BASE_COSTS[productType] || 0).toLocaleString("ko-KR")}원`],
+                ["플랫폼 수수료 (10%)", `- ${Math.floor(userPrice * 0.1).toLocaleString("ko-KR")}원`],
+                ["예상 정산액", `${Math.max(0, userPrice - (BASE_COSTS[productType] || 0) - Math.floor(userPrice * 0.1)).toLocaleString("ko-KR")}원`],
+              ].map(([label, value], i) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0", fontWeight: i === 3 ? 700 : 400, color: i === 3 ? "#16a34a" : "#374151", borderTop: i === 3 ? "1px solid #86efac" : "none", paddingTop: i === 3 ? 8 : 3, marginTop: i === 3 ? 4 : 0 }}>
+                  <span>{label}</span><span>{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 버튼 */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setShowPriceModal(false)}
+                style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>
+                취소
+              </button>
+              <button onClick={() => { setShowPriceModal(false); handlePublish(); }}
+                disabled={userPrice < (BASE_COSTS[productType] || 5000) || isPublishing}
+                style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", background: userPrice < (BASE_COSTS[productType] || 5000) ? "#d1d5db" : "#10b981", color: "white", fontSize: 14, fontWeight: 700, cursor: userPrice < (BASE_COSTS[productType] || 5000) ? "not-allowed" : "pointer" }}>
+                {isPublishing ? "게시 중..." : "이 가격으로 게시하기"}
               </button>
             </div>
           </div>
@@ -463,9 +655,6 @@ function EditorContent() {
           {toast}
         </div>
       )}
-
-      {/* Hidden export canvas */}
-      <canvas ref={exportCanvasRef} className="hidden" />
     </div>
   );
 }

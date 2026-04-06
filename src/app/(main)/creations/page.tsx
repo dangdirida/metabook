@@ -39,7 +39,25 @@ export default function CreationsPage() {
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
 
   const [storeItems, setStoreItems] = useState<ReturnType<typeof getCreations>>([]);
+  const [goodsItems, setGoodsItems] = useState<Creation[]>([]);
   useEffect(() => { setStoreItems(getCreations()); }, []);
+  useEffect(() => {
+    fetch("/api/goods-creations?limit=50")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.items) {
+          setGoodsItems(data.items.map((g: { id: string; title: string; bookId: string; userId: string; thumbnailDataUrl: string; likes: number; createdAt: string }) => ({
+            id: `goods-${g.id}`, bookId: g.bookId || "", userId: g.userId || "anonymous",
+            userName: g.userId || "anonymous", title: g.title, description: "",
+            type: "goods" as const, fileUrl: "", thumbnailUrl: g.thumbnailDataUrl || "",
+            tags: [], status: "approved" as const, likes: g.likes || 0, ogqLinked: false,
+            createdAt: g.createdAt || new Date().toISOString(),
+            _goodsId: g.id,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
   const allCreations: Creation[] = [
     ...mockCreations, ...loversCreations,
     ...storeItems.map((c) => ({
@@ -48,6 +66,7 @@ export default function CreationsPage() {
       thumbnailUrl: c.thumbnail || "", tags: [], status: "approved" as const,
       likes: c.hearts, ogqLinked: false, createdAt: c.createdAt,
     })),
+    ...goodsItems,
   ];
 
   const filtered = allCreations.filter((c) => {
@@ -106,8 +125,10 @@ export default function CreationsPage() {
               const book = mockBooks.find((b) => b.id === creation.bookId);
               const meta = TYPE_META[creation.type];
               const gradient = TYPE_GRADIENTS[creation.type] || "from-gray-400 to-gray-500";
+              const goodsId = (creation as unknown as Record<string, unknown>)._goodsId as string | undefined;
+              const href = goodsId ? `/goods/${goodsId}` : `/creations/${creation.id}`;
               return (
-                <Link key={creation.id} href={`/creations/${creation.id}`}
+                <Link key={creation.id} href={href}
                   className="group bg-white rounded-2xl overflow-hidden border border-[var(--color-mono-080)] hover:shadow-md hover:border-[var(--color-primary-200)] transition-all">
                   <div className={`aspect-square relative bg-gradient-to-br ${gradient}`}>
                     {creation.thumbnailUrl ? (
