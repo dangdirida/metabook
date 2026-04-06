@@ -7,6 +7,8 @@ import {
   buildMemoryContext,
 } from "@/lib/chat-memory";
 import { adminDb } from "@/lib/firebase-admin";
+import { ensureCharactersAnalyzed } from "@/lib/book-setup";
+import { getChaptersByBookId } from "@/lib/mock-content";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -25,14 +27,27 @@ ${persona}
 한국어로 답변하세요.
 답변은 2-4문장으로 간결하게 해주세요.`;
 
+  // 인물 데이터 없으면 자동 분석
+  if (safeBookId !== "unknown") {
+    const chapters = getChaptersByBookId(safeBookId);
+    const fullText = chapters.map((c) => c.content).join("\n\n");
+    if (fullText.length > 100) {
+      await ensureCharactersAnalyzed(safeBookId, bookTitle || safeBookId, fullText).catch(() => {});
+    }
+  }
+
   // Firestore에서 인물 데이터 조회
   let characterPrompt = "";
   try {
     const snapshot = await adminDb.collection("bookCharacters").doc(safeBookId).collection("characters").get();
-    const charDoc = snapshot.docs.find((doc) => {
+    let charDoc = snapshot.docs.find((doc) => {
       const d = doc.data();
-      return d.name === agentName || d.id === agentId || agentName?.includes(d.name) || d.name?.includes(agentName);
+      return d.name === agentName || d.id === agentName || d.id === agentId || agentName?.includes(d.name) || d.name?.includes(agentName);
     });
+    // fallback: 주인공
+    if (!charDoc && snapshot.docs.length > 0) {
+      charDoc = snapshot.docs.find((doc) => doc.data().role === "주인공") || snapshot.docs[0];
+    }
     if (charDoc) {
       const c = charDoc.data();
       characterPrompt = [
