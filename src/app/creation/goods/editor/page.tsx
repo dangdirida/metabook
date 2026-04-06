@@ -164,38 +164,58 @@ function EditorContent() {
     return () => window.removeEventListener("keydown", onKey);
   }, [userImage, bgColor, pushHistory]);
 
-  // Export
-  const handleSave = async () => {
-    const canvas = exportCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Shared render function
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generateComposite = async (): Promise<string> => {
+    const canvas = exportCanvasRef.current || document.createElement("canvas");
     const { width: cw, height: ch } = config.canvasSize;
+    const pa = config.printArea;
     canvas.width = cw; canvas.height = ch;
-    ctx.fillStyle = bgColor; ctx.fillRect(0, 0, cw, ch);
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, cw, ch);
+
+    // 1. 인쇄 영역에만 배경색
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(cw * pa.x, ch * pa.y, cw * pa.w, ch * pa.h);
 
     const loadImg = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
       const img = new window.Image(); img.crossOrigin = "anonymous";
       img.onload = () => res(img); img.onerror = rej; img.src = src;
     });
 
-    try {
-      if (config.files.base) { const base = await loadImg(config.files.base); ctx.drawImage(base, 0, 0, cw, ch); }
-      if (userImage) {
+    // 2. 유저 이미지
+    if (userImage) {
+      try {
         const uimg = await loadImg(userImage.src);
         ctx.save();
         ctx.translate(userImage.x + userImage.width / 2, userImage.y + userImage.height / 2);
         ctx.scale(userImage.scaleX, userImage.scaleY);
         ctx.drawImage(uimg, -userImage.width / 2, -userImage.height / 2, userImage.width, userImage.height);
         ctx.restore();
-      }
-      const prod = await loadImg(config.files.product);
-      ctx.drawImage(prod, 0, 0, cw, ch);
-    } catch { /* fallback */ }
+      } catch { /* */ }
+    }
 
+    // 3. Product overlay (투명 PNG)
+    try { const prod = await loadImg(config.files.product); ctx.drawImage(prod, 0, 0, cw, ch); } catch { /* */ }
+
+    return canvas.toDataURL("image/png");
+  };
+
+  const handlePreview = async () => {
+    setIsGenerating(true);
+    const url = await generateComposite();
+    setPreviewUrl(url);
+    setShowPreview(true);
+    setIsGenerating(false);
+  };
+
+  const handleSave = async () => {
+    const url = await generateComposite();
     const link = document.createElement("a");
     link.download = `${config.name}_design.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.href = url;
     link.click();
     setToast("이미지가 저장됐어요!");
     setTimeout(() => setToast(null), 3000);
@@ -329,14 +349,12 @@ function EditorContent() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
           <div ref={canvasRef} className="relative select-none shadow-lg rounded-xl overflow-hidden"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
-            {/* 배경색 */}
-            <div className="absolute inset-0" style={{ backgroundColor: bgColor, transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
-              {/* Base */}
-              {config.files.base && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={config.files.base} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-              )}
-              {/* User image */}
+            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
+              {/* 1. 캔버스 배경 (연한 회색) */}
+              <div className="absolute inset-0" style={{ backgroundColor: "#f0f0f0" }} />
+              {/* 2. 인쇄 영역 배경색 */}
+              <div className="absolute" style={{ left: config.canvasSize.width * config.printArea.x, top: config.canvasSize.height * config.printArea.y, width: config.canvasSize.width * config.printArea.w, height: config.canvasSize.height * config.printArea.h, backgroundColor: bgColor }} />
+              {/* 3. 유저 이미지 */}
               {userImage && (
                 <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
                   style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height }}
@@ -347,7 +365,7 @@ function EditorContent() {
                   {HANDLES.map((h) => <div key={h} style={handlePos(h)} onMouseDown={(e) => handleResizeDown(h, e)} />)}
                 </div>
               )}
-              {/* Product overlay */}
+              {/* 4. 제품 목업 (투명 PNG) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
               {/* Dotted overlay */}
@@ -380,7 +398,7 @@ function EditorContent() {
             </button>
           )}
           <div className="flex-1" />
-          <button onClick={() => setShowPreview(true)} disabled={!userImage}
+          <button onClick={handlePreview} disabled={!userImage || isGenerating}
             className="flex items-center justify-center gap-2 py-3 rounded-xl border border-[var(--color-mono-200)] text-[13px] font-medium text-[var(--color-mono-700)] hover:bg-[var(--color-mono-050)] disabled:opacity-40 transition-colors">
             <Eye className="w-4 h-4" />미리보기
           </button>
@@ -392,20 +410,23 @@ function EditorContent() {
       </div>
 
       {/* Preview modal */}
-      {showPreview && userImage && (
+      {showPreview && previewUrl && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowPreview(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[15px] font-semibold text-[var(--color-mono-900)]">미리보기</h3>
               <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-[var(--color-mono-050)]"><X className="w-4 h-4" /></button>
             </div>
-            <div className="relative bg-[var(--color-mono-050)] rounded-xl overflow-hidden" style={{ aspectRatio: `${config.canvasSize.width}/${config.canvasSize.height}` }}>
+            <div className="bg-[var(--color-mono-050)] rounded-xl overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={config.files.thumbnail} alt="미리보기" className="w-full h-full object-contain" />
+              <img src={previewUrl} alt="미리보기" className="w-full object-contain" />
             </div>
-            <button onClick={handleSave} className="w-full mt-4 py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)]">
-              <Download className="w-4 h-4 inline mr-1" />저장하기
-            </button>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowPreview(false)} className="flex-1 py-3 rounded-xl border border-[var(--color-mono-200)] text-[13px] font-medium text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)]">닫기</button>
+              <button onClick={handleSave} className="flex-1 py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[13px] font-semibold hover:bg-[var(--color-primary-600)]">
+                <Download className="w-4 h-4 inline mr-1" />저장하기
+              </button>
+            </div>
           </div>
         </div>
       )}
