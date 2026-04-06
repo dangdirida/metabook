@@ -209,7 +209,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
                   : "border border-[var(--color-mono-100)] bg-white text-mono-600 hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)]"
               }`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+              <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
               {agent.name}
             </button>
           ))}
@@ -231,7 +231,7 @@ function AIChat({ selectedAgentId }: { selectedAgentId: string | null }) {
           <div className="flex flex-col items-center pt-6 pb-4">
             <div className="relative mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={currentAgent.avatar || "/avatars/default-profile.svg"} alt={currentAgent.name} className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-50 shadow-sm" />
+              <img src={currentAgent.avatar || "/avatars/default-profile.svg"} alt={currentAgent.name} className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-50 shadow-sm" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
               <span className="absolute bottom-0 right-0 w-5 h-5 bg-[var(--color-primary-500)] rounded-full border-2 border-white flex items-center justify-center">
                 <MessageCircle className="w-2.5 h-2.5 text-white" />
               </span>

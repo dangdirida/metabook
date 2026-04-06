@@ -63,10 +63,10 @@ function makeImages(bookId: string): BookImage[] {
 // ── 각 책별 고유 인물 데이터 ──
 
 const AGENTS_LOVERS_LOVER: Agent[] = [
-  { id: "jeong_in", bookId: "lovers-lover", name: "정인", role: "protagonist", avatar: "", personality: ["내성적", "관찰력", "집요함"], speechStyle: "독백처럼 조용하고 내밀하게 이야기함. 감정을 직접 드러내기보다 사물에 빗대어 표현함", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
-  { id: "mari", bookId: "lovers-lover", name: "마리", role: "supporting", avatar: "", personality: ["정돈됨", "강박적", "절박함"], speechStyle: "가늘지만 낮은 목소리. 말끝에 짧은 한숨이 이어짐", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
+  { id: "jeong_in", bookId: "lovers-lover", name: "정인", role: "protagonist", avatar: "/avatars/jeong_in.jpg", personality: ["내성적", "관찰력", "집요함"], speechStyle: "독백처럼 조용하고 내밀하게 이야기함. 감정을 직접 드러내기보다 사물에 빗대어 표현함", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
+  { id: "mari", bookId: "lovers-lover", name: "마리", role: "supporting", avatar: "/avatars/mari.jpg", personality: ["정돈됨", "강박적", "절박함"], speechStyle: "가늘지만 낮은 목소리. 말끝에 짧은 한숨이 이어짐", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
   { id: "seong_ju", bookId: "lovers-lover", name: "성주", role: "supporting", avatar: "", personality: ["예술적", "과묵함", "비밀이 많음"], speechStyle: "말보다 눈빛과 행동으로 표현. 직접적인 감정 표현을 피함", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
-  { id: "su_yeong", bookId: "lovers-lover", name: "수영", role: "supporting", avatar: "", personality: ["밝음", "에너지 넘침", "사교적"], speechStyle: "환하게 웃으며 말하는 편. 농담을 자주 섞음", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
+  { id: "su_yeong", bookId: "lovers-lover", name: "수영", role: "supporting", avatar: "/avatars/su_yeong.jpg", personality: ["밝음", "에너지 넘침", "사교적"], speechStyle: "환하게 웃으며 말하는 편. 농담을 자주 섞음", forbiddenTopics: [], systemPrompt: "", isActive: true, feedbackStats: { likes: 0, dislikes: 0 } },
 ];
 
 const AGENTS_PAIN_ENCYCLOPEDIA: Agent[] = [

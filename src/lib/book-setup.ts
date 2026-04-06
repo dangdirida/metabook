@@ -39,10 +39,17 @@ ${truncated}`;
   const parsed = JSON.parse(text);
   const characters = parsed.characters || [];
 
+  const AVATAR_MAP: Record<string, string> = {
+    jeong_in: "/avatars/jeong_in.jpg",
+    mari: "/avatars/mari.jpg",
+    su_yeong: "/avatars/su_yeong.jpg",
+  };
+
   const batch = adminDb.batch();
   for (const c of characters) {
+    const avatar = AVATAR_MAP[c.id] || "/avatars/default-profile.svg";
     const ref = adminDb.collection("bookCharacters").doc(bookId).collection("characters").doc(c.id);
-    batch.set(ref, { ...c, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
+    batch.set(ref, { ...c, avatar, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
   }
   await batch.commit();
   console.log(`[book-setup] ${bookTitle}: ${characters.length}명 분석 완료`);
