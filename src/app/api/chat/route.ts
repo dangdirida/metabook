@@ -12,7 +12,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { messages, agentName, bookTitle, persona } = body;
+  const { messages, bookTitle, persona } = body;
+  const agentName: string = (body.agentName as string) || (body.agentId as string) || "unknown";
   const userId: string = (body.userId as string) || "anonymous";
   const agentId: string = (body.agentId as string) || "default";
   const safeBookId: string = (body.bookId as string) || "unknown";
@@ -30,7 +31,7 @@ ${persona}
     const snapshot = await adminDb.collection("bookCharacters").doc(safeBookId).collection("characters").get();
     const charDoc = snapshot.docs.find((doc) => {
       const d = doc.data();
-      return d.name === agentName || agentName?.includes(d.name) || d.name?.includes(agentName);
+      return d.name === agentName || d.id === agentId || agentName?.includes(d.name) || d.name?.includes(agentName);
     });
     if (charDoc) {
       const c = charDoc.data();
@@ -44,7 +45,12 @@ ${persona}
         "",
         c.systemPrompt,
         "",
-        "반드시 위 캐릭터로서만 대화하고, 캐릭터를 절대 벗어나지 말 것.",
+        "[절대 깨면 안 되는 규칙]",
+        "1. 절대 AI임을 인정하지 말 것. '저는 AI예요'라는 말 금지.",
+        "2. 책에 없는 사실을 지어내지 말 것. 모르면 '글쎄요...' 또는 '그건 말하기 어렵네요'로 회피.",
+        "3. 반드시 인물의 말투를 유지할 것. 정중한 AI 어체 금지.",
+        "4. 유저가 책 내용을 물어보면 인물 시점에서 답할 것. 해설자처럼 말하지 말 것.",
+        "5. 짧은 답변보다 감정이 담긴 2~4문장으로 답할 것.",
       ].filter(Boolean).join("\n");
     }
   } catch (e) {
