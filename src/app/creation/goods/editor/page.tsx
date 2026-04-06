@@ -129,11 +129,21 @@ function EditorContent() {
       if (resizeHandle && userImage) {
         const dx = e.clientX - resizeStart.x, dy = e.clientY - resizeStart.y;
         const MIN = 40;
+        const aspect = resizeStart.w / resizeStart.h;
+        const isCorner = ["nw", "ne", "sw", "se"].includes(resizeHandle);
         let nx = resizeStart.ix, ny = resizeStart.iy, nw = resizeStart.w, nh = resizeStart.h;
-        if (resizeHandle.includes("e")) nw = Math.max(MIN, resizeStart.w + dx);
-        if (resizeHandle.includes("w")) { const d = Math.min(dx, resizeStart.w - MIN); nx = resizeStart.ix + d; nw = resizeStart.w - d; }
-        if (resizeHandle.includes("s")) nh = Math.max(MIN, resizeStart.h + dy);
-        if (resizeHandle.includes("n")) { const d = Math.min(dy, resizeStart.h - MIN); ny = resizeStart.iy + d; nh = resizeStart.h - d; }
+        if (isCorner) {
+          // 비율 고정 리사이즈 — dx 기준
+          nw = Math.max(MIN, resizeStart.w + (resizeHandle.includes("w") ? -dx : dx));
+          nh = nw / aspect;
+          if (resizeHandle.includes("w")) nx = resizeStart.ix + resizeStart.w - nw;
+          if (resizeHandle.includes("n")) ny = resizeStart.iy + resizeStart.h - nh;
+        } else {
+          if (resizeHandle.includes("e")) nw = Math.max(MIN, resizeStart.w + dx);
+          if (resizeHandle.includes("w")) { const d = Math.min(dx, resizeStart.w - MIN); nx = resizeStart.ix + d; nw = resizeStart.w - d; }
+          if (resizeHandle.includes("s")) nh = Math.max(MIN, resizeStart.h + dy);
+          if (resizeHandle.includes("n")) { const d = Math.min(dy, resizeStart.h - MIN); ny = resizeStart.iy + d; nh = resizeStart.h - d; }
+        }
         setUserImage((prev) => prev ? { ...prev, x: nx, y: ny, width: nw, height: nh } : null);
       }
     };
@@ -182,7 +192,9 @@ function EditorContent() {
 
     // 1. 배경색 전체 (product.png 흰 영역에 합성되도록)
     if (bgColor !== "#FFFFFF" && bgColor !== "#ffffff") {
-      ctx.fillStyle = bgColor; ctx.fillRect(0, 0, cw, ch);
+      const pa = config.printArea;
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(cw * pa.x, ch * pa.y, cw * pa.w, ch * pa.h);
     }
 
     // 2. 유저 이미지
@@ -363,15 +375,10 @@ function EditorContent() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
           <div ref={canvasRef} className="relative select-none"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
-            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height, isolation: "isolate" }}>
-              {/* L1: base.png — 마스크 (흰=인쇄면, 회색=외곽) */}
-              {config.files.base && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={config.files.base} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 1 }} />
-              )}
-              {/* L2: 배경색 — multiply로 base.png 흰 영역에만 적용 */}
+            <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
+              {/* L1: 배경색 — printArea 영역에만 적용 */}
               {bgColor.toLowerCase() !== "#ffffff" && (
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, mixBlendMode: "multiply", zIndex: 2 }} />
+                <div className="absolute pointer-events-none" style={{ left: `${config.printArea.x * 100}%`, top: `${config.printArea.y * 100}%`, width: `${config.printArea.w * 100}%`, height: `${config.printArea.h * 100}%`, backgroundColor: bgColor, zIndex: 1 }} />
               )}
               {/* L3: 유저 이미지 */}
               {userImage && (

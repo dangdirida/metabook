@@ -21,7 +21,7 @@ export const MOCKUP_CONFIGS: Record<string, MockupConfig> = {
       overlay: "/mockups/phonecase/phonecase_overlay.png",
       thumbnail: "/mockups/phonecase/phonecase_thumbnail.png",
     },
-    printArea: { x: 0.08, y: 0.05, w: 0.84, h: 0.90 },
+    printArea: { x: 0.09, y: 0.04, w: 0.82, h: 0.92 },
     canvasSize: { width: 500, height: 700 },
   },
   tumbler: {
@@ -33,8 +33,8 @@ export const MOCKUP_CONFIGS: Record<string, MockupConfig> = {
       overlay: "/mockups/tumbler/tumbler_overlay.png",
       thumbnail: "/mockups/tumbler/tumbler_thumbnail.png",
     },
-    printArea: { x: 0.20, y: 0.10, w: 0.60, h: 0.80 },
-    canvasSize: { width: 400, height: 700 },
+    printArea: { x: 0.08, y: 0.08, w: 0.40, h: 0.84 },
+    canvasSize: { width: 700, height: 542 },
   },
   photocard: {
     id: "photocard",
