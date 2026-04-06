@@ -60,6 +60,8 @@ export default function ChatPageWrapper() {
 
 function ChatPageInner() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [rooms, setRooms] = useState<Record<string, ChatRoom>>({});
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -151,6 +153,7 @@ function ChatPageInner() {
     : [];
 
   const fmtTime = (ts: string) => {
+    if (!mounted) return "";
     const d = new Date(ts); const now = new Date(); const diff = now.getTime() - d.getTime();
     const m = Math.floor(diff / 60000); const h = Math.floor(diff / 3600000); const dy = Math.floor(diff / 86400000);
     if (m < 1) return "방금"; if (m < 60) return `${m}분`; if (h < 24) return `${h}시간`; if (dy < 7) return `${dy}일`;
@@ -341,7 +344,7 @@ function ChatPageInner() {
                           <p className="text-[11px] text-[var(--color-mono-400)] truncate mt-0.5">{top.agent.speechStyle}</p>
                         </div>
                         <div className="flex flex-col items-end flex-shrink-0 gap-1.5">
-                          <span className="text-[11px] text-[var(--color-mono-400)]">대화 {top.cc.toLocaleString()}회</span>
+                          <span className="text-[11px] text-[var(--color-mono-400)]">대화 {top.cc.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}회</span>
                           <span className="text-[11px] font-medium text-[var(--color-primary-600)] group-hover:underline">대화하기 →</span>
                         </div>
                       </div>
@@ -354,7 +357,7 @@ function ChatPageInner() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-11 h-11 rounded-full object-cover mb-2 mt-1" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
                         <p className="text-[13px] font-semibold text-[var(--color-mono-900)]">{agent.name}</p>
-                        <p className="text-[10px] text-[var(--color-mono-400)] mb-2">대화 {cc.toLocaleString()}회</p>
+                        <p className="text-[10px] text-[var(--color-mono-400)] mb-2">대화 {cc.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}회</p>
                         <span className="text-[11px] font-medium text-[var(--color-primary-500)] opacity-0 group-hover:opacity-100 transition-opacity">대화하기</span>
                       </div>
                     ))}
