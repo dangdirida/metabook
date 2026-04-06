@@ -318,33 +318,57 @@ function ChatPageInner() {
       {/* 가운데: 채팅 영역 */}
       <div className={`flex-1 flex flex-col min-w-0 ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
         {!currentRoom ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--color-mono-030)]">
-            <div className="w-full max-w-md px-6">
-              <p className="text-[13px] font-semibold text-[var(--color-mono-500)] mb-4 text-center">인기 인물</p>
-              <div className="space-y-3">
-                {(() => {
-                  const popular = booksWithAgents.flatMap((b) => b.agents.map((a) => ({ agent: a, book: b })));
-                  const MOCK_COUNTS: Record<string, number> = { jeong_in: 1243, mari: 876, seong_ju: 654, su_yeong: 512 };
-                  const sorted = popular.map((p) => ({ ...p, chatCount: MOCK_COUNTS[p.agent.id] || Math.floor(100 + Math.random() * 400) })).sort((a, b) => b.chatCount - a.chatCount).slice(0, 5);
-                  return sorted.map(({ agent, book, chatCount }, i) => (
-                    <div key={agent.id} onClick={() => openChat(agent, book)}
-                      className={`flex items-center gap-3 p-4 bg-white rounded-2xl border cursor-pointer hover:border-[var(--color-primary-200)] hover:bg-[var(--color-primary-030)] hover:shadow-sm transition-all group ${i === 0 ? "border-l-2 border-l-[var(--color-primary-500)] border-[var(--color-mono-080)]" : "border-l-2 border-l-[var(--color-primary-200)] border-[var(--color-mono-080)]"}`}>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${i === 0 ? "bg-[var(--color-primary-500)] text-white" : "bg-[var(--color-mono-200)] text-[var(--color-mono-600)]"}`}>{i + 1}</div>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-11 h-11 rounded-full object-cover flex-shrink-0 bg-[var(--color-primary-030)]" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-semibold text-[var(--color-mono-900)]">{agent.name}</p>
-                        <p className="text-[12px] text-[var(--color-mono-400)] truncate">{book.title}</p>
+          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--color-mono-030)] overflow-y-auto py-8">
+            <div className="w-full max-w-2xl px-6">
+              <p className="text-[15px] font-medium text-[var(--color-mono-800)] mb-4">인기 인물</p>
+              {(() => {
+                const popular = booksWithAgents.flatMap((b) => b.agents.map((a) => ({ agent: a, book: b })));
+                const MC: Record<string, number> = { jeong_in: 1243, mari: 876, seong_ju: 654, su_yeong: 512 };
+                const sorted = popular.map((p) => ({ ...p, cc: MC[p.agent.id] || (200 + (p.agent.id.charCodeAt(0) * 7) % 300) })).sort((a, b) => b.cc - a.cc).slice(0, 5);
+                const top = sorted[0]; const rest = sorted.slice(1);
+                return (
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* 1위 — wide card */}
+                    {top && (
+                      <div key={top.agent.id} onClick={() => openChat(top.agent, top.book)}
+                        className="col-span-3 flex items-center gap-4 p-4 bg-white rounded-2xl border border-[var(--color-primary-200)] cursor-pointer hover:shadow-md transition-all group">
+                        <div className="w-6 h-6 rounded-full bg-[var(--color-primary-500)] flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">1</div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={top.agent.avatar || "/avatars/default-profile.svg"} alt={top.agent.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[15px] font-semibold text-[var(--color-mono-900)]">{top.agent.name}</p>
+                          <p className="text-[12px] text-[var(--color-mono-400)] truncate">{top.book.title} · {top.agent.role === "protagonist" ? "주인공" : "조연"}</p>
+                          <p className="text-[11px] text-[var(--color-mono-400)] truncate mt-0.5">{top.agent.speechStyle}</p>
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0 gap-1.5">
+                          <span className="text-[11px] text-[var(--color-mono-400)]">대화 {top.cc.toLocaleString()}회</span>
+                          <span className="text-[11px] font-medium text-[var(--color-primary-600)] group-hover:underline">대화하기 →</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end flex-shrink-0">
-                        <span className="text-[11px] text-[var(--color-mono-400)]">대화 {chatCount.toLocaleString()}회</span>
-                        <MessageCircle className="w-3.5 h-3.5 text-[var(--color-mono-300)] group-hover:text-[var(--color-primary-500)] transition-colors mt-0.5" />
+                    )}
+                    {/* 2~5위 — small cards */}
+                    {rest.map(({ agent, book, cc }, i) => (
+                      <div key={agent.id} onClick={() => openChat(agent, book)}
+                        className="relative flex flex-col items-center p-3 bg-white rounded-2xl border border-[var(--color-mono-100)] cursor-pointer hover:border-[var(--color-primary-300)] hover:shadow-md transition-all group text-center">
+                        <div className="absolute top-2 left-2 w-5 h-5 rounded-full bg-[var(--color-mono-200)] flex items-center justify-center text-[10px] font-bold text-[var(--color-mono-600)]">{i + 2}</div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-11 h-11 rounded-full object-cover mb-2 mt-1" onError={(e) => { (e.target as HTMLImageElement).src = "/avatars/default-profile.svg"; }} />
+                        <p className="text-[13px] font-semibold text-[var(--color-mono-900)]">{agent.name}</p>
+                        <p className="text-[10px] text-[var(--color-mono-400)] mb-2">대화 {cc.toLocaleString()}회</p>
+                        <span className="text-[11px] font-medium text-[var(--color-primary-500)] opacity-0 group-hover:opacity-100 transition-opacity">대화하기</span>
                       </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-              <button onClick={() => setSidebarTab("explore")} className="w-full mt-4 py-3 rounded-2xl text-[13px] font-semibold text-[var(--color-primary-600)] hover:bg-[var(--color-primary-030)] transition-colors border border-[var(--color-primary-200)]">더 많은 인물 보기</button>
+                    ))}
+                    {/* 더 보기 */}
+                    {rest.length >= 3 && (
+                      <div onClick={() => setSidebarTab("explore")}
+                        className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-[var(--color-mono-200)] cursor-pointer hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-030)] transition-all text-center">
+                        <span className="text-[20px] text-[var(--color-mono-300)] mb-1">+</span>
+                        <span className="text-[11px] text-[var(--color-mono-400)]">더 많은 인물</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         ) : (
