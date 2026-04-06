@@ -171,19 +171,19 @@ function EditorContent() {
   const generateComposite = async (): Promise<string> => {
     const canvas = exportCanvasRef.current || document.createElement("canvas");
     const { width: cw, height: ch } = config.canvasSize;
-    const pa = config.printArea;
     canvas.width = cw; canvas.height = ch;
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, cw, ch);
-
-    // 1. 인쇄 영역에만 배경색
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(cw * pa.x, ch * pa.y, cw * pa.w, ch * pa.h);
 
     const loadImg = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
       const img = new window.Image(); img.crossOrigin = "anonymous";
       img.onload = () => res(img); img.onerror = rej; img.src = src;
     });
+
+    // 1. 배경색 전체 (product.png 흰 영역에 합성되도록)
+    if (bgColor !== "#FFFFFF" && bgColor !== "#ffffff") {
+      ctx.fillStyle = bgColor; ctx.fillRect(0, 0, cw, ch);
+    }
 
     // 2. 유저 이미지
     if (userImage) {
@@ -197,7 +197,7 @@ function EditorContent() {
       } catch { /* */ }
     }
 
-    // 3. Product overlay (투명 PNG)
+    // 3. Product overlay (투명 PNG — 케이스 테두리가 위에 올라감)
     try { const prod = await loadImg(config.files.product); ctx.drawImage(prod, 0, 0, cw, ch); } catch { /* */ }
 
     return canvas.toDataURL("image/png");
@@ -319,17 +319,31 @@ function EditorContent() {
           </div>
         )}
         {selectedTool === "bgcolor" && (
-          <div className="w-56 bg-white border-r border-[var(--color-mono-080)] p-3 flex-shrink-0">
-            <p className="text-xs font-semibold text-[var(--color-mono-500)] mb-3">배경색</p>
-            <div className="grid grid-cols-5 gap-2 mb-3">
-              {COLORS.map((c) => (
+          <div className="w-56 bg-white border-r border-[var(--color-mono-080)] p-3 flex-shrink-0 space-y-3">
+            <p className="text-xs font-semibold text-[var(--color-mono-500)]">배경색</p>
+            {/* 컬러 피커 */}
+            <input type="color" value={bgColor} onChange={(e) => { setBgColor(e.target.value); pushHistory({ userImage, bgColor: e.target.value }); }}
+              className="w-full h-12 rounded-lg cursor-pointer border border-[var(--color-mono-100)]" />
+            {/* Hex 입력 */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[var(--color-mono-400)]">HEX</span>
+              <input type="text" value={bgColor} onChange={(e) => { const v = e.target.value; if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) setBgColor(v); }}
+                onBlur={() => pushHistory({ userImage, bgColor })}
+                className="flex-1 px-2 py-1 text-[12px] font-mono border border-[var(--color-mono-100)] rounded-lg text-center" />
+            </div>
+            {/* 기본 팔레트 */}
+            <div className="grid grid-cols-6 gap-1.5">
+              {["#FFFFFF", "#000000", "#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#2196F3", "#9C27B0", "#795548", "#607D8B", "#E91E63", "#00BCD4"].map((c) => (
                 <button key={c} onClick={() => { setBgColor(c); pushHistory({ userImage, bgColor: c }); }}
-                  className={`w-8 h-8 rounded-lg border-2 ${bgColor === c ? "border-[var(--color-primary-500)] scale-110" : "border-[var(--color-mono-100)]"}`}
+                  className={`w-7 h-7 rounded-md border ${bgColor === c ? "border-[var(--color-primary-500)] ring-1 ring-[var(--color-primary-300)]" : "border-[var(--color-mono-100)]"}`}
                   style={{ backgroundColor: c }} />
               ))}
             </div>
-            <input type="color" value={bgColor} onChange={(e) => { setBgColor(e.target.value); pushHistory({ userImage, bgColor: e.target.value }); }}
-              className="w-full h-10 rounded-lg cursor-pointer" />
+            {/* 초기화 */}
+            <button onClick={() => { setBgColor("#FFFFFF"); pushHistory({ userImage, bgColor: "#FFFFFF" }); }}
+              className="w-full py-1.5 text-[11px] text-[var(--color-mono-500)] hover:text-[var(--color-mono-700)] border border-[var(--color-mono-100)] rounded-lg">
+              배경색 제거
+            </button>
           </div>
         )}
         {selectedTool === "caution" && (
@@ -347,17 +361,21 @@ function EditorContent() {
 
         {/* 중앙 캔버스 */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
-          <div ref={canvasRef} className="relative select-none shadow-lg rounded-xl overflow-hidden"
+          <div ref={canvasRef} className="relative select-none"
             style={{ width: config.canvasSize.width * scale, height: config.canvasSize.height * scale }}>
             <div className="absolute inset-0" style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: config.canvasSize.width, height: config.canvasSize.height }}>
-              {/* 1. 캔버스 배경 (연한 회색) */}
-              <div className="absolute inset-0" style={{ backgroundColor: "#f0f0f0" }} />
-              {/* 2. 인쇄 영역 배경색 */}
-              <div className="absolute" style={{ left: config.canvasSize.width * config.printArea.x, top: config.canvasSize.height * config.printArea.y, width: config.canvasSize.width * config.printArea.w, height: config.canvasSize.height * config.printArea.h, backgroundColor: bgColor }} />
-              {/* 3. 유저 이미지 */}
+              {/* L1: 배경색 (multiply로 product.png 흰 영역에만 적용) */}
+              {bgColor !== "#FFFFFF" && bgColor !== "#ffffff" && (
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: bgColor, mixBlendMode: "multiply", zIndex: 2 }} />
+              )}
+              {/* L2: 점선 안쪽 연한 색상 */}
+              {bgColor !== "#FFFFFF" && bgColor !== "#ffffff" && (
+                <div className="absolute pointer-events-none" style={{ left: `${config.printArea.x * 100}%`, top: `${config.printArea.y * 100}%`, width: `${config.printArea.w * 100}%`, height: `${config.printArea.h * 100}%`, backgroundColor: bgColor, opacity: 0.25, zIndex: 3 }} />
+              )}
+              {/* L3: 유저 이미지 */}
               {userImage && (
                 <div className="absolute cursor-move border-2 border-dashed border-[var(--color-primary-400)]"
-                  style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height }}
+                  style={{ left: userImage.x, top: userImage.y, width: userImage.width, height: userImage.height, zIndex: 5 }}
                   onMouseDown={handleMouseDown}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={userImage.src} alt="" className="w-full h-full object-cover pointer-events-none"
@@ -365,13 +383,13 @@ function EditorContent() {
                   {HANDLES.map((h) => <div key={h} style={handlePos(h)} onMouseDown={(e) => handleResizeDown(h, e)} />)}
                 </div>
               )}
-              {/* 4. 제품 목업 (투명 PNG) */}
+              {/* L4: 제품 목업 (투명 PNG, 가장 위) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-              {/* Dotted overlay */}
+              <img src={config.files.product} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 10 }} />
+              {/* L5: 점선 오버레이 */}
               {config.files.overlay && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={config.files.overlay} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-60" />
+                <img src={config.files.overlay} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" style={{ zIndex: 11, opacity: 0.6 }} />
               )}
             </div>
           </div>
