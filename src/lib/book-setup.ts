@@ -63,28 +63,49 @@ ${truncated}`;
     sooyoung_kim: "/avatars/su_yeong.jpg",
   };
 
-  // 기존 Firestore 인물 조회 (name 기준 중복 방지)
+  // 기존 Firestore 인물 조회 (name 기준 중복 방지, avatar/feedbackStats 보존)
   const existingSnap = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
-  const existingByName: Record<string, string> = {};
+  const existingByName: Record<string, { docId: string; avatar?: string; feedbackStats?: { likes: number; dislikes: number } }> = {};
   existingSnap.docs.forEach((doc) => {
-    const name = doc.data().name as string;
-    if (name) existingByName[name] = doc.id;
+    const d = doc.data();
+    const name = d.name as string;
+    if (name) existingByName[name] = { docId: doc.id, avatar: d.avatar, feedbackStats: d.feedbackStats };
   });
 
-  const batch = adminDb.batch();
   const savedNames = new Set<string>();
 
   for (const c of uniqueCharacters) {
-    if (savedNames.has(c.name)) continue; // 이번 배치 내 중복 스킵
+    if (savedNames.has(c.name)) continue;
     savedNames.add(c.name);
 
-    const avatar = AVATAR_MAP[c.id] || "/avatars/default-profile.svg";
-    // 같은 name이 이미 있으면 해당 doc을 update, 없으면 새 doc 생성
-    const docId = existingByName[c.name] || c.id;
-    const ref = adminDb.collection("bookCharacters").doc(bookId).collection("characters").doc(docId);
-    batch.set(ref, { ...c, id: docId, avatar, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
+    const existing = existingByName[c.name];
+    const colRef = adminDb.collection("bookCharacters").doc(bookId).collection("characters");
+
+    if (existing) {
+      // 기존 인물: avatar, feedbackStats 유지, 분석 결과만 업데이트
+      await colRef.doc(existing.docId).update({
+        role: c.role,
+        personality: c.personality,
+        speechStyle: c.speechStyle,
+        background: c.background,
+        systemPrompt: c.systemPrompt,
+        relationships: c.relationships || [],
+        representativeQuotes: c.representativeQuotes || [],
+        analyzedAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      // 새 인물: 전체 데이터 저장
+      const avatar = AVATAR_MAP[c.id] || "/avatars/default-profile.svg";
+      await colRef.doc(c.id).set({
+        ...c,
+        bookId,
+        avatar,
+        isActive: true,
+        feedbackStats: { likes: 0, dislikes: 0 },
+        analyzedAt: FieldValue.serverTimestamp(),
+      });
+    }
   }
-  await batch.commit();
   console.log(`[book-setup] ${bookTitle}: ${uniqueCharacters.length}명 분석 완료 (중복 제거 후)`);
 }
 
