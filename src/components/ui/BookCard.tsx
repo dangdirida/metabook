@@ -7,7 +7,7 @@ import type { Book } from "@/types";
 
 export default function BookCard({ book }: { book: Book }) {
   return (
-    <Link href={`/library/${book.id}`} className="group block">
+    <Link href={`/library/${book.id}/intro`} className="group block">
       <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
         <Image src={book.coverImage} alt={book.title} fill className="object-cover" unoptimized />
         {/* 호버 오버레이 */}

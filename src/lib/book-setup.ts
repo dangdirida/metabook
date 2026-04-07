@@ -63,11 +63,26 @@ ${truncated}`;
     sooyoung_kim: "/avatars/su_yeong.jpg",
   };
 
+  // 기존 Firestore 인물 조회 (name 기준 중복 방지)
+  const existingSnap = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
+  const existingByName: Record<string, string> = {};
+  existingSnap.docs.forEach((doc) => {
+    const name = doc.data().name as string;
+    if (name) existingByName[name] = doc.id;
+  });
+
   const batch = adminDb.batch();
+  const savedNames = new Set<string>();
+
   for (const c of uniqueCharacters) {
+    if (savedNames.has(c.name)) continue; // 이번 배치 내 중복 스킵
+    savedNames.add(c.name);
+
     const avatar = AVATAR_MAP[c.id] || "/avatars/default-profile.svg";
-    const ref = adminDb.collection("bookCharacters").doc(bookId).collection("characters").doc(c.id);
-    batch.set(ref, { ...c, avatar, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
+    // 같은 name이 이미 있으면 해당 doc을 update, 없으면 새 doc 생성
+    const docId = existingByName[c.name] || c.id;
+    const ref = adminDb.collection("bookCharacters").doc(bookId).collection("characters").doc(docId);
+    batch.set(ref, { ...c, id: docId, avatar, bookId, analyzedAt: FieldValue.serverTimestamp() }, { merge: true });
   }
   await batch.commit();
   console.log(`[book-setup] ${bookTitle}: ${uniqueCharacters.length}명 분석 완료 (중복 제거 후)`);

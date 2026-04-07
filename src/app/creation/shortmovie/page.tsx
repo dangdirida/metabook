@@ -129,7 +129,7 @@ function ShortMovieContent() {
       thumbnail: "",
       content: videoUrl,
     });
-    router.push(`/library/${bookId}`);
+    router.push(`/library/${bookId}/intro`);
   };
 
   return (
@@ -137,7 +137,7 @@ function ShortMovieContent() {
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
-            onClick={() => router.push(`/library/${bookId}`)}
+            onClick={() => router.push(`/library/${bookId}/intro`)}
             className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-mono-700)]" />

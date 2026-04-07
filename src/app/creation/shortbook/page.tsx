@@ -169,7 +169,7 @@ function ShortBookContent() {
       thumbnail: "",
       content: generatedText,
     });
-    router.push(`/library/${bookId}`);
+    router.push(`/library/${bookId}/intro`);
   };
 
   // 공통 옵션 UI: 분량 선택
@@ -206,7 +206,7 @@ function ShortBookContent() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => {
-              if (step === "select") router.push(`/library/${bookId}`);
+              if (step === "select") router.push(`/library/${bookId}/intro`);
               else if (step === "perspective" || step === "ending") setStep("select");
               else if (step === "generating") setStep(subType);
             }}

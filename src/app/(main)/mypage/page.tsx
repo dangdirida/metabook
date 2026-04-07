@@ -169,7 +169,7 @@ export default function MyPage() {
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {recentBooks.map((book) => (
-                  <Link key={book.id} href={`/library/${book.id}`} className="flex-shrink-0 w-28 group">
+                  <Link key={book.id} href={`/library/${book.id}/intro`} className="flex-shrink-0 w-28 group">
                     <div className="w-28 aspect-[3/4] rounded-lg overflow-hidden bg-[var(--color-mono-050)] shadow-sm group-hover:shadow-md transition-shadow">
                       {book.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -201,7 +201,7 @@ export default function MyPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {favorites.map((fav) => (
                     <div key={fav.bookId} className="bg-white rounded-xl border border-[var(--color-mono-080)] p-3">
-                      <Link href={`/library/${fav.bookId}`} className="block">
+                      <Link href={`/library/${fav.bookId}/intro`} className="block">
                         <div className="w-full aspect-[3/4] rounded-lg overflow-hidden bg-[var(--color-mono-050)] mb-2">
                           {fav.coverImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -216,7 +216,7 @@ export default function MyPage() {
                         <Link href={`/chat?bookId=${fav.bookId}`} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[var(--color-primary-030)] text-[var(--color-primary-600)] hover:bg-[var(--color-primary-050)] transition-colors">
                           <MessageCircle className="w-3 h-3" />채팅
                         </Link>
-                        <Link href={`/library/${fav.bookId}`} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-080)] transition-colors">
+                        <Link href={`/library/${fav.bookId}/intro`} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-080)] transition-colors">
                           <BookOpen className="w-3 h-3" />읽기
                         </Link>
                       </div>

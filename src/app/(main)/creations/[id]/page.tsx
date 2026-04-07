@@ -248,7 +248,7 @@ export default function CreationDetailPage() {
             {book && (
               <div className="bg-white rounded-2xl p-5 shadow-sm">
                 <p className="text-[11px] font-semibold text-[var(--color-mono-400)] uppercase tracking-wider mb-3">원작 도서</p>
-                <Link href={`/library/${book.id}`} className="flex gap-3 group">
+                <Link href={`/library/${book.id}/intro`} className="flex gap-3 group">
                   {book.coverImage && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={book.coverImage} alt={book.title} className="w-16 h-22 object-cover rounded-lg flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow" />

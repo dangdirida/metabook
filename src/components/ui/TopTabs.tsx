@@ -200,7 +200,7 @@ export default function TopTabs() {
           <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 40 }}>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {seriesBooks.map((b) => (
-                <Link key={b.id} href={`/library/${b.id}`} className={`flex-shrink-0 w-20 group ${b.id === bookId ? "ring-2 ring-primary-500 rounded-lg" : ""}`}>
+                <Link key={b.id} href={`/library/${b.id}/intro`} className={`flex-shrink-0 w-20 group ${b.id === bookId ? "ring-2 ring-primary-500 rounded-lg" : ""}`}>
                   <div className="w-20 aspect-[3/4] rounded-lg overflow-hidden bg-mono-100">
                     {b.coverImage ? (
                       // eslint-disable-next-line @next/next/no-img-element

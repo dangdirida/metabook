@@ -119,7 +119,7 @@ export default function WorldViewerPage() {
       {/* 상단 헤더 */}
       <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
         <a
-          href={`/library/${bookId}`}
+          href={`/library/${bookId}/intro`}
           className="text-lg font-bold"
         >
           OGQ

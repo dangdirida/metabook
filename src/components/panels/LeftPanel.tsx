@@ -55,7 +55,7 @@ export default function LeftPanel() {
           <BookItem
             key={book.id} book={book} isActive={book.id === bookId}
             isExpanded={expandedBookId === book.id}
-            onSelect={() => router.push(`/library/${book.id}`)}
+            onSelect={() => router.push(`/library/${book.id}/intro`)}
             onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
             onShowQR={(imageId) => setShowQR(imageId)}
           />

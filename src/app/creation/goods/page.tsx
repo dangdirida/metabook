@@ -130,12 +130,12 @@ function GoodsContent() {
   useEffect(() => { if (step === "editor" && goodsType === "bookmark") drawBookmark(); }, [step, goodsType, drawBookmark]);
 
   const downloadCanvas = () => { const c = canvasRef.current; if (!c) return; const a = document.createElement("a"); a.download = `bookmark_${bookTitle}.png`; a.href = c.toDataURL("image/png"); a.click(); };
-  const saveBookmark = () => { const c = canvasRef.current; if (!c) return; const t = c.toDataURL("image/png"); addCreation({ bookId, bookTitle, type: "goods", title: `책갈피: ${quote.slice(0, 20)}...`, thumbnail: t, content: quote }); router.push(`/library/${bookId}`); };
+  const saveBookmark = () => { const c = canvasRef.current; if (!c) return; const t = c.toDataURL("image/png"); addCreation({ bookId, bookTitle, type: "goods", title: `책갈피: ${quote.slice(0, 20)}...`, thumbnail: t, content: quote }); router.push(`/library/${bookId}/intro`); };
 
   const generateSticker = () => { if (!keyword.trim()) return; setIsLoadingImage(true); const sm: Record<string, string> = { cute: "cute kawaii cartoon sticker style, white border", realistic: "realistic detailed sticker, white border", anime: "anime style sticker, vibrant colors, white border" }; setGeneratedImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(`${keyword}, ${sm[stickerStyle]}, high quality`)}?width=512&height=512&nologo=true`); };
   const generateIllustration = () => { if (!sceneDesc.trim()) return; setIsLoadingImage(true); const sm: Record<string, string> = { watercolor: "watercolor painting style", "pen-sketch": "pen and ink sketch style", anime: "anime illustration style", realistic: "photorealistic digital painting" }; setGeneratedImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(`${sceneDesc}, ${sm[illustStyle]}, high quality`)}?width=768&height=768&nologo=true`); };
   const downloadImage = () => { if (!generatedImageUrl) return; const a = document.createElement("a"); a.download = `${goodsType}_${bookTitle}.png`; a.href = generatedImageUrl; a.target = "_blank"; a.click(); };
-  const saveImage = () => { addCreation({ bookId, bookTitle, type: "goods", title: goodsType === "sticker" ? `스티커: ${keyword.slice(0, 20)}` : `일러스트: ${sceneDesc.slice(0, 20)}`, thumbnail: generatedImageUrl, content: generatedImageUrl }); router.push(`/library/${bookId}`); };
+  const saveImage = () => { addCreation({ bookId, bookTitle, type: "goods", title: goodsType === "sticker" ? `스티커: ${keyword.slice(0, 20)}` : `일러스트: ${sceneDesc.slice(0, 20)}`, thumbnail: generatedImageUrl, content: generatedImageUrl }); router.push(`/library/${bookId}/intro`); };
 
   const handleResizeMouseDown = (e: React.MouseEvent, handle: ResizeHandle) => {
     e.stopPropagation(); e.preventDefault();
@@ -209,7 +209,7 @@ function GoodsContent() {
     <div className="min-h-screen bg-[var(--color-mono-010)]">
       <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => step === "select" ? router.push(`/library/${bookId}`) : setStep(step === "done" ? "mockup" : step === "mockup" ? "editor" : "select")}
+          <button onClick={() => step === "select" ? router.push(`/library/${bookId}/intro`) : setStep(step === "done" ? "mockup" : step === "mockup" ? "editor" : "select")}
             className="p-2 rounded-lg hover:bg-[var(--color-mono-050)] transition-colors">
             <ArrowLeft className="w-5 h-5 text-[var(--color-mono-700)]" />
           </button>
@@ -407,7 +407,7 @@ function GoodsContent() {
             {finalImage && <div className="mb-8 rounded-2xl overflow-hidden shadow-xl border border-[var(--color-mono-080)]"><img src={finalImage} alt="완성" style={{ maxWidth: 300, maxHeight: 400, objectFit: "contain" }} /></div>}
             <div className="flex gap-3 w-full">
               <a href={finalImage || "#"} download={`${selectedLabel}_design.png`} className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--color-mono-050)] text-[var(--color-mono-700)] rounded-xl font-medium text-[13px] hover:bg-[var(--color-mono-080)] transition-colors"><Download className="w-4 h-4" />다운로드</a>
-              <button onClick={() => { addCreation({ bookId, bookTitle, type: "goods", title: `${bookTitle} ${selectedLabel}`, thumbnail: finalImage || "", content: finalImage || "" }); router.push(`/library/${bookId}`); }}
+              <button onClick={() => { addCreation({ bookId, bookTitle, type: "goods", title: `${bookTitle} ${selectedLabel}`, thumbnail: finalImage || "", content: finalImage || "" }); router.push(`/library/${bookId}/intro`); }}
                 className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--color-primary-500)] text-white rounded-xl font-medium text-[13px] hover:bg-[var(--color-primary-600)] transition-colors"><Save className="w-4 h-4" />갤러리 저장</button>
             </div>
             <button onClick={() => setStep("select")} className="mt-4 text-[12px] text-[var(--color-mono-400)] hover:text-[var(--color-mono-700)] transition-colors">다른 굿즈 만들기</button>

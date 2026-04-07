@@ -62,20 +62,78 @@ function ChatPageInner() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  const ROOMS_STORAGE_KEY = "metabook_chat_rooms";
+  const CURRENT_ROOM_KEY = "metabook_current_room";
+
   const [rooms, setRooms] = useState<Record<string, ChatRoom>>({});
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedInvites, setSelectedInvites] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [showProfile, setShowProfile] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<"chats" | "explore">("chats");
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const roomsLoadedRef = useRef(false);
+
+  // localStorage에서 채팅방 + 북마크 복원
   useEffect(() => {
     try { setBookmarks(JSON.parse(localStorage.getItem("chat_bookmarks") || "[]")); }
     catch { setBookmarks([]); }
+
+    try {
+      const savedRooms = localStorage.getItem(ROOMS_STORAGE_KEY);
+      if (savedRooms) {
+        const parsed = JSON.parse(savedRooms) as Record<string, ChatRoom>;
+        // agents 데이터 복원: 저장된 agentId/bookId로 mockBooks에서 실제 객체 참조
+        const restored: Record<string, ChatRoom> = {};
+        for (const [roomId, room] of Object.entries(parsed)) {
+          const restoredAgents = (room.agents || [])
+            .map((ra: { agent: { id: string }; book: { id: string } }) => {
+              const book = mockBooks.find((b) => b.id === ra.book.id);
+              const agent = book?.agents.find((a) => a.id === ra.agent.id);
+              return agent && book ? { agent, book } : null;
+            })
+            .filter((x): x is { agent: Agent; book: Book } => x !== null);
+          if (restoredAgents.length > 0) {
+            restored[roomId] = { id: roomId, agents: restoredAgents, messages: room.messages || [] };
+          }
+        }
+        if (Object.keys(restored).length > 0) {
+          setRooms(restored);
+          const savedCurrentId = localStorage.getItem(CURRENT_ROOM_KEY);
+          if (savedCurrentId && restored[savedCurrentId]) {
+            setCurrentRoomId(savedCurrentId);
+            setSidebarTab("chats");
+          }
+        }
+      }
+    } catch { /* ignore */ }
+    roomsLoadedRef.current = true;
   }, []);
+
+  // rooms 변경 시 localStorage에 저장 (직렬화 가능한 형태로)
+  useEffect(() => {
+    if (!roomsLoadedRef.current) return;
+    const serializable: Record<string, { id: string; agents: { agent: { id: string }; book: { id: string } }[]; messages: ChatMessage[] }> = {};
+    for (const [roomId, room] of Object.entries(rooms)) {
+      serializable[roomId] = {
+        id: room.id,
+        agents: room.agents.map((ra) => ({ agent: { id: ra.agent.id }, book: { id: ra.book.id } })),
+        messages: room.messages.slice(-100), // 최근 100개만 저장
+      };
+    }
+    localStorage.setItem(ROOMS_STORAGE_KEY, JSON.stringify(serializable));
+  }, [rooms]);
+
+  // currentRoomId 변경 시 저장
+  useEffect(() => {
+    if (!roomsLoadedRef.current) return;
+    if (currentRoomId) { localStorage.setItem(CURRENT_ROOM_KEY, currentRoomId); }
+    else { localStorage.removeItem(CURRENT_ROOM_KEY); }
+  }, [currentRoomId]);
 
   useEffect(() => {
     const bookIdParam = searchParams.get("bookId");
@@ -128,14 +186,43 @@ function ChatPageInner() {
     setMobileView("chat");
   };
 
-  const inviteAgent = (agent: Agent, book: Book) => {
-    if (!currentRoom) return;
-    if (currentRoom.agents.find((a) => a.agent.id === agent.id)) return;
-    const newAgents = [...currentRoom.agents, { agent, book }];
-    const newRoomId = newAgents.map((a) => a.agent.id).sort().join("_");
-    setRooms((prev) => ({ ...prev, [newRoomId]: { id: newRoomId, agents: newAgents, messages: currentRoom.messages } }));
-    setCurrentRoomId(newRoomId);
-    setShowInviteModal(false);
+  const closeInviteModal = () => { setShowInviteModal(false); setSelectedInvites([]); };
+
+  const handleInviteConfirm = () => {
+    if (!currentRoom || selectedInvites.length === 0) return;
+    // 선택된 인물들을 현재 채팅방에 추가
+    const newAgentEntries = selectedInvites
+      .map((id) => {
+        for (const b of booksWithAgents) {
+          const a = b.agents.find((ag) => ag.id === id);
+          if (a) return { agent: a, book: b };
+        }
+        return null;
+      })
+      .filter((x): x is { agent: Agent; book: Book } => x !== null);
+
+    if (newAgentEntries.length === 0) { closeInviteModal(); return; }
+
+    const updatedAgents = [...currentRoom.agents, ...newAgentEntries];
+    const invitedNames = newAgentEntries.map((e) => e.agent.name).join(", ");
+
+    // 시스템 메시지 추가
+    const systemMsg: ChatMessage = {
+      id: `sys_${Date.now()}`, role: "assistant",
+      content: `${invitedNames}이(가) 대화에 참여했습니다.`,
+      timestamp: new Date().toISOString(),
+    };
+
+    // 현재 roomId 유지하며 인물 목록 + 시스템 메시지 업데이트
+    setRooms((prev) => ({
+      ...prev,
+      [currentRoom.id]: {
+        ...prev[currentRoom.id],
+        agents: updatedAgents,
+        messages: [...prev[currentRoom.id].messages, systemMsg],
+      },
+    }));
+    closeInviteModal();
   };
 
   const toggleBookmark = (roomId: string, messageId: string, content: string, agentName: string) => {
@@ -247,7 +334,7 @@ function ChatPageInner() {
                           </p>
                           <p className="text-[10px] text-[var(--color-mono-300)] truncate mt-0.5">{first?.book.title}{isGroup && ` · ${room.agents.length}명`}</p>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); setRooms((prev) => { const n = { ...prev }; delete n[room.id]; return n; }); if (currentRoomId === room.id) setCurrentRoomId(null); }}
+                        <button onClick={(e) => { e.stopPropagation(); setRooms((prev) => { const n = { ...prev }; delete n[room.id]; return n; }); if (currentRoomId === room.id) { setCurrentRoomId(null); localStorage.removeItem(CURRENT_ROOM_KEY); } }}
                           className="absolute right-3 opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 rounded-lg text-[var(--color-mono-300)] hover:text-red-400 hover:bg-red-50" title="대화 삭제">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -436,7 +523,7 @@ function ChatPageInner() {
           {/* 책 바로가기 */}
           <div className="px-4 py-4 border-b border-[var(--color-mono-080)]">
             <p className="text-[11px] font-semibold text-[var(--color-mono-400)] uppercase tracking-wider mb-2">등장 도서</p>
-            <Link href={`/library/${currentAgents[0]?.book.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--color-mono-030)] transition-colors group">
+            <Link href={`/library/${currentAgents[0]?.book.id}/intro`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--color-mono-030)] transition-colors group">
               {currentAgents[0]?.book.coverImage && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={currentAgents[0].book.coverImage} alt={currentAgents[0].book.title} className="w-10 h-14 object-cover rounded-lg flex-shrink-0" />
@@ -473,31 +560,53 @@ function ChatPageInner() {
 
       {/* 초대 모달 */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full max-h-[70vh] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[var(--color-mono-900)]">인물 초대</h3>
-              <button onClick={() => setShowInviteModal(false)} className="p-1 hover:bg-[var(--color-mono-050)] rounded-lg">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={closeInviteModal}>
+          <div className="bg-white rounded-2xl max-w-sm w-full max-h-[70vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="text-[16px] font-semibold text-[var(--color-mono-900)]">인물 초대</h3>
+              <button onClick={closeInviteModal} className="p-1 hover:bg-[var(--color-mono-050)] rounded-lg">
                 <X className="w-5 h-5 text-[var(--color-mono-500)]" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-1">
+            {selectedInvites.length > 0 && (
+              <div className="px-5 pb-2">
+                <p className="text-[12px] text-[var(--color-primary-600)] font-medium">{selectedInvites.length}명 선택됨</p>
+              </div>
+            )}
+            <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-1">
               {invitableAgents.length === 0 ? (
                 <p className="text-[13px] text-[var(--color-mono-400)] text-center py-8">초대할 수 있는 인물이 없어요</p>
               ) : (
-                invitableAgents.map(({ agent, book }) => (
-                  <button key={agent.id} onClick={() => inviteAgent(agent, book)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--color-mono-030)] transition-colors text-left">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</p>
-                      <p className="text-[11px] text-[var(--color-mono-400)] truncate">{book.title}</p>
+                invitableAgents.map(({ agent, book }) => {
+                  const isSelected = selectedInvites.includes(agent.id);
+                  return (
+                    <div key={agent.id}
+                      onClick={() => setSelectedInvites((p) => p.includes(agent.id) ? p.filter((x) => x !== agent.id) : [...p, agent.id])}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all"
+                      style={{ backgroundColor: isSelected ? "#f0fdf4" : "white", border: isSelected ? "1.5px solid #10b981" : "1.5px solid transparent" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={agent.avatar || "/avatars/default-profile.svg"} alt={agent.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-medium text-[var(--color-mono-900)]">{agent.name}</p>
+                        <p className="text-[11px] text-[var(--color-mono-400)] truncate">{book.title}</p>
+                      </div>
+                      <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 text-[12px]"
+                        style={{ border: isSelected ? "none" : "2px solid #e5e7eb", backgroundColor: isSelected ? "#10b981" : "white", color: "white" }}>
+                        {isSelected && "✓"}
+                      </div>
                     </div>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
+            {selectedInvites.length > 0 && (
+              <div className="px-4 py-3 border-t border-[var(--color-mono-080)]">
+                <button onClick={handleInviteConfirm}
+                  className="w-full py-3 rounded-xl bg-[var(--color-primary-500)] text-white text-[14px] font-semibold hover:bg-[var(--color-primary-600)] transition-colors">
+                  {selectedInvites.length}명 초대하기
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -545,47 +654,102 @@ function ChatRoomView({
     [setRooms, room.id]
   );
 
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  const sendGroupMessage = async (userText: string, allMessages: ChatMessage[]) => {
+    const book = room.agents[0].book;
+    const recentContext = allMessages.slice(-6).map((m) => `${m.role === "user" ? "유저" : m.agentName || "AI"}: ${m.content}`).join("\n");
+    setTypingAgent(room.agents.map((a) => a.agent.name).join(", "));
+    try {
+      const res = await fetch("/api/chat/group", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userMessage: userText,
+          bookId: book.id,
+          characters: room.agents.map(({ agent }) => ({
+            id: agent.id, name: agent.name, role: agent.role,
+            personality: agent.personality, speechStyle: agent.speechStyle,
+            background: "", systemPrompt: "", avatar: agent.avatar || "/avatars/default-profile.svg",
+          })),
+          recentContext,
+        }),
+      });
+      const data = await res.json();
+      const responses: { characterId: string; characterName: string; avatar: string; type: string; content: string }[] = data.responses || [];
+      for (let i = 0; i < responses.length; i++) {
+        const r = responses[i];
+        if (i > 0) {
+          const delay = r.type === "reaction" ? 400 + Math.random() * 800 : 1000 + Math.random() * 2000;
+          setTypingAgent(r.characterName);
+          await sleep(delay);
+        }
+        const aiMsg: ChatMessage = {
+          id: `${Date.now()}_${r.characterId}_${i}`, role: "assistant",
+          agentId: r.characterId, agentName: r.characterName,
+          content: r.type === "reaction" ? r.content : r.content,
+          timestamp: new Date().toISOString(),
+        };
+        updateMessages((msgs) => [...msgs, aiMsg]);
+      }
+    } catch {
+      updateMessages((msgs) => [...msgs, {
+        id: `${Date.now()}_err`, role: "assistant" as const,
+        agentId: room.agents[0].agent.id, agentName: room.agents[0].agent.name,
+        content: "죄송해요, 응답을 생성하지 못했어요.", timestamp: new Date().toISOString(),
+      }]);
+    }
+  };
+
+  const sendSingleMessage = async (userText: string, allMessages: ChatMessage[]) => {
+    const { agent, book } = room.agents[0];
+    setTypingAgent(agent.name);
+    const aiMsg: ChatMessage = { id: `${Date.now()}_${agent.id}`, role: "assistant", agentId: agent.id, agentName: agent.name, content: "", timestamp: new Date().toISOString() };
+    updateMessages((msgs) => [...msgs, aiMsg]);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: allMessages.map((m) => ({ role: m.role, content: m.content })), agentName: agent.name, bookTitle: book.title, persona: `성격: ${agent.personality.join(", ")}. 말투: ${agent.speechStyle}`, userId: "anonymous", agentId: agent.id, bookId: book.id }),
+      });
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value, { stream: true }).split("\n");
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const d = line.slice(6).trim();
+            if (!d || d === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(d);
+              const delta = parsed.type === "content_block_delta" ? parsed.delta?.text : parsed.type === "content_block_start" ? parsed.content_block?.text : parsed.content;
+              if (delta) { fullContent += delta; const captured = fullContent; updateMessages((msgs) => { const u = [...msgs]; u[u.length - 1] = { ...u[u.length - 1], content: captured }; return u; }); }
+            } catch { /* ignore */ }
+          }
+        }
+      }
+    } catch {
+      updateMessages((msgs) => { const u = [...msgs]; u[u.length - 1] = { ...u[u.length - 1], content: "죄송해요, 응답을 생성하지 못했어요." }; return u; });
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || isStreaming) return;
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: input.trim(), timestamp: new Date().toISOString() };
+    const userText = input.trim();
+    const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: userText, timestamp: new Date().toISOString() };
     updateMessages((msgs) => [...msgs, userMsg]);
     setInput("");
     setIsStreaming(true);
     const allMessages = [...room.messages, userMsg];
 
-    for (const { agent, book } of room.agents) {
-      setTypingAgent(agent.name);
-      const aiMsg: ChatMessage = { id: `${Date.now()}_${agent.id}`, role: "assistant", agentId: agent.id, agentName: agent.name, content: "", timestamp: new Date().toISOString() };
-      updateMessages((msgs) => [...msgs, aiMsg]);
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: allMessages.map((m) => ({ role: m.role, content: m.content })), agentName: agent.name, bookTitle: book.title, persona: `성격: ${agent.personality.join(", ")}. 말투: ${agent.speechStyle}`, userId: "anonymous", agentId: agent.id, bookId: book.id }),
-        });
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        let fullContent = "";
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const lines = decoder.decode(value, { stream: true }).split("\n");
-            for (const line of lines) {
-              if (!line.startsWith("data: ")) continue;
-              const data = line.slice(6).trim();
-              if (!data || data === "[DONE]") continue;
-              try {
-                const parsed = JSON.parse(data);
-                const delta = parsed.type === "content_block_delta" ? parsed.delta?.text : parsed.type === "content_block_start" ? parsed.content_block?.text : parsed.content;
-                if (delta) { fullContent += delta; const captured = fullContent; updateMessages((msgs) => { const u = [...msgs]; u[u.length - 1] = { ...u[u.length - 1], content: captured }; return u; }); }
-              } catch { /* ignore */ }
-            }
-          }
-        }
-      } catch {
-        updateMessages((msgs) => { const u = [...msgs]; u[u.length - 1] = { ...u[u.length - 1], content: "죄송해요, 응답을 생성하지 못했어요." }; return u; });
-      }
+    if (isGroup) {
+      await sendGroupMessage(userText, allMessages);
+    } else {
+      await sendSingleMessage(userText, allMessages);
     }
+
     setTypingAgent(null);
     setIsStreaming(false);
   };
@@ -609,7 +773,7 @@ function ChatRoomView({
           </p>
           <p className="text-[11px] text-[var(--color-mono-400)] truncate">{firstAgent.book.title}</p>
         </div>
-        <Link href={`/library/${firstAgent.book.id}`} className="md:hidden p-2 rounded-lg hover:bg-[var(--color-mono-050)] text-[var(--color-mono-400)]" title="책 페이지로 이동">
+        <Link href={`/library/${firstAgent.book.id}/intro`} className="md:hidden p-2 rounded-lg hover:bg-[var(--color-mono-050)] text-[var(--color-mono-400)]" title="책 페이지로 이동">
           <BookOpen className="w-4 h-4" />
         </Link>
         <button onClick={onInvite} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium border border-[var(--color-mono-100)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-050)] transition-colors">
@@ -635,12 +799,22 @@ function ChatRoomView({
             </div>
             <p className="text-[15px] font-semibold text-[var(--color-mono-800)]">{room.agents.map((a) => a.agent.name).join(", ")}</p>
             <p className="text-[12px] text-[var(--color-mono-400)] mt-1 text-center max-w-xs">
-              {isGroup ? "그룹 채팅방이에요. 메시지를 보내면 모든 인물이 답장해요." : firstAgent.agent.speechStyle}
+              {isGroup ? "그룹 채팅방이에요. 대화 맥락에 따라 인물들이 자연스럽게 반응해요." : firstAgent.agent.speechStyle}
             </p>
           </div>
         )}
 
-        {room.messages.map((msg) => (
+        {room.messages.map((msg) => {
+          const isReaction = msg.role === "assistant" && msg.content && msg.content.trim().length <= 2 && !/[a-zA-Z가-힣0-9]/.test(msg.content.trim());
+          const isSystemMsg = msg.role === "assistant" && !msg.agentId && msg.id.startsWith("sys_");
+          if (isSystemMsg) {
+            return (
+              <div key={msg.id} className="flex justify-center py-2">
+                <span className="text-[11px] text-[var(--color-mono-400)] bg-[var(--color-mono-050)] px-3 py-1 rounded-full">{msg.content}</span>
+              </div>
+            );
+          }
+          return (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] ${msg.role === "user" ? "order-1" : ""}`}>
               {msg.role === "assistant" && (
@@ -650,6 +824,9 @@ function ChatRoomView({
                   <span className="text-[11px] text-[var(--color-mono-500)]">{msg.agentName}</span>
                 </div>
               )}
+              {isReaction ? (
+                <div className="text-[24px] leading-none py-1">{msg.content}</div>
+              ) : (
               <div className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed ${msg.role === "user" ? "bg-[var(--color-primary-500)] text-white rounded-tr-sm" : "bg-[var(--color-primary-030)] text-[var(--color-mono-800)] rounded-tl-sm"}`}>
                 {msg.content || (
                   <span className="inline-flex gap-1">
@@ -659,7 +836,8 @@ function ChatRoomView({
                   </span>
                 )}
               </div>
-              {msg.role === "assistant" && msg.content && (
+              )}
+              {msg.role === "assistant" && msg.content && !isReaction && (
                 <div className="flex gap-1 mt-1 ml-1">
                   <button onClick={() => toggleFeedback(msg.id, "like")}
                     className={`p-1 rounded transition-colors ${msg.feedback === "like" ? "text-primary-500" : "text-mono-300 hover:text-mono-500"}`}>
@@ -678,7 +856,8 @@ function ChatRoomView({
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {typingAgent && (
           <div className="flex items-center gap-2 text-[12px] text-[var(--color-mono-400)]">

@@ -96,7 +96,7 @@ export default function FavoritesPage() {
                 {favorites.map((item) => (
                   <div key={item.bookId} className="group relative">
                     <div
-                      onClick={() => router.push(`/library/${item.bookId}`)}
+                      onClick={() => router.push(`/library/${item.bookId}/intro`)}
                       className="cursor-pointer"
                     >
                       <div className="aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover:-translate-y-1 transition-transform duration-300 bg-[var(--color-mono-050)]">

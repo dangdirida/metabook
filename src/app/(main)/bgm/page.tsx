@@ -69,7 +69,7 @@ export default function BgmPage() {
           <div key={bookId} className="bg-white rounded-2xl overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-mono-080)]">
               <p className="text-[13px] font-semibold text-[var(--color-mono-800)]">{bookTitle}</p>
-              <Link href={`/library/${bookId}`} className="text-[11px] text-[var(--color-primary-500)] hover:text-[var(--color-primary-700)] font-medium">
+              <Link href={`/library/${bookId}/intro`} className="text-[11px] text-[var(--color-primary-500)] hover:text-[var(--color-primary-700)] font-medium">
                 책 읽으러 가기 →
               </Link>
             </div>

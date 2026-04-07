@@ -98,7 +98,7 @@ function MusicCreationContent() {
       musicDuration: generatedMusic.duration,
       audioUrl: generatedMusic.audioUrl || undefined,
     });
-    router.push(`/library/${bookId}`);
+    router.push(`/library/${bookId}/intro`);
   };
 
   const togglePlay = () => {

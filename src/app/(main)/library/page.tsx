@@ -154,7 +154,7 @@ function PublisherSlider({
 // --- 갤러리 카드 (img 태그 직접 사용) ---
 function GalleryCard({ title, coverImage }: { title: string; coverImage: string }) {
   const matchBook = mockBooks.find((b) => b.title === title || b.coverImage === coverImage);
-  const Wrapper = matchBook ? ({ children }: { children: React.ReactNode }) => <Link href={`/library/${matchBook.id}`}>{children}</Link> : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+  const Wrapper = matchBook ? ({ children }: { children: React.ReactNode }) => <Link href={`/library/${matchBook.id}/intro`}>{children}</Link> : ({ children }: { children: React.ReactNode }) => <>{children}</>;
   return (
     <Wrapper>
       <div className="group cursor-pointer">
@@ -270,7 +270,7 @@ function LibraryContent() {
             {showSearchDrop && searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-[var(--color-mono-080)] overflow-hidden z-50">
                 {searchResults.map((b) => (
-                  <Link key={b.id} href={`/library/${b.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] transition-colors border-b border-[var(--color-mono-050)] last:border-0">
+                  <Link key={b.id} href={`/library/${b.id}/intro`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] transition-colors border-b border-[var(--color-mono-050)] last:border-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={b.coverImage} alt={b.title} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
                     <div className="flex-1 min-w-0">
