@@ -162,3 +162,15 @@ html.dark-mode .bg-mono-50 {
     scroll-behavior: auto !important;
   }
 }
+
+/* 챕터 스와이프 슬라이드 애니메이션 */
+@keyframes slideInLeft {
+  from { transform: translateX(60px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(-60px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-left { animation: slideInLeft 0.25s ease-out; }
+.animate-slide-in-right { animation: slideInRight 0.25s ease-out; }

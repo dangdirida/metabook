@@ -1257,9 +1257,32 @@ const defaultChapters: ChapterContent[] = [
   },
 ];
 
+// 대화문 앞에 빈 줄 추가, 연속 빈 줄 압축 등 가독성 포맷
+function formatChapterContent(raw: string): string {
+  return raw
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .map((line, i, arr) => {
+      // 대화문 시작 줄 앞에 빈 줄 추가 (이미 빈 줄이면 스킵)
+      if ((line.startsWith("\u201C") || line.startsWith('"')) && i > 0 && arr[i - 1].trim() !== "") {
+        return "\n" + line;
+      }
+      return line;
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n"); // 3줄 이상 빈 줄 → 2줄로
+}
+
 // bookId로 챕터 가져오기 (없으면 기본 챕터 반환)
 export function getChaptersByBookId(bookId: string): ChapterContent[] {
-  return bookChaptersMap[bookId] || defaultChapters;
+  const chapters = bookChaptersMap[bookId] || defaultChapters;
+  return chapters.map((ch) => {
+    // ch8 이상만 포맷 적용 (ch1~ch7은 그대로)
+    if (ch.number >= 8) {
+      return { ...ch, content: formatChapterContent(ch.content) };
+    }
+    return ch;
+  });
 }
 
 // 하위 호환: 기존 코드에서 사용하던 export

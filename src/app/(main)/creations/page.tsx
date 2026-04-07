@@ -4,38 +4,43 @@ import Link from "next/link";
 import { mockCreations, loversCreations } from "@/lib/mock-creations";
 import { getCreations } from "@/lib/creation-store";
 import { mockBooks } from "@/lib/mock-data";
-import { Heart, Search, Filter, ArrowLeft, Sticker, Music, Image as ImageIcon, Video, BookOpen, FileText, Film, Gift, Package } from "lucide-react";
+import { Heart, Search, Filter, ArrowLeft, Sticker, Music, Video, BookOpen, FileText, Gift, Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Creation } from "@/types";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   sticker: { label: "스티커", color: "bg-amber-50 text-amber-700" },
   music: { label: "음악", color: "bg-blue-50 text-blue-700" },
-  photo: { label: "이미지", color: "bg-emerald-50 text-emerald-700" },
-  video: { label: "영상", color: "bg-red-50 text-red-700" },
+  shortbook: { label: "숏북", color: "bg-teal-50 text-teal-700" },
   webtoon: { label: "웹툰", color: "bg-orange-50 text-orange-700" },
   novel: { label: "소설", color: "bg-violet-50 text-violet-700" },
-  shortbook: { label: "숏북", color: "bg-teal-50 text-teal-700" },
-  shortmovie: { label: "숏뮤비", color: "bg-pink-50 text-pink-700" },
+  video: { label: "영상", color: "bg-red-50 text-red-700" },
   goods: { label: "굿즈", color: "bg-rose-50 text-rose-700" },
 };
 const TYPE_GRADIENTS: Record<string, string> = {
   sticker: "from-amber-400 to-orange-500", music: "from-blue-400 to-indigo-500",
-  photo: "from-emerald-400 to-teal-500", video: "from-red-400 to-rose-500",
-  webtoon: "from-orange-400 to-amber-500", novel: "from-violet-400 to-purple-500",
-  shortbook: "from-teal-400 to-emerald-500", shortmovie: "from-pink-400 to-purple-500",
+  shortbook: "from-teal-400 to-emerald-500", webtoon: "from-orange-400 to-amber-500",
+  novel: "from-violet-400 to-purple-500", video: "from-red-400 to-rose-500",
   goods: "from-rose-400 to-pink-500",
 };
 const ALL_TYPES = Object.keys(TYPE_META);
 const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  sticker: Sticker, music: Music, photo: ImageIcon, video: Video,
-  webtoon: FileText, novel: BookOpen, shortbook: BookOpen, shortmovie: Film, goods: Gift,
+  sticker: Sticker, music: Music, shortbook: BookOpen, webtoon: FileText,
+  novel: BookOpen, video: Video, goods: Gift,
 };
+
+const GOODS_SUB = [
+  { id: "phonecase", label: "폰케이스" },
+  { id: "tumbler", label: "텀블러" },
+  { id: "photocard", label: "포토카드" },
+  { id: "bookmark", label: "책갈피" },
+];
 
 export default function CreationsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
+  const [selectedSubType, setSelectedSubType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
 
   const [storeItems, setStoreItems] = useState<ReturnType<typeof getCreations>>([]);
@@ -46,13 +51,13 @@ export default function CreationsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.items) {
-          setGoodsItems(data.items.map((g: { id: string; title: string; bookId: string; userId: string; thumbnailDataUrl: string; likes: number; createdAt: string }) => ({
+          setGoodsItems(data.items.map((g: { id: string; title: string; bookId: string; userId: string; thumbnailDataUrl: string; likes: number; createdAt: string; productType?: string }) => ({
             id: `goods-${g.id}`, bookId: g.bookId || "", userId: g.userId || "anonymous",
             userName: g.userId || "anonymous", title: g.title, description: "",
             type: "goods" as const, fileUrl: "", thumbnailUrl: g.thumbnailDataUrl || "",
             tags: [], status: "approved" as const, likes: g.likes || 0, ogqLinked: false,
             createdAt: g.createdAt || new Date().toISOString(),
-            _goodsId: g.id,
+            _goodsId: g.id, _goodsProductType: g.productType || "",
           })));
         }
       })
@@ -70,7 +75,18 @@ export default function CreationsPage() {
   ];
 
   const filtered = allCreations.filter((c) => {
-    const matchType = selectedType === "all" || c.type === selectedType;
+    let matchType = true;
+    if (selectedType !== "all") {
+      if (selectedType === "goods") {
+        matchType = c.type === "goods";
+        if (matchType && selectedSubType) {
+          matchType = (c as unknown as Record<string, unknown>).productType === selectedSubType
+            || (c as unknown as Record<string, unknown>)._goodsProductType === selectedSubType;
+        }
+      } else {
+        matchType = c.type === selectedType;
+      }
+    }
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || c.title.toLowerCase().includes(q) || c.userName.toLowerCase().includes(q) ||
       c.tags.some((t) => t.toLowerCase().includes(q)) || mockBooks.find((b) => b.id === c.bookId)?.title.toLowerCase().includes(q);
@@ -102,15 +118,32 @@ export default function CreationsPage() {
               className="flex-1 bg-transparent text-[13px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] outline-none" />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-0.5">
-            <button onClick={() => setSelectedType("all")}
+            <button onClick={() => { setSelectedType("all"); setSelectedSubType(null); }}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${selectedType === "all" ? "bg-[var(--color-primary-500)] text-white" : "bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-080)]"}`}>전체</button>
             {ALL_TYPES.map((type) => (
-              <button key={type} onClick={() => setSelectedType(type)}
+              <button key={type} onClick={() => { setSelectedType(type); setSelectedSubType(null); }}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${selectedType === type ? "bg-[var(--color-primary-500)] text-white" : "bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-080)]"}`}>
                 {TYPE_META[type].label}
               </button>
             ))}
           </div>
+          {/* 굿즈 서브필터 */}
+          {selectedType === "goods" && (
+            <div className="flex gap-2 mt-2 overflow-x-auto pb-0.5">
+              {GOODS_SUB.map((sub) => (
+                <button key={sub.id}
+                  onClick={() => setSelectedSubType(selectedSubType === sub.id ? null : sub.id)}
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-medium transition-colors"
+                  style={{
+                    border: `1.5px solid ${selectedSubType === sub.id ? "#10b981" : "#e5e7eb"}`,
+                    background: selectedSubType === sub.id ? "#f0fdf4" : "white",
+                    color: selectedSubType === sub.id ? "#10b981" : "#6b7280",
+                  }}>
+                  {sub.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-4 py-6">

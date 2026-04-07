@@ -152,20 +152,21 @@ function PublisherSlider({
 }
 
 // --- 갤러리 카드 (img 태그 직접 사용) ---
-function GalleryCard({ title, coverImage }: { title: string; coverImage: string }) {
-  const matchBook = mockBooks.find((b) => b.title === title || b.coverImage === coverImage);
-  const Wrapper = matchBook ? ({ children }: { children: React.ReactNode }) => <Link href={`/library/${matchBook.id}/intro`}>{children}</Link> : ({ children }: { children: React.ReactNode }) => <>{children}</>;
-  return (
-    <Wrapper>
-      <div className="group cursor-pointer">
-        <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={coverImage} alt={title} className="w-full h-full object-cover" loading="lazy" />
-        </div>
-        <h3 className="mt-2 font-semibold text-[var(--color-mono-990)] truncate text-sm">{title}</h3>
+function GalleryCard({ title, coverImage, bookId }: { title: string; coverImage: string; bookId?: string }) {
+  const matchBook = bookId
+    ? mockBooks.find((b) => b.id === bookId)
+    : mockBooks.find((b) => b.title === title || b.coverImage === coverImage || title.includes(b.title) || b.title.includes(title));
+  const href = matchBook ? `/library/${matchBook.id}/intro` : null;
+  const card = (
+    <div className="group cursor-pointer">
+      <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-300">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverImage} alt={title} className="w-full h-full object-cover" loading="lazy" />
       </div>
-    </Wrapper>
+      <h3 className="mt-2 font-semibold text-[var(--color-mono-990)] truncate text-sm">{title}</h3>
+    </div>
   );
+  return href ? <Link href={href}>{card}</Link> : card;
 }
 
 // --- 메인 ---
@@ -438,7 +439,7 @@ function LibraryContent() {
             filteredByCategory.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                 {filteredByCategory.map((book) => (
-                  <GalleryCard key={book.id} title={book.title} coverImage={book.coverImage} />
+                  <GalleryCard key={book.id} title={book.title} coverImage={book.coverImage} bookId={book.id} />
                 ))}
               </div>
             ) : (

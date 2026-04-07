@@ -49,6 +49,10 @@ export default function CenterPanel() {
   const [showBgmModal, setShowBgmModal] = useState(false);
   const [showNoteToast, setShowNoteToast] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [swipeTouchX, setSwipeTouchX] = useState(0);
+  const [swipeDragX, setSwipeDragX] = useState(0);
+  const [swipeDragging, setSwipeDragging] = useState(false);
+  const [slideDir, setSlideDir] = useState<"left" | "right" | null>(null);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [highlightPickerPos, setHighlightPickerPos] = useState<{ x: number; y: number } | null>(null);
   const [pendingText, setPendingText] = useState("");
@@ -108,6 +112,14 @@ export default function CenterPanel() {
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, [currentChapter]);
+
+  // 스와이프 슬라이드 애니메이션 초기화
+  useEffect(() => {
+    if (slideDir) {
+      const t = setTimeout(() => setSlideDir(null), 300);
+      return () => clearTimeout(t);
+    }
+  }, [slideDir]);
 
   const saveScrollPosition = () => {
     if (contentRef.current) {
@@ -274,8 +286,14 @@ export default function CenterPanel() {
         </div>
       </div>
 
-      {/* 본문 영역 */}
-      <div ref={contentRef} className={`flex-1 overflow-y-auto custom-scrollbar transition-opacity duration-200 ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
+      {/* 본문 영역 — 좌우 스와이프로 챕터 이동 */}
+      <div ref={contentRef}
+        className={`flex-1 overflow-y-auto custom-scrollbar ${slideDir === "left" ? "animate-slide-in-left" : slideDir === "right" ? "animate-slide-in-right" : ""} ${isTransitioning ? "opacity-0" : "opacity-100"} transition-opacity duration-200`}
+        onTouchStart={(e) => setSwipeTouchX(e.touches[0].clientX)}
+        onTouchEnd={(e) => { const delta = swipeTouchX - e.changedTouches[0].clientX; if (Math.abs(delta) > 80) { if (delta > 0) { setSlideDir("left"); goToChapter(1); } else { setSlideDir("right"); goToChapter(-1); } } }}
+        onMouseDown={(e) => { if (e.button !== 0) return; setSwipeDragX(e.clientX); setSwipeDragging(true); }}
+        onMouseUp={(e) => { if (!swipeDragging) return; setSwipeDragging(false); const delta = swipeDragX - e.clientX; if (Math.abs(delta) > 80) { if (delta > 0) { setSlideDir("left"); goToChapter(1); } else { setSlideDir("right"); goToChapter(-1); } } }}
+        onMouseLeave={() => setSwipeDragging(false)}>
         <div className="max-w-2xl mx-auto px-6 py-8">
           <div className="mb-6">
             {currentChapter === 0 && book?.section && <p className={`text-[11px] font-light tracking-[0.25em] mb-1 ${isDark ? "text-mono-500" : "text-[var(--color-mono-400)]"}`}>{book.section}</p>}
