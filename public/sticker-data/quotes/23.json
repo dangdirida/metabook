@@ -1,0 +1,44 @@
+{
+  "quotes": [
+    {
+      "text": "해적왕이 될 거야!",
+      "emotion": "dream",
+      "scene": "루피의 선언"
+    },
+    {
+      "text": "사람은 언제 죽는다고 생각하나? 잊혀졌을 때다",
+      "emotion": "wisdom",
+      "scene": "힐룩의 대사"
+    },
+    {
+      "text": "내 동료를 건드리지 마",
+      "emotion": "anger",
+      "scene": "동료를 지킬 때"
+    },
+    {
+      "text": "살고 싶다!!!",
+      "emotion": "desperate",
+      "scene": "로빈의 고백"
+    },
+    {
+      "text": "남자의 꿈은 끝나지 않아",
+      "emotion": "determination",
+      "scene": "흰수염의 유언"
+    },
+    {
+      "text": "어쩔 수 없잖아 난 고무인간이니까",
+      "emotion": "humor",
+      "scene": "루피의 낙천성"
+    },
+    {
+      "text": "나에겐 이길 수 없더라도 져선 안 되는 싸움이 있다",
+      "emotion": "courage",
+      "scene": "우솝의 각오"
+    },
+    {
+      "text": "언젠간 반드시 바다에서 만나자",
+      "emotion": "promise",
+      "scene": "샹크스와의 약속"
+    }
+  ]
+}

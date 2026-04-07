@@ -1,0 +1,44 @@
+{
+  "quotes": [
+    {
+      "text": "포기하면 거기서 시합 끝이야",
+      "emotion": "determination",
+      "scene": "안선생의 명대사"
+    },
+    {
+      "text": "왼손은 거들 뿐",
+      "emotion": "cool",
+      "scene": "강백호의 자신감"
+    },
+    {
+      "text": "난 천재니까",
+      "emotion": "confidence",
+      "scene": "강백호의 자기 확신"
+    },
+    {
+      "text": "영감님 농구가 하고 싶어요",
+      "emotion": "passion",
+      "scene": "정대만의 눈물"
+    },
+    {
+      "text": "초보라서 어때 그게 뭐 대수야",
+      "emotion": "courage",
+      "scene": "강백호의 도전"
+    },
+    {
+      "text": "될 때까지 한다",
+      "emotion": "persistence",
+      "scene": "강백호의 연습"
+    },
+    {
+      "text": "지금부터가 시작이다",
+      "emotion": "start",
+      "scene": "새로운 도전"
+    },
+    {
+      "text": "난 오늘부터 농구부원이 됐다",
+      "emotion": "excitement",
+      "scene": "입부 선언"
+    }
+  ]
+}

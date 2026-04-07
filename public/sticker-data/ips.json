@@ -1,0 +1,64 @@
+{
+  "elements": [
+    {
+      "id": 25,
+      "title": "해리포터",
+      "author": "J.K. 롤링",
+      "publisher": "문학수첩",
+      "category": "소설",
+      "coverImageUrl": "https://image.aladin.co.kr/product/38/56/cover500/898392067x_3.jpg",
+      "localCover": "/covers/25.jpg",
+      "ipType": "BOOK",
+      "description": "해리포터",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 15,
+      "title": "어린왕자",
+      "author": "생텍쥐페리",
+      "publisher": "김영사",
+      "category": "문학",
+      "coverImageUrl": "https://image.aladin.co.kr/product/6853/49/cover500/8932917248_2.jpg",
+      "localCover": "/covers/15.jpg",
+      "ipType": "BOOK",
+      "description": null,
+      "status": "ACTIVE"
+    },
+    {
+      "id": 21,
+      "title": "슬램덩크",
+      "author": "이노우에 다케히코",
+      "publisher": "대원씨아이",
+      "category": "만화",
+      "coverImageUrl": "https://image.aladin.co.kr/product/28/13/cover500/8952821971_1.gif",
+      "localCover": "/covers/21.gif",
+      "ipType": "BOOK",
+      "description": "슬램덩크",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 23,
+      "title": "원피스",
+      "author": "오다 에이치로",
+      "publisher": "대원씨아이",
+      "category": "만화",
+      "coverImageUrl": "https://image.aladin.co.kr/product/43/63/cover500/8952863496_1.gif",
+      "localCover": "/covers/23.gif",
+      "ipType": "BOOK",
+      "description": "원피스",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 101,
+      "title": "애인의 애인에게",
+      "author": "백영옥",
+      "publisher": "김영사",
+      "category": "소설",
+      "coverImageUrl": "https://www.gimmyoung.com/filestore/book/books/cover/2026/63f3dba4-95b4-4d20-86b8-c0c7b38d59d8.jpg",
+      "localCover": "/covers/101.jpg",
+      "ipType": "BOOK",
+      "description": "희망 없이 사람을 사랑하는 일이 가능할까",
+      "status": "ACTIVE"
+    }
+  ]
+}

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote, Camera } from "lucide-react";
-import { getCreations, type CreationItem } from "@/lib/creation-store";
+import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote, Camera, Trash2 } from "lucide-react";
+import { getCreations, deleteCreation, type CreationItem } from "@/lib/creation-store";
 import { getNotes, deleteNote, type Note } from "@/lib/notes-store";
 import { getFavorites } from "@/lib/favorites-store";
 import type { Highlight } from "@/lib/highlight-store";
@@ -40,6 +40,12 @@ export default function MyPage() {
     setChatCount(total);
     try { setHighlights(JSON.parse(localStorage.getItem("metabook_highlights") || "[]")); } catch { setHighlights([]); }
   }, []);
+
+  const handleDeleteCreation = (id: string) => {
+    if (!confirm("이 창작물을 삭제할까요?\n삭제 후 복구할 수 없어요.")) return;
+    deleteCreation(id);
+    setMyCreations(getCreations());
+  };
 
   const user = session?.user;
   const nickname = user?.name || "게스트";
@@ -114,20 +120,27 @@ export default function MyPage() {
                   {myCreations.map((item: CreationItem) => {
                     const gradient = TYPE_GRADIENTS[item.type] || "from-gray-400 to-gray-600";
                     return (
-                      <Link key={item.id} href={`/creations/${item.id}`} className="bg-white rounded-xl border border-[var(--color-mono-080)] overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="aspect-square relative overflow-hidden">
-                          {item.thumbnail ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}><Palette className="w-8 h-8 text-white/60" /></div>
-                          )}
-                        </div>
-                        <div className="p-3">
-                          <p className="text-sm font-medium text-[var(--color-mono-900)] line-clamp-1">{item.title}</p>
-                          <p className="text-xs text-[var(--color-mono-400)] mt-1">{new Date(item.createdAt).toLocaleDateString("ko-KR")}</p>
-                        </div>
-                      </Link>
+                      <div key={item.id} className="relative bg-white rounded-xl border border-[var(--color-mono-080)] overflow-hidden hover:shadow-md transition-shadow group">
+                        <Link href={`/creations/${item.id}`}>
+                          <div className="aspect-square relative overflow-hidden">
+                            {item.thumbnail ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}><Palette className="w-8 h-8 text-white/60" /></div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <p className="text-sm font-medium text-[var(--color-mono-900)] line-clamp-1">{item.title}</p>
+                            <p className="text-xs text-[var(--color-mono-400)] mt-1">{new Date(item.createdAt).toLocaleDateString("ko-KR")}</p>
+                          </div>
+                        </Link>
+                        <button onClick={() => handleDeleteCreation(item.id)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/45 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-black/70"
+                          title="삭제">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>

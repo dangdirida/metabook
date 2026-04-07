@@ -100,18 +100,12 @@ export default function CenterPanel() {
     }
   }, [isDark]);
 
+  // 전체 챕터 기준 진행률 계산
   useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      const scrollHeight = el.scrollHeight - el.clientHeight;
-      const p = scrollHeight > 0 ? (el.scrollTop / scrollHeight) * 100 : 0;
-      setProgress(p);
-      localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: currentChapter, progress: p, updatedAt: new Date().toISOString() }));
-    };
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [currentChapter]);
+    const p = totalChapters > 0 ? Math.round((currentChapter / totalChapters) * 100) : 0;
+    setProgress(p);
+    localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: currentChapter, progress: p, updatedAt: new Date().toISOString() }));
+  }, [currentChapter, totalChapters, bookId]);
 
   // 스와이프 슬라이드 애니메이션 초기화
   useEffect(() => {
@@ -134,7 +128,7 @@ export default function CenterPanel() {
     saveScrollPosition();
     setTimeout(() => {
       setCurrentChapter(next);
-      localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: next, progress: 0, updatedAt: new Date().toISOString() }));
+      localStorage.setItem(`metabook_progress_${bookId}`, JSON.stringify({ chapterIndex: next, progress: totalChapters > 0 ? Math.round((next / totalChapters) * 100) : 0, updatedAt: new Date().toISOString() }));
       setTimeout(() => {
         if (contentRef.current) {
           const nextChNum = chapters[next]?.number;

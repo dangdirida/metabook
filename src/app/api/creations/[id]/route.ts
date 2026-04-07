@@ -3,30 +3,6 @@ import { adminDb } from "@/lib/firebase-admin";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const doc = await adminDb.collection("goodsCreations").doc(id).get();
-
-    if (!doc.exists) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    const data = doc.data()!;
-    return NextResponse.json({
-      id: doc.id,
-      ...data,
-      createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
-    });
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
-
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +14,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const docRef = adminDb.collection("goodsCreations").doc(id);
+    const docRef = adminDb.collection("creations").doc(id);
     const doc = await docRef.get();
 
     if (!doc.exists) {

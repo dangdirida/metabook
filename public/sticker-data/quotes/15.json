@@ -1,0 +1,54 @@
+{
+  "quotes": [
+    {
+      "text": "가장 중요한 건 눈에 보이지 않아",
+      "emotion": "wisdom",
+      "scene": "여우와의 대화"
+    },
+    {
+      "text": "네가 시간을 들였기 때문이야",
+      "emotion": "love",
+      "scene": "장미에 대한 깨달음"
+    },
+    {
+      "text": "길들인다는 건 관계를 맺는 거야",
+      "emotion": "friendship",
+      "scene": "여우와의 만남"
+    },
+    {
+      "text": "나를 길들여줘",
+      "emotion": "trust",
+      "scene": "여우의 부탁"
+    },
+    {
+      "text": "넌 나에게 세상에 하나뿐인 존재야",
+      "emotion": "love",
+      "scene": "장미와의 관계"
+    },
+    {
+      "text": "별을 바라보면 네가 웃고 있겠지",
+      "emotion": "longing",
+      "scene": "이별"
+    },
+    {
+      "text": "어른들은 숫자를 좋아하지",
+      "emotion": "humor",
+      "scene": "어른들에 대한 관찰"
+    },
+    {
+      "text": "사막이 아름다운 건 어딘가에 우물이 있기 때문이야",
+      "emotion": "hope",
+      "scene": "사막 여행"
+    },
+    {
+      "text": "진정으로 보는 건 마음으로 보는 거야",
+      "emotion": "wisdom",
+      "scene": "여우의 비밀"
+    },
+    {
+      "text": "한 송이 꽃을 사랑하면 별을 볼 때 행복해져",
+      "emotion": "happiness",
+      "scene": "장미를 떠올리며"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "quotes": [
+    { "text": "집은 세 겹으로 잠겨 있었다.", "emotion": "loneliness", "scene": "첫 장면", "character": "정인" },
+    { "text": "첫눈은 일 년에 두 번씩 내리는 거였네.", "emotion": "melancholy", "scene": "브루클린 첫눈", "character": "마리" },
+    { "text": "고통을 자기 자신에게조차 효과적으로 감춘다고요?", "emotion": "realization", "scene": "정신과 상담", "character": "마리" },
+    { "text": "축적은 나무의 생존 방식이 아니다.", "emotion": "wisdom", "scene": "단풍 묘사", "character": "서술자" }
+  ]
+}

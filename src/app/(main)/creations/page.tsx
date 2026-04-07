@@ -163,10 +163,17 @@ export default function CreationsPage() {
               return (
                 <Link key={creation.id} href={href}
                   className="group bg-white rounded-2xl overflow-hidden border border-[var(--color-mono-080)] hover:shadow-md hover:border-[var(--color-primary-200)] transition-all">
-                  <div className={`aspect-square relative bg-gradient-to-br ${gradient}`}>
+                  <div className={`aspect-square relative ${creation.type === "goods" ? "bg-white" : `bg-gradient-to-br ${gradient}`}`}>
                     {creation.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={creation.thumbnailUrl} alt={creation.title} className="w-full h-full object-cover" />
+                      creation.type === "goods" ? (
+                        <div className="w-full h-full flex items-center justify-center p-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={creation.thumbnailUrl} alt={creation.title} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={creation.thumbnailUrl} alt={creation.title} className="w-full h-full object-cover" />
+                      )
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center gap-2">{(() => { const Icon = TYPE_ICONS[creation.type] || Package; return <Icon className="w-14 h-14 text-white/60" />; })()}</div>
                     )}
