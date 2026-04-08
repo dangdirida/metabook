@@ -154,7 +154,7 @@ ${persona}
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const geminiModel = genAI.getGenerativeModel({
-          model: "gemini-2.0-flash",
+          model: "gemini-1.5-flash-001",
           systemInstruction: finalSystemPrompt,
         });
         const chat = geminiModel.startChat({
