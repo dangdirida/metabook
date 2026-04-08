@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { BookOpen, MessageCircle, Palette, Sparkles, Heart, X, StickyNote, Camera, Trash2 } from "lucide-react";
+import CreationThumbnail from "@/components/CreationThumbnail";
 import { getCreations, deleteCreation, type CreationItem } from "@/lib/creation-store";
 import { getNotes, deleteNote, type Note } from "@/lib/notes-store";
 import { getFavorites } from "@/lib/favorites-store";
@@ -149,27 +150,26 @@ export default function MyPage() {
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <h2 className="text-xl font-bold text-[var(--color-mono-990)]">{userProfile?.name || nickname}</h2>
-                      <button onClick={() => { setEditName(userProfile?.name || nickname); setEditingProfile(true); }}
-                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#9ca3af" }}>✏️</button>
-                    </div>
-                    <p className="text-sm text-[var(--color-mono-500)]">{email}</p>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: "#262d2e" }}>{userProfile?.name || nickname}</div>
+                    <p className="text-sm text-[var(--color-mono-500)]" style={{ marginTop: 2 }}>{email}</p>
+                    <button onClick={() => { setEditName(userProfile?.name || nickname); setEditingProfile(true); }}
+                      style={{ marginTop: 6, fontSize: 12, color: "#7c9295", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 }}>
+                      프로필 편집
+                    </button>
                   </div>
                 )}
               </div>
               {/* 통계 */}
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                 {[
-                  { icon: "📚", value: recentBooks.length, label: "읽은 책" },
-                  { icon: "💬", value: aiChatCount, label: "AI 대화" },
-                  { icon: "🎨", value: myCreations.length, label: "내 창작물" },
+                  { value: recentBooks.length, label: "읽은 책" },
+                  { value: aiChatCount, label: "AI 대화" },
+                  { value: myCreations.length, label: "내 창작물" },
                 ].map((s) => (
-                  <div key={s.label} style={{ flex: 1, background: "#f9fafb", borderRadius: 12, padding: "12px 8px", textAlign: "center", border: "1px solid #f0f0f0" }}>
-                    <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#111827", lineHeight: 1 }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{s.label}</div>
+                  <div key={s.label} style={{ flex: 1, background: "#f3f6f6", borderRadius: 12, padding: "14px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#262d2e", lineHeight: 1, marginBottom: 5 }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: "#7c9295", fontWeight: 400, letterSpacing: "0.02em" }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -202,15 +202,8 @@ export default function MyPage() {
                     const href = isGoods && item._goodsId ? `/goods/${item._goodsId}` : `/creations/${item.id}`;
                     return (
                       <div key={item.id} style={{ position: "relative", cursor: "pointer" }} className="group" onClick={() => router.push(href)}>
-                        <div style={{ aspectRatio: "1", borderRadius: 10, overflow: "hidden", background: isGoods ? "white" : "#f3f4f6", marginBottom: 6, border: "1px solid #f0f0f0" }}>
-                          {thumbSrc ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={thumbSrc} alt={item.title} style={{ width: "100%", height: "100%", objectFit: isGoods ? "contain" : "cover", padding: isGoods ? 8 : 0 }} />
-                          ) : (
-                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
-                              {item.type === "music" ? "🎵" : item.type === "goods" || item.type === "sticker" ? "🛍️" : item.type === "shortbook" ? "📖" : "🎬"}
-                            </div>
-                          )}
+                        <div style={{ borderRadius: 10, overflow: "hidden", marginBottom: 6, border: "1px solid #f0f0f0" }}>
+                          <CreationThumbnail item={{ id: item.id, type: item.type, title: item.title, imageUrl: thumbSrc, bookTitle: item.bookTitle }} />
                         </div>
                         <div style={{ fontSize: 12, color: "#374151", fontWeight: 500, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{item.title}</div>
                         <button onClick={(e) => { e.stopPropagation(); handleDeleteCreation(item); }}

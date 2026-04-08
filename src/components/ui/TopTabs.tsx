@@ -3,9 +3,9 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BookOpen, Film, Gift, Heart, Sparkles, ChevronUp, Play, Plus, ShoppingBag, Library, Music } from "lucide-react";
 import { getCreations, toggleHeart, type CreationItem } from "@/lib/creation-store";
+import CreationThumbnail from "@/components/CreationThumbnail";
 import { getGoodsByBookId } from "@/lib/mock-goods";
 import { mockBooks, getBookById } from "@/lib/mock-data";
-import { getCreationsByBookId } from "@/lib/mock-creations";
 import type { Creation } from "@/types";
 import Link from "next/link";
 
@@ -30,8 +30,26 @@ export default function TopTabs() {
   const refreshCreations = () => setStoreCreations(getCreations(bookId as string));
   const handleHeart = (id: string) => { toggleHeart(id); refreshCreations(); };
 
-  const mockCreations = getCreationsByBookId(bookId as string);
-  const totalCount = storeCreations.length + mockCreations.length;
+  // API 창작물 (Firestore)
+  const [apiCreations, setApiCreations] = useState<{ id: string; type: string; title: string; thumbnailUrl?: string; thumbnailDataUrl?: string; bookTitle?: string }[]>([]);
+  const [apiCreationsLoading, setApiCreationsLoading] = useState(false);
+  useEffect(() => {
+    if (!bookId) return;
+    setApiCreationsLoading(true);
+    fetch(`/api/goods-creations?bookId=${bookId}&limit=20`)
+      .then((r) => r.json())
+      .then((d) => {
+        setApiCreations((d.items || []).map((g: Record<string, unknown>) => ({
+          id: g.id as string, type: (g.productType as string) === "sticker" ? "sticker" : "goods",
+          title: g.title as string, thumbnailDataUrl: g.thumbnailDataUrl as string,
+          bookTitle: g.bookTitle as string,
+        })));
+        setApiCreationsLoading(false);
+      })
+      .catch(() => setApiCreationsLoading(false));
+  }, [bookId]);
+
+  const totalCount = storeCreations.length + apiCreations.length;
 
   const book = getBookById(bookId as string);
   const goods = getGoodsByBookId(bookId as string);
@@ -105,7 +123,7 @@ export default function TopTabs() {
               })}
             </div>
             <div className="overflow-y-auto custom-scrollbar p-3" style={{ maxHeight: OPEN_HEIGHT - 56 }}>
-              {storeCreations.length === 0 && mockCreations.length === 0 ? (
+              {totalCount === 0 && !apiCreationsLoading ? (
                 <div className="text-center py-6">
                   <div className="w-14 h-14 bg-[var(--color-mono-050)] rounded-2xl flex items-center justify-center mx-auto mb-3"><Sparkles className="w-7 h-7 text-mono-300" strokeWidth={1.5} /></div>
                   <p className="text-[var(--color-mono-700)] font-semibold text-sm">첫 창작물을 만들어보세요!</p>
@@ -114,13 +132,14 @@ export default function TopTabs() {
                 </div>
               ) : (
                 <div className="grid grid-cols-5 gap-2">
-                  {mockCreations.map((mc) => (
-                    <MockCreationCard
-                      key={mc.id}
-                      creation={mc}
-                      onClick={() => router.push(`/creations/${mc.id}`)}
-                    />
+                  {/* API 창작물 (Firestore) */}
+                  {apiCreations.map((item) => (
+                    <div key={item.id} onClick={() => router.push(`/goods/${item.id}`)}
+                      className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
+                      <CreationThumbnail item={{ id: item.id, type: item.type, title: item.title, imageUrl: item.thumbnailDataUrl, bookTitle: item.bookTitle }} />
+                    </div>
                   ))}
+                  {/* localStorage 창작물 */}
                   {storeCreations.map((item) => {
                     if (item.type === "music") {
                       return <MusicCard key={item.id} item={item} onHeart={() => handleHeart(item.id)} />;
@@ -225,20 +244,10 @@ export default function TopTabs() {
 function CreationCard({item,cfg,Icon,onHeart,onClick}:{item:CreationItem;cfg:{label:string;gradient:string;accentColor:string;icon:React.ElementType};Icon:React.ElementType;onHeart:()=>void;onClick?:()=>void}) {
   return (
     <div onClick={onClick} className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
-      <div className="aspect-[3/4] relative overflow-hidden bg-mono-100">
-        {item.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-        ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${cfg.gradient} flex flex-col items-end justify-end p-2`}>
-            <div className="absolute inset-0 opacity-20"><div className="absolute top-1 left-1 w-8 h-8 rounded-full bg-white/30" /><div className="absolute bottom-3 right-1 w-5 h-5 rounded-full bg-white/20" /><div className="absolute top-4 right-2 w-3 h-3 rounded-full bg-white/25" /></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"><div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"><Icon className="w-5 h-5 text-white" strokeWidth={1.5} /></div></div>
-            <p className="relative text-[9px] text-white/90 font-semibold text-right line-clamp-2 leading-tight z-10">{item.title}</p>
-          </div>
-        )}
-        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">{cfg.label}</span>
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center"><div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md"><Play className="w-3.5 h-3.5 text-mono-800 ml-0.5" strokeWidth={2} /></div></div>
-        <button onClick={(e)=>{e.stopPropagation();onHeart();}} className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Heart className={`w-2.5 h-2.5 ${item.hearted?"fill-red-400 text-red-400":"text-white"}`} /><span className="text-[8px] text-white font-medium">{item.hearts}</span></button>
+      <div className="relative overflow-hidden bg-mono-100" style={{ borderRadius: "inherit" }}>
+        <CreationThumbnail item={{ id: item.id, type: item.type, title: item.title, thumbnail: item.thumbnail }} />
+        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm z-[3]">{cfg.label}</span>
+        <button onClick={(e)=>{e.stopPropagation();onHeart();}} className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-[3]"><Heart className={`w-2.5 h-2.5 ${item.hearted?"fill-red-400 text-red-400":"text-white"}`} /><span className="text-[8px] text-white font-medium">{item.hearts}</span></button>
       </div>
     </div>
   );
@@ -274,22 +283,9 @@ function MockCreationCard({
       onClick={onClick}
       className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200"
     >
-      <div className="aspect-[3/4] relative overflow-hidden bg-mono-100">
-        {creation.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={creation.thumbnailUrl}
-            alt={creation.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient} flex flex-col items-end justify-end p-2`}>
-            <p className="relative text-[9px] text-white/90 font-semibold text-right line-clamp-2 leading-tight z-10">
-              {creation.title}
-            </p>
-          </div>
-        )}
-        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+      <div className="relative overflow-hidden bg-mono-100" style={{ borderRadius: "inherit" }}>
+        <CreationThumbnail item={{ id: creation.id, type: creation.type, title: creation.title, imageUrl: creation.thumbnailUrl }} />
+        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm z-[3]">
           {TYPE_LABELS_MOCK[creation.type] || creation.type}
         </span>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
@@ -327,42 +323,23 @@ function MusicCard({ item, onHeart }: { item: CreationItem; onHeart: () => void 
 
   return (
     <div className="group cursor-pointer rounded-xl overflow-hidden border border-mono-100 hover:border-mono-200 hover:shadow-lg transition-all duration-200">
-      <div className="aspect-[3/4] relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600">
-        <div className="absolute inset-0 flex items-center justify-center gap-0.5 opacity-30">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className={`w-1 rounded-full bg-white transition-all ${isPlaying ? "animate-pulse" : ""}`}
-              style={{ height: `${20 + Math.sin(i * 0.8) * 15 + 5}px`, animationDelay: `${i * 0.1}s`, animationDuration: `${0.6 + i * 0.1}s` }} />
-          ))}
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button onClick={togglePlay}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
-              item.audioUrl || item.audioPreviewUrl ? "bg-white/90 hover:bg-white hover:scale-110" : "bg-white/30 cursor-not-allowed"
-            }`}>
+      <div className="relative overflow-hidden" style={{ borderRadius: "inherit" }}>
+        <CreationThumbnail item={{ id: item.id, type: "music", title: item.title, duration: item.musicDuration }} />
+        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm z-[3]">음악</span>
+        {(item.audioUrl || item.audioPreviewUrl) && (
+          <button onClick={togglePlay} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-md z-[3] hover:scale-110 transition-transform">
             {isPlaying ? (
-              <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+              <svg className="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
             ) : (
-              <svg className="w-5 h-5 text-indigo-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              <svg className="w-4 h-4 text-indigo-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
             )}
           </button>
-        </div>
-        {!item.audioUrl && !item.audioPreviewUrl && (
-          <div className="absolute top-1.5 right-1.5 bg-amber-400/90 text-amber-900 text-[7px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-sm">준비중</div>
         )}
-        <span className="absolute top-1.5 left-1.5 text-[8px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">음악</span>
         <button onClick={(e) => { e.stopPropagation(); onHeart(); }}
-          className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-[3]">
           <Heart className={`w-2.5 h-2.5 ${item.hearted ? "fill-red-400 text-red-400" : "text-white"}`} />
           <span className="text-[8px] text-white font-medium">{item.hearts}</span>
         </button>
-        {item.musicDuration && (
-          <div className="absolute bottom-1.5 left-1.5 text-[8px] text-white/80 font-medium">
-            {Math.floor(item.musicDuration / 60)}:{String(item.musicDuration % 60).padStart(2, "0")}
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-4">
-          <p className="text-[9px] text-white/90 font-semibold line-clamp-1">{item.title}</p>
-        </div>
       </div>
     </div>
   );
