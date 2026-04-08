@@ -25,13 +25,18 @@ export async function POST(req: NextRequest) {
 
     const userName = session.user.name || session.user.email.split("@")[0];
 
+    // base64 이미지 크기 체크 (Firestore 문서 1MB 제한)
+    const MAX_IMG_SIZE = 800 * 1024; // 800KB
+    const safeImageUrl = imageUrl && imageUrl.length < MAX_IMG_SIZE ? imageUrl : null;
+    const safeImages = Array.isArray(images) ? images.filter((img: string) => img && img.length < MAX_IMG_SIZE).slice(0, 6) : [];
+
     const docRef = await adminDb.collection("creations").add({
       type,
       title,
       bookId: bookId || null,
       bookTitle: bookTitle || null,
-      imageUrl: imageUrl || null,
-      images: images || [],
+      imageUrl: safeImageUrl,
+      images: safeImages,
       audioUrl: audioUrl || null,
       genre: genre || null,
       moods: moods || [],

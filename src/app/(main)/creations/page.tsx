@@ -52,25 +52,41 @@ export default function CreationsPage() {
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
 
   const [storeItems, setStoreItems] = useState<ReturnType<typeof getCreations>>([]);
+  const [firestoreItems, setFirestoreItems] = useState<Creation[]>([]);
   const [goodsItems, setGoodsItems] = useState<Creation[]>([]);
+
   useEffect(() => { setStoreItems(getCreations()); }, []);
+
+  // Firestore creations + goodsCreations 병렬 로드
   useEffect(() => {
-    fetch("/api/goods-creations?limit=50")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.items) {
-          setGoodsItems(data.items.map((g: { id: string; title: string; bookId: string; userId: string; thumbnailDataUrl: string; likes: number; createdAt: string; productType?: string }) => ({
-            id: `goods-${g.id}`, bookId: g.bookId || "", userId: g.userId || "anonymous",
-            userName: g.userId || "anonymous", title: g.title, description: "",
-            type: "goods" as const, fileUrl: "", thumbnailUrl: g.thumbnailDataUrl || "",
-            tags: [], status: "approved" as const, likes: g.likes || 0, ogqLinked: false,
-            createdAt: g.createdAt || new Date().toISOString(),
-            _goodsId: g.id, _goodsProductType: g.productType || "",
-          })));
-        }
-      })
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/creations?limit=50").then((r) => r.json()).catch(() => ({ items: [] })),
+      fetch("/api/goods-creations?limit=50").then((r) => r.json()).catch(() => ({ items: [] })),
+    ]).then(([d1, d2]) => {
+      // creations 컬렉션
+      setFirestoreItems((d1.items || []).map((c: Record<string, unknown>) => ({
+        id: c.id as string, bookId: (c.bookId as string) || "", userId: (c.userId as string) || "anonymous",
+        userName: (c.userName as string) || (c.userId as string) || "anonymous", title: (c.title as string) || "",
+        description: (c.description as string) || "", type: (c.type as Creation["type"]) || "sticker",
+        fileUrl: "", thumbnailUrl: (c.imageUrl as string) || (c.thumbnailUrl as string) || "",
+        tags: (c.tags as string[]) || [], status: "approved" as const,
+        likes: (c.likes as number) || 0, ogqLinked: false,
+        createdAt: (c.createdAt as string) || new Date().toISOString(),
+        audioUrl: c.audioUrl, genre: c.genre, moods: c.moods, duration: c.duration,
+      })));
+      // goodsCreations 컬렉션
+      setGoodsItems((d2.items || []).map((g: Record<string, unknown>) => ({
+        id: `goods-${g.id}`, bookId: (g.bookId as string) || "", userId: (g.userId as string) || "anonymous",
+        userName: (g.userId as string) || "anonymous", title: (g.title as string) || "",
+        description: "", type: "goods" as const, fileUrl: "",
+        thumbnailUrl: (g.thumbnailDataUrl as string) || "",
+        tags: [], status: "approved" as const, likes: (g.likes as number) || 0, ogqLinked: false,
+        createdAt: (g.createdAt as string) || new Date().toISOString(),
+        _goodsId: g.id, _goodsProductType: (g.productType as string) || "",
+      })));
+    });
   }, []);
+
   const allCreations: Creation[] = [
     ...storeItems.map((c) => ({
       id: c.id, bookId: c.bookId || "", userId: "me", userName: "나", title: c.title,
@@ -78,6 +94,7 @@ export default function CreationsPage() {
       thumbnailUrl: c.thumbnail || "", tags: [], status: "approved" as const,
       likes: c.hearts, ogqLinked: false, createdAt: c.createdAt,
     })),
+    ...firestoreItems,
     ...goodsItems,
   ].filter((c) => c.type !== "webtoon" && c.type !== "novel");
 

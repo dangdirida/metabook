@@ -123,24 +123,33 @@ function StickerContent() {
     if (!selectedThumbnail || !selectedIp) return;
     setPublishing(true);
     try {
-      const res = await fetch("/api/goods-creations", {
+      const res = await fetch("/api/creations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          thumbnailDataUrl: selectedThumbnail,
-          productType: "sticker",
+          type: "sticker",
+          title: `${selectedIp.title} 스티커팩`,
           bookId,
           bookTitle: selectedIp.title,
-          title: `${selectedIp.title} 스티커팩`,
-          bgColor: null,
-          price: 0,
+          imageUrl: selectedThumbnail,
+          character: selectedChar || null,
+          style: selectedStyle,
+          situations: selectedSituations,
+          count: results.length,
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "게시 실패");
+      }
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "게시 실패");
       setShowPublishModal(false);
       alert("게시물이 등록되었어요!");
-    } catch {
-      alert("게시에 실패했어요. 다시 시도해주세요.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "알 수 없는 오류";
+      console.error("publish error:", e);
+      alert(`게시에 실패했어요: ${msg}`);
     } finally {
       setPublishing(false);
     }
