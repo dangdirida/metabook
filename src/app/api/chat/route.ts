@@ -147,20 +147,32 @@ ${persona}
   }
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: finalSystemPrompt,
-    });
-
-    const chat = model.startChat({
-      history: history.length > 0 ? history : undefined,
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 0.9,
-      },
-    });
-
-    const result = await chat.sendMessageStream(userText);
+    // 503 자동 재시도 (최대 3회)
+    let result;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const geminiModel = genAI.getGenerativeModel({
+          model: "gemini-1.5-flash",
+          systemInstruction: finalSystemPrompt,
+        });
+        const chat = geminiModel.startChat({
+          history: history.length > 0 ? history : undefined,
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.9 },
+        });
+        result = await chat.sendMessageStream(userText);
+        break;
+      } catch (retryErr: unknown) {
+        const msg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+        const is503 = msg.includes("503") || msg.includes("overloaded") || msg.includes("high demand");
+        if (is503 && attempt < 2) {
+          console.log(`[chat] 503 재시도 ${attempt + 1}/3`);
+          await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+          continue;
+        }
+        throw retryErr;
+      }
+    }
+    if (!result) throw new Error("Gemini 응답 없음");
 
     const encoder = new TextEncoder();
     let fullResponse = "";

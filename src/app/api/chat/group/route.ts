@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No characters found" }, { status: 404 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Step 1: 연출자 AI — 누가 어떻게 응답할지 결정
     const charListStr = characters.map((c) => `- ${c.name} (id: ${c.id})`).join("\n");
