@@ -39,26 +39,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Firestore에서 인물 데이터 조회
-    let characters: CharacterInfo[] = [];
-    try {
-      const snap = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
-      characters = snap.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: d.name || doc.id,
-          role: d.role || "",
-          personality: Array.isArray(d.personality) ? d.personality : [],
-          speechStyle: d.speechStyle || "",
-          background: d.background || "",
-          systemPrompt: d.systemPrompt || "",
-          avatar: d.avatar || "/avatars/default-profile.svg",
-        };
-      });
-    } catch { /* */ }
+    // 클라이언트가 보낸 초대된 인물 ID 목록
+    const invitedIds = new Set(
+      (clientChars as CharacterInfo[] || []).map((c: CharacterInfo) => c.id)
+    );
 
-    // 클라이언트에서 전달된 인물 정보로 폴백
+    // Firestore에서 인물 데이터 조회 — 초대된 인물만 필터링
+    let characters: CharacterInfo[] = [];
+    if (invitedIds.size > 0) {
+      try {
+        const snap = await adminDb.collection("bookCharacters").doc(bookId).collection("characters").get();
+        characters = snap.docs
+          .filter((doc) => invitedIds.has(doc.id))
+          .map((doc) => {
+            const d = doc.data();
+            // 클라이언트 데이터에서 누락된 필드 보강
+            const clientChar = (clientChars as CharacterInfo[])?.find((c: CharacterInfo) => c.id === doc.id);
+            return {
+              id: doc.id,
+              name: d.name || clientChar?.name || doc.id,
+              role: d.role || clientChar?.role || "",
+              personality: Array.isArray(d.personality) ? d.personality : clientChar?.personality || [],
+              speechStyle: d.speechStyle || clientChar?.speechStyle || "",
+              background: d.background || clientChar?.background || "",
+              systemPrompt: d.systemPrompt || clientChar?.systemPrompt || "",
+              avatar: d.avatar || clientChar?.avatar || "/avatars/default-profile.svg",
+            };
+          });
+      } catch { /* */ }
+    }
+
+    // Firestore에 없으면 클라이언트 데이터 사용
     if (characters.length === 0 && clientChars) {
       characters = clientChars;
     }
@@ -70,63 +81,32 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Step 1: 연출자 AI — 누가 어떻게 응답할지 결정
-    const directorPrompt = `너는 소설 속 인물들의 단체 카톡방 연출자야.
-아래 규칙을 철저히 지켜서 JSON으로만 응답해. 마크다운이나 설명 없이 순수 JSON만 반환.
+    const charListStr = characters.map((c) => `- ${c.name} (id: ${c.id})`).join("\n");
 
-인물 목록: ${characters.map((c) => `${c.name}(id:${c.id})`).join(", ")}
+    const directorPrompt = `너는 그룹 채팅방의 연출자다. JSON으로만 응답해. 마크다운/설명 없이 순수 JSON만.
+
+현재 채팅방 참여 인물 (이 인물들만 응답 가능):
+${charListStr}
+
+⚠️ 절대 규칙: 위 목록에 없는 인물은 절대 응답하면 안 된다. characterId는 반드시 위 id 중 하나여야 한다.
+
 유저 메시지: "${userMessage}"
 ${recentContext ? `이전 대화:\n${recentContext}` : ""}
 
 [응답 규칙]
+1. 첫 인사("안녕" 등): 전원 각자 방식으로 인사 (똑같이 X)
+2. 일반 대화: 관련 있는 1~2명만 "full", 나머지 "none"
+3. 특정 인물 호명 시: 해당 인물만 "full"
+4. 논쟁/감정 주제: 의견 다른 인물들만
 
-규칙 1: 첫 등장/첫 인사
-유저가 처음 대화를 시작하거나 "안녕" 같은 첫 인사를 하면
-→ 모든 인물이 각자의 방식으로 인사. 단, 전부 똑같이 인사하지 말 것.
+[절대 금지] 모든 인물이 매번 리액션 / 억지 끼어들기 / 목록에 없는 인물 응답
 
-규칙 2: 일반 대화
-유저가 일반적인 말을 하면
-→ 그 주제에 관심 있거나 할 말 있는 인물 1~2명만 "full" 응답
-→ 나머지는 "none"(침묵) 또는 극히 드물게 "reaction"
-→ 리액션은 정말 자연스러울 때만, 억지로 하지 말 것
+[type] "full"(2~3문장), "short"(1문장), "reaction"(이모지 1개), "none"(침묵)
 
-규칙 3: 특정 인물 호명
-"[이름]아", "[이름]은", "[이름]한테" 등 특정 인물을 지목하면
-→ 지목된 인물만 "full" 응답
-→ 나머지는 "none" 또는 아주 가끔 "reaction" (흥미로울 때만)
-
-규칙 4: 논쟁/감정적 주제
-→ 의견 다른 인물들만 응답, 관심 없는 인물은 침묵
-
-규칙 5: 인물 간 상호작용 (10~15% 확률로만)
-아래 조건 충족 시 "interject" 타입 사용 가능:
-- 유저 메시지가 논쟁/갈등 주제일 때
-- 한 인물의 응답이 다른 인물의 가치관과 명확히 충돌할 때
-- 감정적으로 공감/위로할 상황일 때
-인물 간 관계:
-- 마리↔성주: 복잡한 전 연인 — 의견 충돌 가능
-- 정인↔마리: 관찰자↔당사자 — 정인이 조심스럽게 끼어들 수 있음
-- 수영↔정인: 친밀한 관계 — 수영이 분위기 전환/위로 가능
-인물 간 대화는 2~3메시지 내로 종료. 유저를 소외시키지 말 것.
-
-[절대 금지]
-- 모든 인물이 매번 리액션하는 것
-- 억지로 끼어드는 것
-- 관련 없는 인물이 응답하는 것
-- 인물 간 대화가 5메시지 이상 지속되는 것
-
-[type 종류]
-"full": 본격 응답 (자기 말투/성격으로 자연스럽게)
-"short": 짧은 한마디 (1문장 이내)
-"reaction": 이모지 1개만 (reactionEmoji 필드에 이모지)
-"interject": 다른 인물 발언에 반응 (짧은 한마디, targetCharacterId 지정)
-"none": 침묵 (응답 없음)
-
-반드시 아래 JSON 형식만 반환:
+반드시 아래 JSON만 반환:
 {
   "responders": [
-    { "characterId": "id값", "type": "full", "reactionEmoji": null },
-    { "characterId": "id값", "type": "none", "reactionEmoji": null },
-    { "characterId": "id값", "type": "interject", "reactionEmoji": null, "targetCharacterId": "대상id" }
+    { "characterId": "위_id중_하나", "type": "full", "reactionEmoji": null }
   ]
 }`;
 
@@ -147,6 +127,10 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
         })),
       };
     }
+
+    // 초대된 인물만 응답하도록 필터링
+    const validCharIds = new Set(characters.map((c) => c.id));
+    plan.responders = plan.responders.filter((r) => validCharIds.has(r.characterId));
 
     // Step 2: 계획대로 각 인물 응답 생성
     const responses: {
@@ -185,30 +169,33 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
         ? `방금 ${characters.find((c) => c.id === responder.targetCharacterId)?.name || "다른 인물"}이 말한 것에 대해 반응해.`
         : "";
 
-      const charPrompt = `${character.systemPrompt || `당신은 "${character.name}"입니다.`}
+      const CHAR_HINT: Record<string, string> = {
+        jeong_in: "정인: 조용하고 문학적. 은유적 표현. 짧고 사려깊게.",
+        mari: "마리: 냉정하고 간결. 감정 직접 표현 안 함. 세련되게.",
+        su_yeong: "수영: 밝고 친근. 유머 가끔. 자연스럽고 활기차게.",
+        seong_ju: "성주: 과묵. 짧고 명확하게. 시적 표현. 말을 흐리지 않음.",
+      };
+
+      const charPrompt = `너는 "${character.name}"이다.
+${character.systemPrompt || ""}
+
+성격: ${character.personality.join(", ")}
+말투: ${character.speechStyle}
+배경: ${character.background}
+${CHAR_HINT[character.id] || ""}
 
 지금 단체 카톡방이야. ${lengthGuide}
 ${interjectContext}
 
-[절대 금지 — 위반 시 응답 무효]
-- (한숨), (웃음), (침묵) 등 괄호 안 행동/감정 묘사 완전 금지
-- *행동* 이탤릭 행동 묘사 완전 금지
-- "..." 으로만 끝나는 미완성 문장 금지
-- 같은 표현/문장 구조 반복 금지
-- 이모티콘/이모지 사용 금지
-- 감정은 말투와 단어 선택으로만 표현
-
-[하지 말 것]
-- 모든 사람에게 인사하기
-- 길게 설명하기
-- 다른 인물 이름 불필요하게 끼워넣기
-
-[다양성]
-- 시작 단어를 다양하게
-- 이전 대화에서 쓴 표현 반복하지 말 것
-
-자연스럽게 카톡 보내듯이.
-말투와 성격: ${character.speechStyle} / ${character.personality.join(", ")}
+대화 규칙:
+- 카카오톡처럼 자연스럽게
+- 괄호 행동 묘사 절대 금지: (한숨), (웃음), (고개를 끄덕이며) 등
+- *행동* 이탤릭 묘사 금지
+- 이모지 남발 금지 (꼭 필요할 때 1개만)
+- "..."으로만 끝나는 미완성 문장 금지
+- 완성된 문장으로 끝낼 것
+- 같은 표현 반복 금지
+- 시작 단어 다양하게
 
 유저 메시지: "${userMessage}"`;
 
