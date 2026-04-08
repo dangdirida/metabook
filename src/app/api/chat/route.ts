@@ -109,10 +109,28 @@ ${persona}
     ? `${baseSystemPrompt}\n\n${memoryContext}\n\n위의 대화 기록을 참고해서 자연스럽게 이어서 대화해줘. 이전에 나눈 이야기를 기억하고 있는 것처럼 자연스럽게 반응해.`
     : baseSystemPrompt;
 
-  const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
-    role: m.role === "user" ? "user" : "model",
-    parts: [{ text: m.content }],
-  }));
+  // history: 빈 content 제거 + 연속 같은 role 병합 + role 변환
+  const rawHistory = messages.slice(0, -1)
+    .filter((m: { role: string; content: string }) => m.content && m.content.trim())
+    .map((m: { role: string; content: string }) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }],
+    }));
+
+  // Gemini는 연속 같은 role 금지 → 연속이면 마지막 것만 유지
+  const history: { role: string; parts: { text: string }[] }[] = [];
+  for (const msg of rawHistory) {
+    if (history.length > 0 && history[history.length - 1].role === msg.role) {
+      history[history.length - 1] = msg; // 같은 role이면 덮어쓰기
+    } else {
+      history.push(msg);
+    }
+  }
+
+  // history가 model로 시작하면 제거 (Gemini는 user로 시작해야 함)
+  while (history.length > 0 && history[0].role === "model") {
+    history.shift();
+  }
 
   const lastMessage = messages[messages.length - 1];
 
