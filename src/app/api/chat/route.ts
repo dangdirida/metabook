@@ -142,7 +142,7 @@ ${persona}
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: finalSystemPrompt,
     });
 
