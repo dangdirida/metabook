@@ -22,8 +22,10 @@ function cleanResponse(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { messages, bookTitle, persona } = body;
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { body = {}; }
+  const messages: { role: string; content: string }[] = Array.isArray(body.messages) ? body.messages : [];
+  const { bookTitle, persona } = body as { bookTitle?: string; persona?: string };
   const agentName: string = (body.agentName as string) || (body.agentId as string) || "unknown";
   const userId: string = (body.userId as string) || "anonymous";
   const agentId: string = (body.agentId as string) || "default";
@@ -97,6 +99,10 @@ ${persona}
 
   const baseSystemPrompt = characterPrompt ? `${characterPrompt}\n\n---\n\n${systemPrompt}` : systemPrompt;
 
+  if (messages.length === 0) {
+    return new Response(JSON.stringify({ error: "메시지가 비어있어요." }), { status: 400, headers: { "Content-Type": "application/json" } });
+  }
+
   // 메모리 조회 (병렬, 실패해도 채팅은 정상 동작)
   const lastUserContent = messages[messages.length - 1]?.content || "";
   const [relevantMemories, recentMessages] = await Promise.all([
@@ -149,7 +155,7 @@ ${persona}
     const chat = model.startChat({
       history: history.length > 0 ? history : undefined,
       generationConfig: {
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1024,
         temperature: 0.9,
       },
     });
