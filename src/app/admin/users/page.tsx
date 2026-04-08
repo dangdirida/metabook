@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, X, Users, UserPlus, Activity, Loader2, RefreshCw } from "lucide-react";
-import { getAllUsers, updateUserRole, updateUserStatus } from "@/lib/firestore";
 
 type Role = "user" | "creator" | "admin";
 type Status = "active" | "suspended";
@@ -66,10 +65,22 @@ export default function AdminUsersPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllUsers();
-      setUsers(data as FirestoreUser[]);
+      const res = await fetch("/api/admin/users");
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setUsers((data.users || []).map((u: Record<string, unknown>) => ({
+        id: u.uid || u.id || "",
+        name: u.name || u.displayName || "",
+        email: u.email || "",
+        image: u.avatar || u.photoURL || u.image || "",
+        createdAt: u.createdAt || (u.metadata as Record<string, unknown>)?.creationTime || "",
+        updatedAt: u.lastSignIn || (u.metadata as Record<string, unknown>)?.lastSignInTime || "",
+        role: u.role || "user",
+        status: u.status || "active",
+        library: u.library || [],
+      } as FirestoreUser)));
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -97,11 +108,16 @@ export default function AdminUsersPage() {
   const handleRoleChange = async (userId: string, newRole: Role) => {
     setSaving(true);
     try {
-      await updateUserRole(userId, newRole);
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+      if (!res.ok) throw new Error("역할 변경 실패");
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
       if (selectedUser?.id === userId) setSelectedUser((prev) => prev ? { ...prev, role: newRole } : null);
     } catch (e) {
-      alert("역할 변경 실패: " + String(e));
+      alert("역할 변경 실패: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       setSaving(false);
     }
@@ -114,11 +130,16 @@ export default function AdminUsersPage() {
     const newStatus: Status = currentStatus === "active" ? "suspended" : "active";
     setSaving(true);
     try {
-      await updateUserStatus(userId, newStatus);
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, status: newStatus }),
+      });
+      if (!res.ok) throw new Error("상태 변경 실패");
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)));
       if (selectedUser?.id === userId) setSelectedUser((prev) => prev ? { ...prev, status: newStatus } : null);
     } catch (e) {
-      alert("상태 변경 실패: " + String(e));
+      alert("상태 변경 실패: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       setSaving(false);
     }
