@@ -3,9 +3,16 @@
 import { usePanelStore } from "@/store/panelStore";
 import { BookOpen, MessageCircle, Library } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import JuniorBadge from "@/components/ui/JuniorBadge";
 import UserMenu from "@/components/ui/UserMenu";
 
+const NAV_ITEMS = [
+  { label: "홈", href: "/library" },
+  { label: "창작물", href: "/creations" },
+  { label: "브금", href: "/bgm" },
+  { label: "채팅", href: "/chat" },
+];
 
 export default function BookLayout({
   children,
@@ -13,6 +20,7 @@ export default function BookLayout({
   children: React.ReactNode;
 }) {
   const { activePanel, setActivePanel } = usePanelStore();
+  const pathname = usePathname();
 
   return (
     <div className="h-screen flex flex-col bg-white">
@@ -22,6 +30,14 @@ export default function BookLayout({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo_ogq_green.png" alt="OGQ" className="h-7 w-auto" />
         </Link>
+        <nav className="hidden md:flex items-center gap-1">
+          {NAV_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href}
+              style={{ fontSize: 14, fontWeight: pathname?.startsWith(item.href) && item.href !== "/library" ? 600 : 400, color: pathname?.startsWith(item.href) && item.href !== "/library" ? "#00c389" : "#57676b", textDecoration: "none", padding: "6px 14px", borderRadius: 10 }}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <div className="flex items-center gap-3">
           <JuniorBadge />
           <UserMenu />

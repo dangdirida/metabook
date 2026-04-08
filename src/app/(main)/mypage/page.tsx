@@ -11,7 +11,6 @@ import type { Highlight } from "@/lib/highlight-store";
 import { mockBooks } from "@/lib/mock-data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import UserMenu from "@/components/ui/UserMenu";
 
 const TYPE_GRADIENTS: Record<string, string> = {
   shortbook: "from-emerald-400 to-teal-600",
@@ -109,13 +108,6 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
-      <header className="bg-white border-b border-[var(--color-mono-080)] sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <Link href="/library"><img src="/logo_ogq_green.png" alt="OGQ" className="h-7 w-auto" /></Link>
-          <UserMenu />
-        </div>
-      </header>
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
