@@ -20,11 +20,11 @@ async function searchContext(query: string, bookId: string): Promise<string> {
     if (!geminiKey || !pineconeKey || !pineconeHost) return "";
 
     const embedRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "models/text-embedding-004", content: { parts: [{ text: query.slice(0, 1000) }] } }),
+        body: JSON.stringify({ content: { parts: [{ text: query.slice(0, 1000) }] }, outputDimensionality: 768 }),
       }
     );
     const embedData = await embedRes.json();
