@@ -203,7 +203,7 @@ ${interjectContext}
         const replyResult = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: charPrompt }] }],
           generationConfig: {
-            maxOutputTokens: responder.type === "short" ? 64 : 256,
+            maxOutputTokens: responder.type === "short" ? 256 : 2048,
             temperature: 0.95,
           },
         });
