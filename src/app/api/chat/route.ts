@@ -36,7 +36,9 @@ ${persona}
 독자와 자연스럽고 몰입감 있는 대화를 나눠주세요.
 책의 내용과 세계관에 충실하게 답변하되, 캐릭터의 말투와 성격을 유지하세요.
 한국어로 답변하세요.
-답변은 2-4문장으로 간결하게 해주세요.`;
+답변은 1024 토큰 안에 완결되게 작성해주세요.
+할 말이 많으면 자연스럽게 두 번에 나눠서 보내도 됩니다.
+절대 문장 중간에 잘리지 말고 반드시 완성된 문장으로 끝내주세요.`;
 
   // 인물 데이터 없으면 자동 분석
   if (safeBookId !== "unknown") {
@@ -152,7 +154,7 @@ ${persona}
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const geminiModel = genAI.getGenerativeModel({
-          model: "gemini-1.5-flash-latest",
+          model: "gemini-2.0-flash",
           systemInstruction: finalSystemPrompt,
         });
         const chat = geminiModel.startChat({
