@@ -12,6 +12,41 @@ import { getChaptersByBookId } from "@/lib/mock-content";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+async function searchContext(query: string, bookId: string): Promise<string> {
+  try {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const pineconeKey = process.env.PINECONE_API_KEY;
+    const pineconeHost = process.env.PINECONE_HOST;
+    if (!geminiKey || !pineconeKey || !pineconeHost) return "";
+
+    const embedRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "models/text-embedding-004", content: { parts: [{ text: query.slice(0, 1000) }] } }),
+      }
+    );
+    const embedData = await embedRes.json();
+    const queryVector = embedData.embedding?.values;
+    if (!queryVector || queryVector.length === 0) return "";
+
+    const searchRes = await fetch(`${pineconeHost}/query`, {
+      method: "POST",
+      headers: { "Api-Key": pineconeKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ vector: queryVector, topK: 3, filter: { bookId: { "$eq": bookId } }, includeMetadata: true }),
+    });
+    const searchData = await searchRes.json();
+    const matches = (searchData.matches || []).filter((m: { score: number }) => m.score > 0.7);
+    if (matches.length === 0) return "";
+
+    const context = matches.map((m: { metadata?: { text?: string } }) => m.metadata?.text || "").filter(Boolean).join("\n\n");
+    return `\n\n[관련 책 내용 참고]\n${context}\n\n위 내용을 참고해서 캐릭터 말투로 자연스럽게 대화해. 직접 인용하지 말 것.`;
+  } catch {
+    return "";
+  }
+}
+
 function cleanResponse(text: string): string {
   return text
     .replace(/\([^)]*?(한숨|웃음|침묵|고개|눈빛|표정|미소|조용|바라|쓸쓸|나직|살짝)[^)]*?\)/g, "")
@@ -105,9 +140,9 @@ ${persona}
   ]);
   const memoryContext = buildMemoryContext(relevantMemories, recentMessages);
 
-  const finalSystemPrompt = memoryContext
-    ? `${baseSystemPrompt}\n\n${memoryContext}\n\n위의 대화 기록을 참고해서 자연스럽게 이어서 대화해줘. 이전에 나눈 이야기를 기억하고 있는 것처럼 자연스럽게 반응해.`
-    : baseSystemPrompt;
+  const ragContext = await searchContext(lastUserContent, safeBookId).catch(() => "");
+
+  const finalSystemPrompt = `${baseSystemPrompt}${memoryContext ? "\n\n" + memoryContext + "\n\n위의 대화 기록을 참고해서 자연스럽게 이어서 대화해줘." : ""}${ragContext}`;
 
   // history: 빈 content 제거 + 연속 같은 role 병합 + role 변환
   const rawHistory = messages.slice(0, -1)
