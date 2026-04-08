@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, MessageCircle, Music, User } from "lucide-react";
+import { BookOpen, MessageCircle, Music, Palette } from "lucide-react";
 
 const TABS = [
   { href: "/library", icon: BookOpen, label: "홈" },
-  { href: "/chat", icon: MessageCircle, label: "채팅" },
+  { href: "/creations", icon: Palette, label: "창작물" },
   { href: "/bgm", icon: Music, label: "브금" },
-  { href: "/mypage", icon: User, label: "내 정보" },
+  { href: "/chat", icon: MessageCircle, label: "채팅" },
 ];
 
 export default function MobileTabBar() {

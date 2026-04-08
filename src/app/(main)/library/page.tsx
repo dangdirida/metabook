@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight, Sparkles, X, BookOpen, MessageCircle, Palette } from "lucide-react";
 import Link from "next/link";
 import BookCard from "@/components/ui/BookCard";
-import UserMenu from "@/components/ui/UserMenu";
 import { mockBooks } from "@/lib/mock-data";
 import { GALLERY_BOOKS } from "@/lib/gallery-books";
 import type { Book } from "@/types";
@@ -244,47 +243,35 @@ function LibraryContent() {
 
   return (
     <div className="min-h-screen bg-[var(--color-mono-010)]">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[var(--color-mono-080)]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 relative">
-          <div className="flex items-center justify-between mb-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <Link href="/library" className="flex-shrink-0"><img src="/logo_ogq_green.png" alt="OGQ" className="h-7 w-auto" /></Link>
-            <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-              {[{ href: "/library", label: "홈" }, { href: "/creations", label: "창작물" }, { href: "/bgm", label: "브금" }, { href: "/chat", label: "채팅" }].map((item) => (
-                <Link key={item.href} href={item.href} className="px-4 py-2 rounded-xl text-[14px] font-medium text-[var(--color-mono-600)] hover:text-[var(--color-mono-990)] hover:bg-[var(--color-mono-050)] transition-colors">{item.label}</Link>
+      {/* 검색 바 */}
+      <div className="bg-white border-b border-[var(--color-mono-080)]">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 relative">
+          <Search className="absolute left-7 md:left-11 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-mono-400)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setShowSearchDrop(true)}
+            onBlur={() => setTimeout(() => setShowSearchDrop(false), 200)}
+            placeholder="제목, 저자, 캐릭터 검색..."
+            className="w-full pl-10 pr-4 py-3 bg-[var(--color-mono-010)] border border-[var(--color-mono-080)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+          />
+          {showSearchDrop && searchResults.length > 0 && (
+            <div className="absolute top-full left-4 right-4 md:left-8 md:right-8 mt-1 bg-white rounded-2xl shadow-xl border border-[var(--color-mono-080)] overflow-hidden z-50">
+              {searchResults.map((b) => (
+                <Link key={b.id} href={`/library/${b.id}/intro`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] transition-colors border-b border-[var(--color-mono-050)] last:border-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={b.coverImage} alt={b.title} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-[var(--color-mono-900)] truncate">{b.title}</p>
+                    <p className="text-[11px] text-[var(--color-mono-400)] truncate">{b.author} · {b.agents.map((a) => a.name).join(", ")}</p>
+                  </div>
+                </Link>
               ))}
-            </nav>
-            <div className="flex-shrink-0"><UserMenu /></div>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-mono-400)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setShowSearchDrop(true)}
-              onBlur={() => setTimeout(() => setShowSearchDrop(false), 200)}
-              placeholder="제목, 저자, 캐릭터 검색..."
-              className="w-full pl-10 pr-4 py-3 bg-[var(--color-mono-010)] border border-[var(--color-mono-080)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-            />
-            {showSearchDrop && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-[var(--color-mono-080)] overflow-hidden z-50">
-                {searchResults.map((b) => (
-                  <Link key={b.id} href={`/library/${b.id}/intro`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-mono-030)] transition-colors border-b border-[var(--color-mono-050)] last:border-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={b.coverImage} alt={b.title} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-[var(--color-mono-900)] truncate">{b.title}</p>
-                      <p className="text-[11px] text-[var(--color-mono-400)] truncate">{b.author} · {b.agents.map((a) => a.name).join(", ")}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-10">
         {/* 히어로 배너 */}

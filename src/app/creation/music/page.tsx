@@ -60,44 +60,47 @@ function MusicCreationContent() {
     if (!selectedGenre) return;
     setStep("generating");
     setGeneratingProgress(0);
-    const interval = setInterval(() => {
-      setGeneratingProgress((prev) => {
-        if (prev >= 90) { clearInterval(interval); return 90; }
-        return prev + Math.random() * 8;
-      });
-    }, 2000);
     try {
       const genreLabel = GENRES.find((g) => g.id === selectedGenre)?.label || selectedGenre;
       const sunoPrompt = `${prompt || `${book?.title || "책"} 감성`}, ${genreLabel} style, ${selectedMoods.join(", ")} mood, ${withLyrics ? "with Korean vocals" : "instrumental"}`;
 
+      // Step 1: 생성 요청 → taskId 받기
       const res = await fetch("/api/music/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: sunoPrompt,
-          style: selectedGenre,
-          includeVocals: withLyrics,
-        }),
+        body: JSON.stringify({ prompt: sunoPrompt, style: selectedGenre, includeVocals: withLyrics }),
       });
       const data = await res.json();
-      clearInterval(interval);
+      if (!data.success || !data.taskId) throw new Error(data.error || "생성 요청 실패");
+      setGeneratingProgress(10);
 
-      if (data.success && data.audioUrl) {
-        setGeneratingProgress(100);
-        setGeneratedMusic({
-          title: data.title || `${book?.title || ""} - ${genreLabel} OST`,
-          audioUrl: data.audioUrl,
-          duration: data.duration || duration,
-          style: `${genreLabel} ${selectedMoods.join(" ")}`,
-        });
-        setTimeout(() => setStep("result"), 500);
-      } else {
-        throw new Error(data.error || "음악 생성 실패");
+      // Step 2: 클라이언트 폴링 (10초 간격, 최대 4분)
+      for (let i = 0; i < 24; i++) {
+        await new Promise((r) => setTimeout(r, 10000));
+        setGeneratingProgress(Math.min(10 + (i + 1) * 3, 90));
+
+        const statusRes = await fetch(`/api/music/status?taskId=${data.taskId}`);
+        const statusData = await statusRes.json();
+
+        if (statusData.status === "done") {
+          setGeneratingProgress(100);
+          setGeneratedMusic({
+            title: statusData.title || `${book?.title || ""} - ${genreLabel} OST`,
+            audioUrl: statusData.audioUrl,
+            duration: duration,
+            style: `${genreLabel} ${selectedMoods.join(" ")}`,
+          });
+          setTimeout(() => setStep("result"), 500);
+          return;
+        }
+        if (statusData.status === "failed" || statusData.status === "error") {
+          throw new Error(statusData.error || "음악 생성 실패");
+        }
       }
+      throw new Error("시간 초과 (4분). 다시 시도해주세요.");
     } catch (e) {
-      clearInterval(interval);
       setGeneratingProgress(0);
-      alert(e instanceof Error ? e.message : "음악 생성에 실패했어요. 다시 시도해주세요.");
+      alert(e instanceof Error ? e.message : "음악 생성에 실패했어요.");
       setStep("form");
     }
   };
