@@ -21,12 +21,12 @@ export async function POST(req: NextRequest) {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        prompt: prompt || "A calm emotional piano piece",
-        style: style || "pop",
-        title: "AI Generated Music",
+        prompt: prompt || "beautiful emotional music",
+        style: style || "ambient",
+        title: "책 감성 음악",
+        customMode: false,
         instrumental: !includeVocals,
         model: "V3_5",
-        customMode: false,
         callBackUrl: CALLBACK_URL,
       }),
     });
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
 
     console.log("[music/generate] taskId:", taskId);
 
-    // 2단계: record-info 폴링으로 결과 대기 (최대 150초)
-    for (let i = 0; i < 30; i++) {
+    // 2단계: record-info 폴링 (최대 3분 = 36회 x 5초)
+    for (let i = 0; i < 36; i++) {
       await new Promise((r) => setTimeout(r, 5000));
 
       try {
@@ -65,31 +65,45 @@ export async function POST(req: NextRequest) {
         const statusData = await statusRes.json();
         if (statusData.code !== 200) continue;
 
+        const status = statusData?.data?.status;
+
+        if (status === "FAILED" || status === "failed") {
+          const errMsg = statusData?.data?.errorMessage || "음악 생성에 실패했어요.";
+          return NextResponse.json({ success: false, error: errMsg }, { status: 500 });
+        }
+
+        if (status !== "SUCCESS" && status !== "completed") {
+          console.log(`[music/generate] 폴링 ${i + 1}/36 — status: ${status}`);
+          continue;
+        }
+
+        // SUCCESS — 오디오 URL 추출
         const sunoData = statusData?.data?.response?.sunoData;
         if (!sunoData || !Array.isArray(sunoData) || sunoData.length === 0) {
-          console.log(`[music/generate] 폴링 ${i + 1}/30 — 아직 생성 중`);
+          console.log(`[music/generate] 폴링 ${i + 1}/36 — SUCCESS이지만 sunoData 없음`);
           continue;
         }
 
         const first = sunoData[0];
         const audioUrl = first.streamAudioUrl || first.audioUrl || first.sourceStreamAudioUrl;
 
-        if (audioUrl) {
-          console.log("[music/generate] 완료:", first.title, audioUrl.slice(0, 80));
-          return NextResponse.json({
-            success: true,
-            audioUrl,
-            title: first.title || "생성된 음악",
-            duration: first.duration,
-            imageUrl: first.imageUrl || first.sourceImageUrl,
-          });
+        if (!audioUrl) {
+          console.log(`[music/generate] 폴링 ${i + 1}/36 — sunoData 있지만 audioUrl 없음`);
+          continue;
         }
 
-        console.log(`[music/generate] 폴링 ${i + 1}/30 — audioUrl 없음, 계속 대기`);
+        console.log("[music/generate] 완료:", first.title, audioUrl.slice(0, 80));
+        return NextResponse.json({
+          success: true,
+          audioUrl,
+          title: first.title || "생성된 음악",
+          duration: first.duration,
+          imageUrl: first.imageUrl || first.sourceImageUrl,
+        });
       } catch { /* polling error, continue */ }
     }
 
-    return NextResponse.json({ success: false, error: "음악 생성 시간이 초과됐어요 (150초). 다시 시도해주세요." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "음악 생성 시간이 초과됐어요 (3분). 다시 시도해주세요." }, { status: 500 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("[music/generate] error:", msg);
