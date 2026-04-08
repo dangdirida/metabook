@@ -133,6 +133,12 @@ ${persona}
   }
 
   const lastMessage = messages[messages.length - 1];
+  const userText = lastMessage?.content?.trim() || "안녕";
+
+  // history 마지막이 user면 제거 (sendMessageStream이 user 추가하므로 중복 방지)
+  while (history.length > 0 && history[history.length - 1].role === "user") {
+    history.pop();
+  }
 
   try {
     const model = genAI.getGenerativeModel({
@@ -141,14 +147,14 @@ ${persona}
     });
 
     const chat = model.startChat({
-      history,
+      history: history.length > 0 ? history : undefined,
       generationConfig: {
         maxOutputTokens: 2048,
         temperature: 0.9,
       },
     });
 
-    const result = await chat.sendMessageStream(lastMessage.content);
+    const result = await chat.sendMessageStream(userText);
 
     const encoder = new TextEncoder();
     let fullResponse = "";
@@ -202,10 +208,19 @@ ${persona}
       },
     });
   } catch (error) {
-    console.error("Gemini API error:", error);
-    return new Response(
-      JSON.stringify({ error: "AI 응답 생성에 실패했어요." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    console.error("[chat] Gemini API error:", error instanceof Error ? error.message : error);
+    // SSE 형태로 에러 반환 (클라이언트가 스트림으로 처리하므로)
+    const encoder = new TextEncoder();
+    const errStream = new ReadableStream({
+      start(controller) {
+        const errData = JSON.stringify({ type: "content_block_delta", delta: { text: "죄송해요, 잠시 후 다시 시도해주세요." } });
+        controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    return new Response(errStream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   }
 }
