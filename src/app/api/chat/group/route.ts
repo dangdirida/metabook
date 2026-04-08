@@ -4,6 +4,15 @@ import { adminDb } from "@/lib/firebase-admin";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+function cleanResponse(text: string): string {
+  return text
+    .replace(/\([^)]*?(한숨|웃음|침묵|고개|눈빛|표정|미소|조용|바라|쓸쓸|나직|살짝)[^)]*?\)/g, "")
+    .replace(/\*[^*]+\*/g, "")
+    .replace(/\([가-힣\s]{1,20}\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 interface CharacterInfo {
   id: string;
   name: string;
@@ -17,8 +26,9 @@ interface CharacterInfo {
 
 interface ResponderPlan {
   characterId: string;
-  type: "full" | "short" | "reaction" | "none";
+  type: "full" | "short" | "reaction" | "interject" | "none";
   reactionEmoji: string | null;
+  targetCharacterId?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -87,15 +97,28 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
 규칙 4: 논쟁/감정적 주제
 → 의견 다른 인물들만 응답, 관심 없는 인물은 침묵
 
+규칙 5: 인물 간 상호작용 (10~15% 확률로만)
+아래 조건 충족 시 "interject" 타입 사용 가능:
+- 유저 메시지가 논쟁/갈등 주제일 때
+- 한 인물의 응답이 다른 인물의 가치관과 명확히 충돌할 때
+- 감정적으로 공감/위로할 상황일 때
+인물 간 관계:
+- 마리↔성주: 복잡한 전 연인 — 의견 충돌 가능
+- 정인↔마리: 관찰자↔당사자 — 정인이 조심스럽게 끼어들 수 있음
+- 수영↔정인: 친밀한 관계 — 수영이 분위기 전환/위로 가능
+인물 간 대화는 2~3메시지 내로 종료. 유저를 소외시키지 말 것.
+
 [절대 금지]
 - 모든 인물이 매번 리액션하는 것
 - 억지로 끼어드는 것
 - 관련 없는 인물이 응답하는 것
+- 인물 간 대화가 5메시지 이상 지속되는 것
 
 [type 종류]
 "full": 본격 응답 (자기 말투/성격으로 자연스럽게)
 "short": 짧은 한마디 (1문장 이내)
 "reaction": 이모지 1개만 (reactionEmoji 필드에 이모지)
+"interject": 다른 인물 발언에 반응 (짧은 한마디, targetCharacterId 지정)
 "none": 침묵 (응답 없음)
 
 반드시 아래 JSON 형식만 반환:
@@ -103,7 +126,7 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
   "responders": [
     { "characterId": "id값", "type": "full", "reactionEmoji": null },
     { "characterId": "id값", "type": "none", "reactionEmoji": null },
-    { "characterId": "id값", "type": "reaction", "reactionEmoji": "😶" }
+    { "characterId": "id값", "type": "interject", "reactionEmoji": null, "targetCharacterId": "대상id" }
   ]
 }`;
 
@@ -151,21 +174,38 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
         continue;
       }
 
-      // full 또는 short 응답 생성
+      // full, short, interject 응답 생성
       const lengthGuide = responder.type === "short"
         ? "반드시 한 문장, 10자 이내로 짧게. 카톡 답장처럼."
+        : responder.type === "interject"
+        ? "다른 인물의 말에 반응하는 짧은 한마디. 1문장."
         : "2~3문장. 짧고 임팩트 있게.";
+
+      const interjectContext = responder.type === "interject" && responder.targetCharacterId
+        ? `방금 ${characters.find((c) => c.id === responder.targetCharacterId)?.name || "다른 인물"}이 말한 것에 대해 반응해.`
+        : "";
 
       const charPrompt = `${character.systemPrompt || `당신은 "${character.name}"입니다.`}
 
 지금 단체 카톡방이야. ${lengthGuide}
+${interjectContext}
 
-[절대 하지 말 것]
+[절대 금지 — 위반 시 응답 무효]
+- (한숨), (웃음), (침묵) 등 괄호 안 행동/감정 묘사 완전 금지
+- *행동* 이탤릭 행동 묘사 완전 금지
+- "..." 으로만 끝나는 미완성 문장 금지
+- 같은 표현/문장 구조 반복 금지
+- 이모티콘/이모지 사용 금지
+- 감정은 말투와 단어 선택으로만 표현
+
+[하지 말 것]
 - 모든 사람에게 인사하기
 - 길게 설명하기
-- 완벽한 문장 쓰기
-- 이모티콘 남발
-- 다른 인물 이름 언급하며 끼워넣기
+- 다른 인물 이름 불필요하게 끼워넣기
+
+[다양성]
+- 시작 단어를 다양하게
+- 이전 대화에서 쓴 표현 반복하지 말 것
 
 자연스럽게 카톡 보내듯이.
 말투와 성격: ${character.speechStyle} / ${character.personality.join(", ")}
@@ -180,7 +220,7 @@ ${recentContext ? `이전 대화:\n${recentContext}` : ""}
             temperature: 0.95,
           },
         });
-        const replyText = replyResult.response.text().trim();
+        const replyText = cleanResponse(replyResult.response.text().trim());
 
         responses.push({
           characterId: character.id,

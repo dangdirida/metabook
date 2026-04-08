@@ -32,6 +32,8 @@ interface NormalizedCreation {
   id: string; title: string; type: string; userName: string;
   description: string; content: string; likes: number; createdAt: string;
   tags: string[]; ogqUrl?: string; thumbnail?: string; bookId: string;
+  audioUrl?: string; images?: string[]; genre?: string; moods?: string[];
+  style?: string; price?: number;
 }
 
 function normalizeFromMock(c: Creation): NormalizedCreation {
@@ -52,17 +54,37 @@ export default function CreationDetailPage() {
 
   const mockItem = getCreationById(id as string);
   const [storeItem, setStoreItem] = useState(() => {
-    // safe: getCreations returns [] on server
     return null as ReturnType<typeof getCreations>[number] | null;
   });
+  const [firestoreItem, setFirestoreItem] = useState<NormalizedCreation | null>(null);
   useEffect(() => {
     const items = getCreations();
-    setStoreItem(items.find((c) => c.id === id) || null);
-  }, [id]);
+    const found = items.find((c) => c.id === id) || null;
+    setStoreItem(found);
+    // Firestore에서도 조회 시도
+    if (!found && !mockItem) {
+      fetch(`/api/creations/${id}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.item) {
+            setFirestoreItem({
+              id: d.item.id, title: d.item.title || "", type: d.item.type || d.item.productType || "goods",
+              userName: d.item.userName || d.item.userId || "anonymous", description: d.item.description || "",
+              content: d.item.content || "", likes: d.item.likes || 0,
+              createdAt: d.item.createdAt || new Date().toISOString(), tags: d.item.tags || [],
+              ogqUrl: undefined, thumbnail: d.item.thumbnailUrl || d.item.thumbnailDataUrl || d.item.imageUrl || undefined,
+              bookId: d.item.bookId || "", audioUrl: d.item.audioUrl, images: d.item.images,
+              genre: d.item.genre, moods: d.item.moods, style: d.item.style, price: d.item.price,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [id, mockItem]);
 
   const creation: NormalizedCreation | null = mockItem
     ? normalizeFromMock(mockItem)
-    : storeItem ? normalizeFromStore(storeItem) : null;
+    : storeItem ? normalizeFromStore(storeItem) : firestoreItem;
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(creation?.likes || 0);
@@ -154,10 +176,17 @@ export default function CreationDetailPage() {
           <div className="space-y-4">
             {/* 썸네일 */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm relative">
-              <div className="aspect-[16/9] overflow-hidden">
+              <div className={`overflow-hidden ${creation.type === "goods" || creation.type === "sticker" ? "aspect-square bg-white flex items-center justify-center p-6" : "aspect-[16/9]"}`}>
                 {creation.thumbnail ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={creation.thumbnail} alt={creation.title} className="w-full h-full object-cover" />
+                  <img src={creation.thumbnail} alt={creation.title} className={creation.type === "goods" || creation.type === "sticker" ? "max-w-full max-h-full object-contain" : "w-full h-full object-cover"} />
+                ) : creation.type === "shortbook" ? (
+                  <div className="w-full h-full relative" style={{ background: "linear-gradient(145deg, #fff 0%, #f8f9fa 100%)", aspectRatio: "16/9" }}>
+                    <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 22px, #f0f0f0 22px, #f0f0f0 23px)", opacity: 0.5 }} />
+                    <div className="relative z-[1] w-full h-full flex items-center justify-center px-8">
+                      <p className="text-[16px] font-bold text-[var(--color-mono-800)] text-center leading-relaxed line-clamp-3">{creation.title}</p>
+                    </div>
+                  </div>
                 ) : (
                   <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
                     <Icon className="w-24 h-24 text-white/60" />
@@ -194,9 +223,33 @@ export default function CreationDetailPage() {
                 </button>
               </div>
               <hr className="border-[var(--color-mono-080)] mb-5" />
+              {/* 음악 전용: 오디오 플레이어 */}
+              {creation.type === "music" && creation.audioUrl && (
+                <div className="mb-5 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-5">
+                  <p className="text-[13px] font-semibold text-indigo-700 mb-3">오디오 재생</p>
+                  <audio controls src={creation.audioUrl} className="w-full" style={{ borderRadius: 8 }} />
+                  {creation.genre && <p className="text-[12px] text-indigo-500 mt-2">장르: {creation.genre}{creation.moods?.length ? ` · ${creation.moods.join(", ")}` : ""}</p>}
+                </div>
+              )}
+
+              {/* 스티커 전용: 이미지 그리드 */}
+              {(creation.type === "sticker" || creation.type === "goods") && creation.images && creation.images.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-[13px] font-semibold text-[var(--color-mono-700)] mb-3">스티커 전체 ({creation.images.length}종)</p>
+                  <div className="grid grid-cols-6 gap-2">
+                    {creation.images.map((img, i) => (
+                      <div key={i} className="aspect-square bg-white border border-[var(--color-mono-080)] rounded-lg flex items-center justify-center p-1">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img} alt={`스티커 ${i + 1}`} className="w-full h-full object-contain" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {bodyText && (
                 <div className="mb-5">
-                  <p className="text-[14px] font-semibold text-[var(--color-mono-700)] mb-2">소개</p>
+                  <p className="text-[14px] font-semibold text-[var(--color-mono-700)] mb-2">{creation.type === "shortbook" ? "본문" : "소개"}</p>
                   <p className="text-[14px] text-[var(--color-mono-700)] leading-relaxed whitespace-pre-wrap bg-[var(--color-mono-030)] rounded-xl p-4">{bodyText}</p>
                 </div>
               )}

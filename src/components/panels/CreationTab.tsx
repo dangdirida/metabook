@@ -13,6 +13,8 @@ const TYPE_LABELS: Record<CreationType, string> = {
   video: "영상",
   webtoon: "웹툰",
   novel: "소설",
+  shortbook: "숏북",
+  shortmovie: "숏뮤비",
   webdrama: "웹드라마",
   ai_agent: "AI Agent",
   prompt: "프롬프트",

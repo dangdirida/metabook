@@ -127,6 +127,8 @@ export type CreationType =
   | "video"
   | "webtoon"
   | "novel"
+  | "shortbook"
+  | "shortmovie"
   | "webdrama"
   | "ai_agent"
   | "prompt"

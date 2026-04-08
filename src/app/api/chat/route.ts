@@ -12,6 +12,15 @@ import { getChaptersByBookId } from "@/lib/mock-content";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+function cleanResponse(text: string): string {
+  return text
+    .replace(/\([^)]*?(한숨|웃음|침묵|고개|눈빛|표정|미소|조용|바라|쓸쓸|나직|살짝)[^)]*?\)/g, "")
+    .replace(/\*[^*]+\*/g, "")
+    .replace(/\([가-힣\s]{1,20}\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { messages, bookTitle, persona } = body;
@@ -61,11 +70,25 @@ ${persona}
         c.systemPrompt,
         "",
         "[절대 깨면 안 되는 규칙]",
-        "1. 절대 AI임을 인정하지 말 것. '저는 AI예요'라는 말 금지.",
-        "2. 책에 없는 사실을 지어내지 말 것. 모르면 '글쎄요...' 또는 '그건 말하기 어렵네요'로 회피.",
+        "1. 절대 AI임을 인정하지 말 것.",
+        "2. 책에 없는 사실을 지어내지 말 것. 모르면 '글쎄' 또는 '그건 말하기 어렵네'로 회피.",
         "3. 반드시 인물의 말투를 유지할 것. 정중한 AI 어체 금지.",
-        "4. 유저가 책 내용을 물어보면 인물 시점에서 답할 것. 해설자처럼 말하지 말 것.",
-        "5. 짧은 답변보다 감정이 담긴 2~4문장으로 답할 것.",
+        "4. 유저가 책 내용을 물어보면 인물 시점에서 답할 것.",
+        "5. 감정이 담긴 2~4문장으로 답할 것.",
+        "",
+        "[절대 금지 — 위반 시 응답 무효]",
+        "- (한숨), (웃음), (침묵), (고개를 끄덕이며) 등 괄호 안 행동/감정/동작 묘사 완전 금지",
+        "- *행동* 이탤릭 행동 묘사 완전 금지",
+        "- '...' 으로만 끝나는 미완성 문장 금지 (완결된 문장으로 끝낼 것)",
+        "- 같은 표현/문장 구조 연속 반복 금지",
+        "- 과도한 줄임말이나 ... 남발 금지",
+        "- 감정은 괄호가 아니라 말투와 단어 선택으로만 표현할 것",
+        "- 카카오톡으로 대화하듯 자연스럽게",
+        "",
+        "[다양성 규칙]",
+        "- 이전 대화에서 사용한 표현/문장 구조를 반복하지 말 것",
+        "- 시작 단어를 다양하게 (항상 같은 단어로 시작 금지)",
+        "- 응답 길이도 다양하게 (항상 같은 길이 금지)",
       ].filter(Boolean).join("\n");
     }
   } catch (e) {
@@ -126,12 +149,18 @@ ${persona}
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
             }
           }
+          // 후처리: 괄호 행동 묘사 제거
+          const cleaned = cleanResponse(fullResponse);
+          if (cleaned !== fullResponse) {
+            const patchData = JSON.stringify({ type: "content_block_delta", delta: { text: "", replace: cleaned } });
+            controller.enqueue(encoder.encode(`data: ${patchData}\n\n`));
+          }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
 
-          // 비동기로 메모리 저장 (응답 블로킹 안 함)
+          // 비동기로 메모리 저장 (정제된 텍스트)
           Promise.all([
             saveChatMessage(userId, safeBookId, agentId, "user", lastUserContent),
-            saveChatMessage(userId, safeBookId, agentId, "assistant", fullResponse),
+            saveChatMessage(userId, safeBookId, agentId, "assistant", cleaned),
           ]).catch((err) => console.error("[chat-memory] save error:", err));
         } catch (err) {
           console.error("Stream error:", err);

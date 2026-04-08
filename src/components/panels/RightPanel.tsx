@@ -16,6 +16,7 @@ interface ChatMessage {
 }
 
 export default function RightPanel() {
+  const { bookId } = useParams();
   const { activeTab, setActiveTab, selectedAgentId } = usePanelStore();
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function RightPanel() {
       </div>
       <div className="flex-1 overflow-hidden flex flex-col">
         {activeTab === "ai" && <AIChat selectedAgentId={selectedAgentId} />}
-        {activeTab === "community" && <CommunityChat />}
+        {activeTab === "community" && <CommunityChat bookId={bookId as string} />}
       </div>
     </aside>
   );

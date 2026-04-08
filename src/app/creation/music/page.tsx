@@ -63,23 +63,41 @@ function MusicCreationContent() {
     const interval = setInterval(() => {
       setGeneratingProgress((prev) => {
         if (prev >= 90) { clearInterval(interval); return 90; }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 8;
       });
-    }, 800);
+    }, 2000);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      clearInterval(interval);
-      setGeneratingProgress(100);
       const genreLabel = GENRES.find((g) => g.id === selectedGenre)?.label || selectedGenre;
-      setGeneratedMusic({
-        title: `${book?.title || ""} - ${genreLabel} OST`,
-        audioUrl: null,
-        duration,
-        style: `${genreLabel} ${selectedMoods.join(" ")}`,
+      const sunoPrompt = `${prompt || `${book?.title || "책"} 감성`}, ${genreLabel} style, ${selectedMoods.join(", ")} mood, ${withLyrics ? "with Korean vocals" : "instrumental"}`;
+
+      const res = await fetch("/api/music/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: sunoPrompt,
+          style: selectedGenre,
+          includeVocals: withLyrics,
+        }),
       });
-      setTimeout(() => setStep("result"), 500);
-    } catch {
+      const data = await res.json();
       clearInterval(interval);
+
+      if (data.success && data.audioUrl) {
+        setGeneratingProgress(100);
+        setGeneratedMusic({
+          title: data.title || `${book?.title || ""} - ${genreLabel} OST`,
+          audioUrl: data.audioUrl,
+          duration: data.duration || duration,
+          style: `${genreLabel} ${selectedMoods.join(" ")}`,
+        });
+        setTimeout(() => setStep("result"), 500);
+      } else {
+        throw new Error(data.error || "음악 생성 실패");
+      }
+    } catch (e) {
+      clearInterval(interval);
+      setGeneratingProgress(0);
+      alert(e instanceof Error ? e.message : "음악 생성에 실패했어요. 다시 시도해주세요.");
       setStep("form");
     }
   };
@@ -170,11 +188,6 @@ function MusicCreationContent() {
                 )}
               </button>
             </div>
-            {!generatedMusic.audioUrl && (
-              <div className="mt-4 bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-[12px] text-white/80">Suno API 연동 후 실제 음악이 재생됩니다</p>
-              </div>
-            )}
             <p className="text-[12px] text-white/60 text-center mt-3">
               {Math.floor(generatedMusic.duration / 60)}:{String(generatedMusic.duration % 60).padStart(2, "0")}
             </p>

@@ -9,6 +9,7 @@ import { getFavorites } from "@/lib/favorites-store";
 import type { Highlight } from "@/lib/highlight-store";
 import { mockBooks } from "@/lib/mock-data";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import UserMenu from "@/components/ui/UserMenu";
 
 const TYPE_GRADIENTS: Record<string, string> = {
@@ -17,17 +18,56 @@ const TYPE_GRADIENTS: Record<string, string> = {
   goods: "from-orange-400 to-rose-500",
 };
 
+interface MyCreationItem {
+  id: string;
+  type: string;
+  title: string;
+  thumbnail?: string;
+  thumbnailDataUrl?: string;
+  createdAt: string;
+  bookId?: string;
+  bookTitle?: string;
+  _source: "local" | "goods";
+  _goodsId?: string;
+}
+
 export default function MyPage() {
   const { data: session } = useSession();
-  const [myCreations, setMyCreations] = useState<CreationItem[]>([]);
+  const router = useRouter();
+  const [myCreations, setMyCreations] = useState<MyCreationItem[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [favorites, setFavorites] = useState<{ bookId: string; title: string; coverImage: string }[]>([]);
   const [chatCount, setChatCount] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [userProfile, setUserProfile] = useState<{ name?: string; avatar?: string } | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState("");
 
   useEffect(() => {
-    setMyCreations(getCreations());
+    // localStorage 창작물
+    const localItems: MyCreationItem[] = getCreations().map((c) => ({
+      id: c.id, type: c.type, title: c.title, thumbnail: c.thumbnail,
+      createdAt: c.createdAt, bookId: c.bookId, bookTitle: c.bookTitle, _source: "local" as const,
+    }));
+
+    // Firestore 굿즈 창작물
+    fetch("/api/goods-creations?limit=50")
+      .then((r) => r.json())
+      .then((d) => {
+        const goodsItems: MyCreationItem[] = (d.items || []).map((g: { id: string; title: string; bookId: string; bookTitle?: string; thumbnailDataUrl?: string; createdAt: string; productType?: string }) => ({
+          id: `goods-${g.id}`, type: g.productType === "sticker" ? "sticker" : "goods",
+          title: g.title, thumbnailDataUrl: g.thumbnailDataUrl,
+          createdAt: g.createdAt || new Date().toISOString(),
+          bookId: g.bookId, bookTitle: g.bookTitle, _source: "goods" as const, _goodsId: g.id,
+        }));
+        const all = [...localItems, ...goodsItems].sort((a, b) =>
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        setMyCreations(all);
+      })
+      .catch(() => setMyCreations(localItems));
+
     setNotes(getNotes());
     const savedImg = localStorage.getItem("metabook_profile_image");
     if (savedImg) setProfileImage(savedImg);
@@ -39,12 +79,23 @@ export default function MyPage() {
     }
     setChatCount(total);
     try { setHighlights(JSON.parse(localStorage.getItem("metabook_highlights") || "[]")); } catch { setHighlights([]); }
+    // 유저 프로필 로드
+    fetch("/api/user/profile").then((r) => r.json()).then((d) => {
+      if (d.profile) { setUserProfile(d.profile); setEditName(d.profile.name || ""); }
+    }).catch(() => {});
   }, []);
 
-  const handleDeleteCreation = (id: string) => {
+  const handleDeleteCreation = async (item: MyCreationItem) => {
     if (!confirm("이 창작물을 삭제할까요?\n삭제 후 복구할 수 없어요.")) return;
-    deleteCreation(id);
-    setMyCreations(getCreations());
+    if (item._source === "goods" && item._goodsId) {
+      try {
+        const res = await fetch(`/api/goods-creations/${item._goodsId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error();
+      } catch { alert("삭제에 실패했어요."); return; }
+    } else {
+      deleteCreation(item.id);
+    }
+    setMyCreations((prev) => prev.filter((c) => c.id !== item.id));
   };
 
   const user = session?.user;
@@ -70,44 +121,72 @@ export default function MyPage() {
           <aside className="lg:sticky lg:top-24 lg:self-start space-y-4">
             <div className="bg-white rounded-2xl border border-[var(--color-mono-080)] p-6">
               <div className="flex flex-col items-center text-center">
-                <label className="relative cursor-pointer group/avatar block mx-auto w-20 h-20">
-                  <div className="w-20 h-20 rounded-full overflow-hidden">
-                    {profileImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-[var(--color-primary-100)] flex items-center justify-center text-3xl font-bold text-[var(--color-primary-600)]">{initial}</div>
-                    )}
-                  </div>
-                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"><Camera className="w-6 h-6 text-white" /></div>
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { const d = ev.target?.result as string; setProfileImage(d); localStorage.setItem("metabook_profile_image", d); }; r.readAsDataURL(f); }} />
-                </label>
-                <h2 className="text-xl font-bold text-[var(--color-mono-990)] mt-3">{nickname}</h2>
-                <p className="text-sm text-[var(--color-mono-500)]">{email}</p>
-              </div>
-            </div>
-
-            {/* 통계 카드 */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "읽은 책", value: recentBooks.length, unit: "권", Icon: BookOpen, gradient: "from-[var(--color-primary-030)] to-[var(--color-primary-050)]", iconColor: "text-[var(--color-primary-500)]", valueColor: "text-[var(--color-primary-600)]" },
-                { label: "AI 대화", value: aiChatCount, unit: "회", Icon: MessageCircle, gradient: "from-purple-50 to-purple-100", iconColor: "text-purple-500", valueColor: "text-purple-600" },
-                { label: "내 창작물", value: myCreations.length, unit: "개", Icon: Palette, gradient: "from-amber-50 to-amber-100", iconColor: "text-amber-500", valueColor: "text-amber-600" },
-              ].map((stat) => (
-                <div key={stat.label} className={`rounded-2xl p-4 bg-gradient-to-br ${stat.gradient} border border-white/50 text-center`}>
-                  <div className="flex justify-center mb-2"><stat.Icon className={`w-6 h-6 ${stat.iconColor}`} /></div>
-                  <p className={`text-[26px] font-bold ${stat.valueColor} leading-none mb-1`}>{stat.value}<span className="text-[14px] font-normal ml-0.5">{stat.unit}</span></p>
-                  <p className="text-[11px] text-[var(--color-mono-500)]">{stat.label}</p>
+                {/* 프사 */}
+                <div style={{ position: "relative", width: 80, height: 80, margin: "0 auto 12px" }}>
+                  {(userProfile?.avatar || session?.user?.image) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={userProfile?.avatar || session?.user?.image || ""} alt="프로필"
+                      style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid white", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }} />
+                  ) : (
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "white", border: "3px solid white", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}>
+                      {initial}
+                    </div>
+                  )}
                 </div>
-              ))}
+                {/* 닉네임 편집 */}
+                {editingProfile ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+                    <input value={editName} onChange={(e) => setEditName(e.target.value)}
+                      style={{ textAlign: "center", fontSize: 15, fontWeight: 600, border: "1.5px solid #10b981", borderRadius: 8, padding: "4px 10px", width: "80%" }} />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={async () => {
+                        await fetch("/api/user/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editName }) });
+                        setUserProfile((p) => ({ ...p, name: editName }));
+                        setEditingProfile(false);
+                      }} style={{ padding: "4px 14px", borderRadius: 8, border: "none", background: "#10b981", color: "white", fontSize: 12, cursor: "pointer" }}>저장</button>
+                      <button onClick={() => setEditingProfile(false)}
+                        style={{ padding: "4px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "white", fontSize: 12, cursor: "pointer" }}>취소</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <h2 className="text-xl font-bold text-[var(--color-mono-990)]">{userProfile?.name || nickname}</h2>
+                      <button onClick={() => { setEditName(userProfile?.name || nickname); setEditingProfile(true); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#9ca3af" }}>✏️</button>
+                    </div>
+                    <p className="text-sm text-[var(--color-mono-500)]">{email}</p>
+                  </div>
+                )}
+              </div>
+              {/* 통계 */}
+              <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                {[
+                  { icon: "📚", value: recentBooks.length, label: "읽은 책" },
+                  { icon: "💬", value: aiChatCount, label: "AI 대화" },
+                  { icon: "🎨", value: myCreations.length, label: "내 창작물" },
+                ].map((s) => (
+                  <div key={s.label} style={{ flex: 1, background: "#f9fafb", borderRadius: 12, padding: "12px 8px", textAlign: "center", border: "1px solid #f0f0f0" }}>
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#111827", lineHeight: 1 }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </aside>
 
           <div className="space-y-8 min-w-0">
             {/* 내 창작물 */}
             <section>
-              <div className="flex items-center justify-between mb-4">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <h3 className="text-lg font-bold text-[var(--color-mono-990)]">내 창작물</h3>
+                {myCreations.length > 4 && (
+                  <button onClick={() => router.push("/mypage/creations")}
+                    style={{ fontSize: 13, color: "#10b981", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                    전체보기
+                  </button>
+                )}
               </div>
               {myCreations.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-[var(--color-mono-080)] flex flex-col items-center justify-center py-16 text-center">
@@ -116,30 +195,27 @@ export default function MyPage() {
                   <p className="text-xs text-[var(--color-mono-400)] mt-1">책을 읽고 첫 창작물을 만들어보세요!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {myCreations.map((item: CreationItem) => {
-                    const gradient = TYPE_GRADIENTS[item.type] || "from-gray-400 to-gray-600";
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  {myCreations.slice(0, 4).map((item) => {
+                    const thumbSrc = item.thumbnail || item.thumbnailDataUrl;
+                    const isGoods = item._source === "goods";
+                    const href = isGoods && item._goodsId ? `/goods/${item._goodsId}` : `/creations/${item.id}`;
                     return (
-                      <div key={item.id} className="relative bg-white rounded-xl border border-[var(--color-mono-080)] overflow-hidden hover:shadow-md transition-shadow group">
-                        <Link href={`/creations/${item.id}`}>
-                          <div className="aspect-square relative overflow-hidden">
-                            {item.thumbnail ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}><Palette className="w-8 h-8 text-white/60" /></div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <p className="text-sm font-medium text-[var(--color-mono-900)] line-clamp-1">{item.title}</p>
-                            <p className="text-xs text-[var(--color-mono-400)] mt-1">{new Date(item.createdAt).toLocaleDateString("ko-KR")}</p>
-                          </div>
-                        </Link>
-                        <button onClick={() => handleDeleteCreation(item.id)}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/45 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-black/70"
-                          title="삭제">
-                          <X className="w-3 h-3" />
-                        </button>
+                      <div key={item.id} style={{ position: "relative", cursor: "pointer" }} className="group" onClick={() => router.push(href)}>
+                        <div style={{ aspectRatio: "1", borderRadius: 10, overflow: "hidden", background: isGoods ? "white" : "#f3f4f6", marginBottom: 6, border: "1px solid #f0f0f0" }}>
+                          {thumbSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={thumbSrc} alt={item.title} style={{ width: "100%", height: "100%", objectFit: isGoods ? "contain" : "cover", padding: isGoods ? 8 : 0 }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+                              {item.type === "music" ? "🎵" : item.type === "goods" || item.type === "sticker" ? "🛍️" : item.type === "shortbook" ? "📖" : "🎬"}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#374151", fontWeight: 500, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{item.title}</div>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteCreation(item); }}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/45 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          style={{ fontSize: 10 }}>✕</button>
                       </div>
                     );
                   })}
