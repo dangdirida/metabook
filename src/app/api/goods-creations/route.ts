@@ -86,7 +86,9 @@ export async function GET(req: NextRequest) {
         return tb - ta;
       });
 
-    return NextResponse.json({ items });
+    return NextResponse.json({ items }, {
+      headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("[goods-creations] GET error:", e);

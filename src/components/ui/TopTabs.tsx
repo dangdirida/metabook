@@ -31,23 +31,35 @@ export default function TopTabs() {
   const handleHeart = (id: string) => { toggleHeart(id); refreshCreations(); };
 
   // API 창작물 (Firestore)
-  const [apiCreations, setApiCreations] = useState<{ id: string; type: string; title: string; thumbnailUrl?: string; thumbnailDataUrl?: string; bookTitle?: string }[]>([]);
-  const [apiCreationsLoading, setApiCreationsLoading] = useState(false);
+  // API 굿즈/창작물 — 단일 fetch로 갤러리 + 굿즈 탭 모두 사용
+  const [apiItems, setApiItems] = useState<{ id: string; type: string; title: string; price?: number; thumbnailDataUrl?: string; bookTitle?: string; productType?: string }[]>([]);
+  const [apiItemsLoading, setApiItemsLoading] = useState(false);
   useEffect(() => {
     if (!bookId) return;
-    setApiCreationsLoading(true);
-    fetch(`/api/goods-creations?bookId=${bookId}&limit=20`)
+    setApiItemsLoading(true);
+    fetch(`/api/goods-creations?bookId=${bookId}&limit=50`)
       .then((r) => r.json())
       .then((d) => {
-        setApiCreations((d.items || []).map((g: Record<string, unknown>) => ({
-          id: g.id as string, type: (g.productType as string) === "sticker" ? "sticker" : "goods",
-          title: g.title as string, thumbnailDataUrl: g.thumbnailDataUrl as string,
+        setApiItems((d.items || []).map((g: Record<string, unknown>) => ({
+          id: g.id as string,
+          type: (g.productType as string) === "sticker" ? "sticker" : "goods",
+          title: g.title as string,
+          price: g.price as number,
+          thumbnailDataUrl: g.thumbnailDataUrl as string,
           bookTitle: g.bookTitle as string,
+          productType: g.productType as string,
         })));
-        setApiCreationsLoading(false);
+        setApiItemsLoading(false);
       })
-      .catch(() => setApiCreationsLoading(false));
+      .catch(() => setApiItemsLoading(false));
   }, [bookId]);
+
+  // 갤러리용 (전체)
+  const apiCreations = apiItems;
+  const apiCreationsLoading = apiItemsLoading;
+  // 굿즈 탭용 (동일 데이터 재사용)
+  const apiGoods = apiItems;
+  const apiGoodsLoading = apiItemsLoading;
 
   const totalCount = storeCreations.length + apiCreations.length;
 
@@ -57,18 +69,6 @@ export default function TopTabs() {
     if (!book?.seriesId) return [];
     return mockBooks.filter((b) => b.seriesId === book.seriesId);
   }, [book]);
-
-  // API 굿즈 게시물
-  const [apiGoods, setApiGoods] = useState<{ id: string; title: string; price: number; thumbnailDataUrl: string }[]>([]);
-  const [apiGoodsLoading, setApiGoodsLoading] = useState(false);
-  useEffect(() => {
-    if (!bookId) return;
-    setApiGoodsLoading(true);
-    fetch(`/api/goods-creations?bookId=${bookId}`)
-      .then((r) => r.json())
-      .then((d) => { setApiGoods(d.items || []); setApiGoodsLoading(false); })
-      .catch(() => setApiGoodsLoading(false));
-  }, [bookId]);
 
   const hasSeries = seriesBooks.length >= 2;
 
