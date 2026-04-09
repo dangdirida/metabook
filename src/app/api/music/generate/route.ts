@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
         tags: style || "ambient",
         make_instrumental: !includeVocals,
         model: "V4_5",
+        webhook_url: "https://metabook-two.vercel.app/api/music/callback",
+        webhook_secret: "metabook-secret-2026",
       }),
     });
 
