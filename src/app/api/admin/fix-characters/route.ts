@@ -32,7 +32,7 @@ export async function POST() {
       {
         id: "seong_ju",
         name: "성주",
-        avatar: "",
+        avatar: "/avatars/seong_ju.jpg",
         role: "조연",
         bookId: "lovers-lover",
         personality: ["예술적", "과묵함", "비밀이 많음"],
