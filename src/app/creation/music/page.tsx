@@ -21,12 +21,6 @@ const GENRES = [
 
 const MOODS = ["설레는", "슬픈", "따뜻한", "신나는", "고요한", "몽환적", "긴장감", "희망찬", "그리운", "평화로운"];
 
-const DURATIONS = [
-  { value: 30, label: "30초" },
-  { value: 60, label: "1분" },
-  { value: 120, label: "2분" },
-  { value: 180, label: "3분" },
-];
 
 function MusicCreationContent() {
   const searchParams = useSearchParams();
@@ -38,11 +32,10 @@ function MusicCreationContent() {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState(60);
   const [withLyrics, setWithLyrics] = useState(false);
   const [lyricsPrompt, setLyricsPrompt] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [generatedMusic, setGeneratedMusic] = useState<{ title: string; audioUrl: string | null; duration: number; style: string } | null>(null);
+  const [generatedMusic, setGeneratedMusic] = useState<{ title: string; audioUrl: string | null; style: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
 
@@ -87,7 +80,6 @@ function MusicCreationContent() {
           setGeneratedMusic({
             title: statusData.title || `${book?.title || ""} - ${genreLabel} OST`,
             audioUrl: statusData.audioUrl,
-            duration: duration,
             style: `${genreLabel} ${selectedMoods.join(" ")}`,
           });
           setTimeout(() => setStep("result"), 500);
@@ -116,7 +108,7 @@ function MusicCreationContent() {
       content: prompt,
       musicPrompt: prompt,
       musicStyle: generatedMusic.style,
-      musicDuration: generatedMusic.duration,
+      musicDuration: 0,
       audioUrl: generatedMusic.audioUrl || undefined,
     });
     router.push(`/library/${bookId}/intro`);
@@ -141,7 +133,7 @@ function MusicCreationContent() {
           ))}
         </div>
         <h2 className="text-[22px] font-bold mb-2">음악을 만들고 있어요</h2>
-        <p className="text-[14px] text-white/60 mb-8">{GENRES.find((g) => g.id === selectedGenre)?.label} · {duration}초</p>
+        <p className="text-[14px] text-white/60 mb-8">{GENRES.find((g) => g.id === selectedGenre)?.label}</p>
         <div className="w-64 h-1.5 bg-white/20 rounded-full overflow-hidden mb-3">
           <div className="h-full bg-white rounded-full transition-all duration-700" style={{ width: `${generatingProgress}%` }} />
         </div>
@@ -191,9 +183,6 @@ function MusicCreationContent() {
                 )}
               </button>
             </div>
-            <p className="text-[12px] text-white/60 text-center mt-3">
-              {Math.floor(generatedMusic.duration / 60)}:{String(generatedMusic.duration % 60).padStart(2, "0")}
-            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => { setStep("form"); setGeneratedMusic(null); setIsPlaying(false); }}
@@ -211,7 +200,6 @@ function MusicCreationContent() {
               {[
                 ["장르", GENRES.find((g) => g.id === selectedGenre)?.label || ""],
                 ["분위기", selectedMoods.length > 0 ? selectedMoods.join(", ") : "없음"],
-                ["길이", `${duration}초`],
                 ["가사", withLyrics ? "포함" : "없음"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between">
@@ -302,24 +290,8 @@ function MusicCreationContent() {
           </div>
         </div>
 
-        {/* 재생시간 + 가사 */}
+        {/* 가사 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[14px] font-bold text-[var(--color-mono-900)]">재생 시간</h2>
-            <div className="flex gap-2">
-              {DURATIONS.map((d) => (
-                <button key={d.value} onClick={() => setDuration(d.value)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    duration === d.value
-                      ? "bg-[var(--color-primary-500)] text-white"
-                      : "bg-[var(--color-mono-050)] text-[var(--color-mono-600)] hover:bg-[var(--color-mono-100)]"
-                  }`}>
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="border-t border-[var(--color-mono-080)] pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[13px] font-medium text-[var(--color-mono-800)]">가사 포함</p>
@@ -335,7 +307,6 @@ function MusicCreationContent() {
                 placeholder="가사로 만들 문장이나 감정을 입력해주세요" rows={2}
                 className="mt-3 w-full px-3 py-2.5 rounded-xl border border-[var(--color-mono-100)] text-[13px] text-[var(--color-mono-800)] placeholder:text-[var(--color-mono-300)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-300)] resize-none" />
             )}
-          </div>
         </div>
 
         {/* Suno 안내 */}

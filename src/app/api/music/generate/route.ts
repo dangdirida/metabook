@@ -9,7 +9,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { prompt, style, includeVocals } = await req.json();
+    const { prompt, style, includeVocals, lyrics, title } = await req.json();
+
+    const sunoBody: Record<string, unknown> = {
+      make_instrumental: !includeVocals,
+      model: "V4_5",
+      webhook_url: "https://metabook-two.vercel.app/api/music/callback",
+      webhook_secret: "metabook-secret-2026",
+    };
+
+    if (lyrics && typeof lyrics === "string" && lyrics.trim()) {
+      sunoBody.lyrics = lyrics;
+      sunoBody.tags = style || "ambient";
+      if (title) sunoBody.title = title;
+    } else {
+      sunoBody.prompt = prompt || "beautiful emotional music";
+      sunoBody.tags = style || "ambient";
+    }
 
     const res = await fetch(`${BASE_URL}/suno-imagine`, {
       method: "POST",
@@ -17,14 +33,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         "Authorization": apiKey,
       },
-      body: JSON.stringify({
-        prompt: prompt || "beautiful emotional music",
-        tags: style || "ambient",
-        make_instrumental: !includeVocals,
-        model: "V4_5",
-        webhook_url: "https://metabook-two.vercel.app/api/music/callback",
-        webhook_secret: "metabook-secret-2026",
-      }),
+      body: JSON.stringify(sunoBody),
     });
 
     const data = await res.json();
